@@ -123,7 +123,7 @@ try {
 
 # --- 3.2: Steam Client (EXE) ---
 try {
-    Write-Host "`n>>> [2/6] Установка Steam..."
+    Write-Host "`n>>> [2/7] Установка Steam..."
     $SteamUri  = 'https://cdn.akamai.steamstatic.com/client/installer/SteamSetup.exe'
     $SteamFile = Join-Path $env:TEMP 'SteamSetup.exe'
     
@@ -133,8 +133,17 @@ try {
     Write-Host "Запуск тихой установки с ключом /S..."
     Install-Executable -Path $SteamFile -Arguments '/S'
     
+    Write-Host "Перевод автозапуска Steam в состояние 'Отключено' в Диспетчере задач..."
+    # Обращаемся к ветке StartupApproved, которая контролирует статус элементов автозагрузки
+    $StartupApprovedPath = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run"
+    if (-not (Test-Path $StartupApprovedPath)) { New-Item -Path $StartupApprovedPath -Force | Out-Null }
+    
+    # Массив байтов, где 0x03 в начале означает, что элемент отключен
+    $DisabledValue = [byte[]](0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
+    Set-ItemProperty -Path $StartupApprovedPath -Name "Steam" -Value $DisabledValue -Type Binary -Force
+    
     Remove-Item $SteamFile -Force -ErrorAction SilentlyContinue
-    Write-Host ">>> Steam установлен успешно."
+    Write-Host ">>> Steam установлен успешно (сохранен в автозагрузке, но выключен)."
 } catch {
     Write-Warning "Не удалось установить Steam: $($_.Exception.Message)"
 }
