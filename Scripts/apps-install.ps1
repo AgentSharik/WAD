@@ -142,7 +142,7 @@ try {
 # --- 3.3: WinRAR (Официальная русская x64 версия) ---
 try {
     Write-Host "`n>>> [3/6] Установка WinRAR RU..."
-    $WinRarUri  = 'https://www.rarlab.com/rar/winrar-x64-701ru.exe'
+    $WinRarUri  = 'https://www.rarlab.com/rar/winrar-x64-723ru.exe'
     $WinRarFile = Join-Path $env:TEMP 'winrar-x64-ru.exe'
     
     Write-Host "Скачивание установщика WinRAR с официального сервера..."
@@ -186,7 +186,7 @@ try {
 # --- 3.5: ShareX (v20.2.0 с ключом подавления автозапуска и принудительным киллом) ---
 try {
     Write-Host "`n>>> [5/6] Установка ShareX..."
-    $sharexUri  = 'https://github.com/ShareX/ShareX/releases/download/v20.2.0/ShareX-20.2.0-setup-x64.exe'
+    $sharexUri  = 'https://github.com/ShareX/ShareX/releases/download/v21.0.0/ShareX-21.0.0-setup-x64.exe'
     $sharexFile = Join-Path $env:TEMP 'sharex_setup.exe'
     
     Write-Host "Скачивание инсталлятора ShareX..."
