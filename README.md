@@ -66,4 +66,3 @@
   <br><br>
   <img width="576" height="476" alt="ctUjYOBXyx" src="https://github.com/user-attachments/assets/5636952b-2290-4d1b-8c3f-fc5c5efb0251" />
 </div>
-юг
