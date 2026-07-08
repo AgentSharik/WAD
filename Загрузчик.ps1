@@ -1,4 +1,4 @@
-﻿# =========================================================================
+# =========================================================================
 # Назначение: Автономный загрузчик с авто-исправлением кодировки и переносов
 # Папка назначения: C:\Windows\Setup\Scripts
 # =========================================================================
@@ -18,12 +18,14 @@ try {
     Write-Host " СТАРТ МОДУЛЯ ЗАГРУЗКИ С АВТО-ЛЕЧЕНИЕМ СКРИПТОВ"
     Write-Host "========================================================="
 
-    $baseUrl = 'https://raw.githubusercontent.com/alexejnekrasov/powershell-scripts/main/Scripts/'
+    # ОБНОВЛЕННЫЕ ССЫЛКИ НА РЕПОЗИТОРИЙ
+    $baseUrl = 'https://raw.githubusercontent.com/AgentSharik/powershell-scripts/main/Scripts/'
+    $apiUrl  = 'https://api.github.com/repos/AgentSharik/powershell-scripts/contents/Scripts'
+    
     $fileList = @('manager.ps1', 'apps-install.ps1', 'clean-and-photo.ps1', 'install-sys-components.ps1', 'office-install.ps1', 'reset-setup-scripts.ps1')
 
     # Попытка получить свежий список файлов через API GitHub
     try {
-        $apiUrl = 'https://api.github.com/repos/alexejnekrasov/powershell-scripts/contents/Scripts'
         $apiResponse = Invoke-RestMethod -Uri $apiUrl -UseBasicParsing -ErrorAction Stop
         if ($apiResponse) {
             $fileList = $apiResponse | Where-Object { $_.type -eq 'file' } | Select-Object -ExpandProperty name
