@@ -45,7 +45,6 @@ Add-Type -AssemblyName System.Drawing
 $UserProfile = $env:USERPROFILE
 $LogDir = Join-Path $UserProfile "Documents"
 if (-not (Test-Path $LogDir)) { New-Item -ItemType Directory -Force -Path $LogDir | Out-Null }
-Start-Transcript -Path (Join-Path $LogDir "Main_Setup_GUI_Dispatcher.log") -Append
 
 function Add-LogLine ($Prefix, $Message) {
     $Time = (Get-Date).ToString("HH:mm:ss")
@@ -421,4 +420,3 @@ $Form.Add_Load({ $LaunchTimer.Start() })
 
 # Запуск GUI приложения
 [System.Windows.Forms.Application]::Run($Form)
-Stop-Transcript
