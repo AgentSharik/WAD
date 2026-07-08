@@ -174,7 +174,7 @@ try {
 # --- 3.4: qBittorrent (Прямая ссылка на релиз 5.2.2 с libtorrent 1.2.x) ---
 try {
     Write-Host "`n>>> [4/6] Установка qBittorrent (libtorrent 1.2.x)..."
-    $qbUri  = 'https://github.com/qbittorrent/qBittorrent/releases/download/release-5.2.2/qbittorrent_5.2.2_x64_setup.exe'
+    $qbUri  = 'https://github.com/qbittorrent/qBittorrent/releases/download/release-5.2.3/qbittorrent_5.2.3_x64_setup.exe'
     $qbFile = Join-Path $env:TEMP 'qbittorrent_setup.exe'
     
     Write-Host "Скачивание инсталлятора qBittorrent..."
