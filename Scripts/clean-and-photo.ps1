@@ -1,13 +1,13 @@
-﻿# =========================================================================
+# =========================================================================
 # Имя файла: clean-and-photo.ps1
-# Назначение: Очистка системы и активация классического Photo Viewer
+# Назначение: Очистка системы, классический Photo Viewer + умный файл подкачки
 # =========================================================================
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $ProgressPreference    = 'SilentlyContinue'
 
-# Логи в Документы Администратора (поддерживает русское имя пользователя)
+# Логи в Документы Администратора
 $UserProfile = $env:USERPROFILE
 $LogDir = Join-Path $UserProfile "Documents"
 if (-not (Test-Path $LogDir)) { New-Item -ItemType Directory -Force -Path $LogDir | Out-Null }
@@ -19,39 +19,35 @@ try {
     # ----------------------------------------------------
     Write-Host ">>> Начало очистки встроенного мусора..."
 
-    # Список масок приложений, которые нужно УДАЛИТЬ БЕЗЖАЛОСТНО
-    # Магазин, Калькулятор, Заметки, Блокнот, Фото, Медиаплеер, Paint 3D и Xbox НЕ ТРОГАЕМ
     $BloatList = @(
-        "Yandex.Music",                 # Превентивное удаление Яндекс.Музыки
-        "Microsoft.ZuneMusic",          # Музыка Groove (Groove Music) - СНОСИМ!
-        "office.outlook",               # Новый Outlook
-        "windowscommunicationsapps",    # Почта и Календарь
-        "Microsoft.3DViewer",           # 3D Просмотрщик
-        "Microsoft.MixedReality.Portal",# Portal смешанной реальности
-        "Microsoft.BingNews",           # Новости
-        "Microsoft.BingWeather",        # Погода
-        "Microsoft.BingFinance",        # Финансы
-        "Microsoft.BingSports",         # Спорт
-        "Microsoft.MicrosoftSolitaireCollection", # Пасьянсы с рекламой
-        "Microsoft.WindowsFeedbackHub", # Центр отзывов (Телеметрия)
-        "Microsoft.GetHelp",            # Справка / Получить помощь
-        "Microsoft.Getstarted",         # Советы / Начало работы
-        "Microsoft.YourPhone",          # Связь с телефоном
-        "Microsoft.MicrosoftTeams",     # Teams
-        "Microsoft.SkypeApp",           # Skype
-        "Microsoft.54958562F4433"       # Clipchamp (Видеоредактор)
+        "Yandex.Music",                 
+        "Microsoft.ZuneMusic",          
+        "office.outlook",               
+        "windowscommunicationsapps",    
+        "Microsoft.3DViewer",           
+        "Microsoft.MixedReality.Portal",
+        "Microsoft.BingNews",           
+        "Microsoft.BingWeather",        
+        "Microsoft.BingFinance",        
+        "Microsoft.BingSports",         
+        "Microsoft.MicrosoftSolitaireCollection", 
+        "Microsoft.WindowsFeedbackHub", 
+        "Microsoft.GetHelp",            
+        "Microsoft.Getstarted",         
+        "Microsoft.YourPhone",          
+        "Microsoft.MicrosoftTeams",     
+        "Microsoft.SkypeApp",           
+        "Microsoft.54958562F4433"       
     )
 
     foreach ($App in $BloatList) {
         Write-Host "Удаление пакета: $App"
-        # Удаляем у текущих пользователей
         Get-AppxPackage -AllUsers | Where-Object { $_.Name -match $App } | Remove-AppxPackage -ErrorAction SilentlyContinue
-        # Удаляем из заготовок системы (чтобы не вернулся при обновлениях)
         Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -match $App } | Remove-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue
     }
     Write-Host ">>> Очистка UWP-приложений завершена."
 
-    # Полное удаление OneDrive из системы
+    # Полное удаление OneDrive
     Write-Host ">>> Удаление OneDrive..."
     Stop-Process -Name 'OneDrive' -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
     Start-Sleep -Seconds 2
@@ -61,16 +57,14 @@ try {
     # ----------------------------------------------------
     # ЭТАП 2: АКТИВАЦИЯ КЛАССИЧЕСКОГО ПРОСМОТРА ФОТО
     # ----------------------------------------------------
-    Write-Host ">>> Активация Просмотра фотографий Windows 7..."
+    Write-Host "`n>>> Активация Просмотра фотографий Windows 7..."
     
-    # 1) Включаем ассоциации в HKLM
     $assocPath = "HKLM:\SOFTWARE\Microsoft\Windows Photo Viewer\Capabilities\FileAssociations"
     if (-not (Test-Path $assocPath)) { New-Item -Path $assocPath -Force | Out-Null }
     @(".jpg",".jpeg",".png",".bmp",".gif",".tif",".tiff",".jfif",".wdp") | ForEach-Object {
         Set-ItemProperty -Path $assocPath -Name $_ -Value "PhotoViewer.FileAssoc.Tiff" -Force
     }
 
-    # 2) Создаём DefaultAppAssociations.xml для DISM
     $daaPath = "C:\Windows\Setup\Scripts\DefaultAppAssociations.xml"
     New-Item -ItemType Directory -Force -Path (Split-Path $daaPath) | Out-Null
     $xmlContent = @'
@@ -89,15 +83,45 @@ try {
 '@
     [System.IO.File]::WriteAllText($daaPath, $xmlContent, [System.Text.Encoding]::UTF8)
 
-    # 3) Импорт через DISM
     $dismArgs = @("/Online", "/Import-DefaultAppAssociations:$daaPath")
     $p = Start-Process -FilePath "dism.exe" -ArgumentList $dismArgs -PassThru -Wait -NoNewWindow
     if ($p.ExitCode -ne 0) { throw "DISM завершился с кодом $($p.ExitCode)." }
 
-    # 4) Регистрация в RegisteredApplications
     Set-ItemProperty -Path "HKLM:\SOFTWARE\RegisteredApplications" -Name "Windows Photo Viewer" -Value "SOFTWARE\Microsoft\Windows Photo Viewer\Capabilities" -Force
-    
     Write-Host ">>> Просмотр фотографий успешно настроен по умолчанию!"
+
+    # ----------------------------------------------------
+    # ЭТАП 3: АВТОМАТИЧЕСКАЯ НАСТРОЙКА ФАЙЛА ПОДКАЧКИ (PAGEFILE)
+    # ----------------------------------------------------
+    Write-Host "`n>>> Проверка объема ОЗУ и настройка файла подкачки..."
+    
+    $ComputerSystem = Get-CimInstance -ClassName Win32_ComputerSystem
+    # Получаем точный объем ОЗУ в ГБ
+    $TotalRAM_GB = [Math]::Round($ComputerSystem.TotalPhysicalMemory / 1GB)
+    Write-Host "Установлено оперативной памяти: $TotalRAM_GB ГБ"
+
+    if ($TotalRAM_GB -lt 32) {
+        Write-Host "ОЗУ меньше 32 ГБ. Включаем автоматический объем файла подкачки..."
+        if (-not $ComputerSystem.AutomaticManagedPagefile) {
+            $ComputerSystem.AutomaticManagedPagefile = $true
+            Set-CimInstance -CimInstance $ComputerSystem
+        }
+        Write-Host ">>> Файл подкачки переведен в автоматический режим."
+    } else {
+        Write-Host "ОЗУ больше 31 ГБ ($TotalRAM_GB ГБ). Полностью отключаем файл подкачки..."
+        # 1. Отключаем автоматическое управление, чтобы разблокировать удаление
+        if ($ComputerSystem.AutomaticManagedPagefile) {
+            $ComputerSystem.AutomaticManagedPagefile = $false
+            Set-CimInstance -CimInstance $ComputerSystem
+        }
+        # 2. Очищаем все существующие файлы подкачки на накопителях
+        $PageFiles = Get-CimInstance -ClassName Win32_PageFileSetting -ErrorAction SilentlyContinue
+        if ($PageFiles) {
+            $PageFiles | Remove-CimInstance
+            Write-Host ">>> Старые конфигурации файлов подкачки удалены."
+        }
+        Write-Host ">>> Файл подкачки успешно отключен. Изменения вступят в силу после ребута."
+    }
 
 } catch {
     Write-Warning "Ошибка во время оптимизации: $($_.Exception.Message)"
