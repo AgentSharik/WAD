@@ -132,33 +132,6 @@ try {
         Remove-Item $Net8File -Force -ErrorAction SilentlyContinue
     }
  
-    # ----------------------------------------------------
-    # ЭТАП 5: УСТАНОВКА ЗВУКОВЫХ БИБЛИОТЕК OPENAL
-    # ----------------------------------------------------
-    Write-Host "`n>>> Шаг 5: Скачивание и установка OpenAL (3D Audio)..."
-    try {
-        $OalUri = "https://www.openal.org/downloads/oalinst.zip"
-        $OalZip = Join-Path $env:TEMP "oalinst.zip"
-        $OalExtractDir = Join-Path $env:TEMP "oal_extract"
-        if (-not (Test-Path $OalExtractDir)) { New-Item -ItemType Directory -Path $OalExtractDir | Out-Null }
-
-        Download-SetupFile -Uri $OalUri -OutFile $OalZip
-        Expand-Archive -Path $OalZip -DestinationPath $OalExtractDir -Force
-        
-        $OalExe = Join-Path $OalExtractDir "oalinst.exe"
-        if (Test-Path $OalExe) {
-            Install-Executable -Path $OalExe -Arguments "/S"
-            Write-Host ">>> Компоненты OpenAL успешно добавлены в систему."
-        } else {
-            throw "oalinst.exe не найден в корне архива."
-        }
-    } catch {
-        Write-Warning "Не удалось установить OpenAL: $($_.Exception.Message)"
-    } finally {
-        Remove-Item $OalZip -Force -ErrorAction SilentlyContinue
-        Remove-Item $OalExtractDir -Recurse -Force -ErrorAction SilentlyContinue
-    }
-
 } catch {
     Write-Warning "Произошел непредвиденный критический сбой ядра скрипта: $($_.Exception.Message)"
 } finally {
