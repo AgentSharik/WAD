@@ -85,6 +85,7 @@ foreach ($shortcut in $Shortcuts) { if (Test-Path $shortcut) { Remove-Item -Path
 
 $FoldersToClean = @("$env:LOCALAPPDATA\Microsoft\OneDrive", "$env:PROGRAMDATA\Microsoft OneDrive", "C:\OneDriveTemp")
 foreach ($dir in $FoldersToClean) { if (Test-Path $dir) { Remove-Item -Path $dir -Recurse -Force -ErrorAction SilentlyContinue 2>$null } }
+Write-Host ">>> OneDrive удален с ПК"
 
 # ==============================================================================
 # 3. Активация классического Просмотра фотографий Windows 7
