@@ -1,0 +1,1096 @@
+<?xml version="1.0" encoding="utf-8"?>
+<unattend xmlns="urn:schemas-microsoft-com:unattend" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+	<!--https://schneegans.de/windows/unattend-generator/?LanguageMode=Unattended&UILanguage=ru-RU&Locale=ru-RU&Keyboard=00000419&UseKeyboard2=true&Locale2=en-US&Keyboard2=00000409&GeoLocation=203&PEMode=Default&WindowsEditionMode=Custom&ProductKey=VK7JG-NPHTM-C97JM-9MPGT-3V66T&ProcessorArchitecture=amd64&BypassNetworkCheck=true&ComputerNameMode=Custom&ComputerName=PC&TimeZoneMode=Explicit&TimeZone=Russian+Standard+Time&UserAccountMode=Unattended&AccountName0=Admin&AccountDisplayName0=&AccountPassword0=&AccountGroup0=Administrators&AutoLogonMode=Own&PasswordExpirationMode=Unlimited&LockoutMode=Default&HideFiles=Hidden&ClassicContextMenu=true&LaunchToThisPC=true&TaskbarSearch=Icon&TaskbarIconsMode=Custom&TaskbarIconsXml=%3CLayoutModificationTemplate+xmlns%3D%22http%3A%2F%2Fschemas.microsoft.com%2FStart%2F2014%2FLayoutModification%22+xmlns%3Adefaultlayout%3D%22http%3A%2F%2Fschemas.microsoft.com%2FStart%2F2014%2FFullDefaultLayout%22+xmlns%3Astart%3D%22http%3A%2F%2Fschemas.microsoft.com%2FStart%2F2014%2FStartLayout%22+xmlns%3Ataskbar%3D%22http%3A%2F%2Fschemas.microsoft.com%2FStart%2F2014%2FTaskbarLayout%22+Version%3D%221%22%3E%0D%0A++%3CCustomTaskbarLayoutCollection+PinListPlacement%3D%22Replace%22%3E%0D%0A++++%3Cdefaultlayout%3ATaskbarLayout%3E%0D%0A++++++%3Ctaskbar%3ATaskbarPinList%3E%0D%0A++++++++%3Ctaskbar%3ADesktopApp+DesktopApplicationID%3D%22Microsoft.Windows.Explorer%22+%2F%3E%0D%0A++++++%3C%2Ftaskbar%3ATaskbarPinList%3E%0D%0A++++%3C%2Fdefaultlayout%3ATaskbarLayout%3E%0D%0A++%3C%2FCustomTaskbarLayoutCollection%3E%0D%0A%3C%2FLayoutModificationTemplate%3E&DisableWidgets=true&LeftTaskbar=true&HideTaskViewButton=true&DisableBingResults=true&StartTilesMode=Empty&StartPinsMode=Default&DisableWindowsUpdate=true&DisableSac=true&DisableSmartScreen=true&EnableLongPaths=true&EnableRemoteDesktop=true&AllowPowerShellScripts=true&HideEdgeFre=true&DisableEdgeStartupBoost=true&DeleteWindowsOld=true&EffectsMode=Custom&ListviewShadow=true&ThumbnailsOrIcon=true&ListviewAlphaSelect=true&FontSmoothing=true&DeleteEdgeDesktopIcon=true&DesktopIconsMode=Custom&IconThisPC=true&StartFoldersMode=Custom&StartFolderSettings=true&CoreIsolationMode=Enabled&WifiMode=Skip&ExpressSettings=DisableAll&LockKeysMode=Skip&StickyKeysMode=Default&ColorMode=Default&WallpaperMode=Default&LockScreenMode=Default&Remove3DViewer=true&RemoveBingSearch=true&RemoveCamera=true&RemoveClipchamp=true&RemoveCopilot=true&RemoveCortana=true&RemoveDevHome=true&RemoveWindowsHello=true&RemoveFamily=true&RemoveFeedbackHub=true&RemoveGameAssist=true&RemoveGetHelp=true&RemoveHandwriting=true&RemoveMailCalendar=true&RemoveMaps=true&RemoveMathInputPanel=true&RemoveMixedReality=true&RemoveNews=true&RemoveOffice365=true&RemoveOneDrive=true&RemoveOneNote=true&RemoveOneSync=true&RemoveOutlook=true&RemovePeople=true&RemoveRecall=true&RemoveSkype=true&RemoveSolitaire=true&RemoveSpeech=true&RemoveStepsRecorder=true&RemoveStickyNotes=true&RemoveTeams=true&RemoveGetStarted=true&RemoveToDo=true&RemoveVoiceRecorder=true&RemoveWallet=true&RemoveWeather=true&RemoveYourPhone=true&SystemScript0=%23+%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%0D%0A%23+%D0%98%D0%BC%D1%8F+%D1%84%D0%B0%D0%B9%D0%BB%D0%B0%3A+system-logon-init.ps1%0D%0A%23+%D0%9D%D0%B0%D0%B7%D0%BD%D0%B0%D1%87%D0%B5%D0%BD%D0%B8%D0%B5%3A+%D0%91%D0%B5%D1%81%D0%BA%D0%BE%D0%BC%D0%BF%D1%80%D0%BE%D0%BC%D0%B8%D1%81%D1%81%D0%BD%D0%B0%D1%8F+%D0%B1%D0%BB%D0%BE%D0%BA%D0%B8%D1%80%D0%BE%D0%B2%D0%BA%D0%B0+%D1%80%D0%B5%D0%BA%D0%BB%D0%B0%D0%BC%D1%8B%2C+%D1%82%D0%B5%D0%BB%D0%B5%D0%BC%D0%B5%D1%82%D1%80%D0%B8%D0%B8%2C+Outlook%2C+%D0%AF%D0%BD%D0%B4%D0%B5%D0%BA%D1%81.%D0%9C%D1%83%D0%B7%D1%8B%D0%BA%D0%B8%2C+Edge+%D0%B8+%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0+UI%0D%0A%23+%D0%AD%D1%82%D0%B0%D0%BF%3A+System+Logon+%2F+Pre-OOBE+%28%D0%92%D1%8B%D0%BF%D0%BE%D0%BB%D0%BD%D1%8F%D0%B5%D1%82%D1%81%D1%8F+%D0%BE%D1%82+%D0%B8%D0%BC%D0%B5%D0%BD%D0%B8+SYSTEM%29%0D%0A%23+%D0%9B%D0%BE%D0%B3%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5%3A+%D0%94%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D1%8B+%D0%B4%D0%B5%D1%84%D0%BE%D0%BB%D1%82%D0%BD%D0%BE%D0%B3%D0%BE+%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D1%82%D0%B5%D0%BB%D1%8F%0D%0A%23+%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%0D%0A%0D%0ASet-StrictMode+-Version+Latest%0D%0A%24ErrorActionPreference+%3D+%27Stop%27%0D%0A%24ProgressPreference++++%3D+%27SilentlyContinue%27%0D%0A%0D%0A%23+%D0%9D%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0+%D0%BB%D0%BE%D0%B3%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F+%D0%B2+C%3A%5CUsers%5CDefault%5CDocuments%0D%0A%24LogDir+%3D+%22C%3A%5CUsers%5CDefault%5CDocuments%22%0D%0Aif+%28-not+%28Test-Path+%24LogDir%29%29+%7B+New-Item+-ItemType+Directory+-Force+-Path+%24LogDir+%7C+Out-Null+%7D%0D%0AStart-Transcript+-Path+%28Join-Path+%24LogDir+%22System_Logon_Initialization.log%22%29+-Append%0D%0A%0D%0Atry+%7B%0D%0A++++Write-Host+%22%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%22%0D%0A++++Write-Host+%22+%D0%A1%D0%A2%D0%90%D0%A0%D0%A2+%D0%A0%D0%90%D0%A1%D0%A8%D0%98%D0%A0%D0%95%D0%9D%D0%9D%D0%9E%D0%99+%D0%9E%D0%9F%D0%A2%D0%98%D0%9C%D0%98%D0%97%D0%90%D0%A6%D0%98%D0%98+%D0%A1%D0%98%D0%A1%D0%A2%D0%95%D0%9C%D0%AB+%28SYSTEM+CONTEXT%29%22%0D%0A++++Write-Host+%22%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%22%0D%0A%0D%0A++++%23+%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%0D%0A++++%23+1.+%D0%93%D0%9B%D0%9E%D0%91%D0%90%D0%9B%D0%AC%D0%9D%D0%AB%D0%95+%D0%9F%D0%9E%D0%9B%D0%98%D0%A2%D0%98%D0%9A%D0%98+%28HKLM%29+%D0%9F%D0%A0%D0%9E%D0%A2%D0%98%D0%92+%D0%A0%D0%95%D0%9A%D0%9B%D0%90%D0%9C%D0%AB+%D0%98+%D0%9C%D0%A3%D0%A1%D0%9E%D0%A0%D0%90%0D%0A++++%23+%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%0D%0A++++Write-Host+%22%3E%3E%3E+%D0%9D%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0+%D0%B3%D0%BB%D0%BE%D0%B1%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D1%85+%D0%BF%D0%BE%D0%BB%D0%B8%D1%82%D0%B8%D0%BA+CloudContent+%D0%B8+%D0%B2%D0%B8%D0%B4%D0%B6%D0%B5%D1%82%D0%BE%D0%B2...%22%0D%0A++++%24CloudContentPath+%3D+%22HKLM%3A%5CSOFTWARE%5CPolicies%5CMicrosoft%5CWindows%5CCloudContent%22%0D%0A++++if+%28-not+%28Test-Path+%24CloudContentPath%29%29+%7B+New-Item+-Path+%24CloudContentPath+-Force+%7C+Out-Null+%7D%0D%0A++++Set-ItemProperty+-Path+%24CloudContentPath+-Name+%22DisableWindowsConsumerFeatures%22+-Value+1+-Type+DWord+-Force%0D%0A++++Set-ItemProperty+-Path+%24CloudContentPath+-Name+%22DisableWindowsSpotlightFeatures%22+-Value+1+-Type+DWord+-Force%0D%0A++++Set-ItemProperty+-Path+%24CloudContentPath+-Name+%22DisableThirdPartySuggestions%22+-Value+1+-Type+DWord+-Force%0D%0A%0D%0A++++%23+%D0%9E%D1%82%D0%BA%D0%BB%D1%8E%D1%87%D0%B5%D0%BD%D0%B8%D0%B5+%D0%B2%D0%B8%D0%B4%D0%B6%D0%B5%D1%82%D0%BE%D0%B2+%28Feeds%29+%D0%BD%D0%B0+%D0%BF%D0%B0%D0%BD%D0%B5%D0%BB%D0%B8+%D0%B7%D0%B0%D0%B4%D0%B0%D1%87+%D0%B4%D0%BB%D1%8F+%D0%B2%D1%81%D0%B5%D1%85%0D%0A++++%24Feeds+%3D+%22HKLM%3A%5CSOFTWARE%5CPolicies%5CMicrosoft%5CWindows%5CWindows+Feeds%22%0D%0A++++if+%28%21%28Test-Path+%24Feeds%29%29+%7B+New-Item+-Path+%24Feeds+-Force+%7C+Out-Null+%7D%0D%0A++++Set-ItemProperty+-Path+%24Feeds+-Name+%22EnableFeeds%22+-Value+0+-Type+DWord+-Force%0D%0A%0D%0A++++Write-Host+%22%3E%3E%3E+%D0%93%D0%BB%D1%83%D0%B1%D0%BE%D0%BA%D0%B0%D1%8F+%D0%BA%D0%BE%D0%BD%D1%84%D0%B8%D0%B3%D1%83%D1%80%D0%B0%D1%86%D0%B8%D1%8F+%D0%B3%D0%BB%D0%BE%D0%B1%D0%B0%D0%BB%D1%8C%D0%BD%D0%BE%D0%B3%D0%BE+ContentDeliveryManager...%22%0D%0A++++%24CdmPathHKLM+%3D+%22HKLM%3A%5CSOFTWARE%5CMicrosoft%5CWindows%5CCurrentVersion%5CContentDeliveryManager%22%0D%0A++++if+%28-not+%28Test-Path+%24CdmPathHKLM%29%29+%7B+New-Item+-Path+%24CdmPathHKLM+-Force+%7C+Out-Null+%7D%0D%0A++++%0D%0A++++%24CdmTweaks+%3D+%40%7B%0D%0A++++++++%22SilentInstalledAppsEnabled%22+++++++%3D+0%0D%0A++++++++%22ContentDeliveryAllowed%22+++++++++++%3D+0%0D%0A++++++++%22OemPreInstalledAppsEnabled%22+++++++%3D+0%0D%0A++++++++%22PreInstalledAppsEnabled%22++++++++++%3D+0%0D%0A++++++++%22PreInstalledAppsReady%22++++++++++++%3D+0%0D%0A++++++++%22SubscribedContentEnabled%22+++++++++%3D+0%0D%0A++++++++%22SystemPaneSuggestionsEnabled%22+++++%3D+0%0D%0A++++++++%22SubscribedContent-310093Enabled%22++%3D+0%0D%0A++++++++%22SubscribedContent-338387Enabled%22++%3D+0%0D%0A++++++++%22SubscribedContent-338388Enabled%22++%3D+0%0D%0A++++++++%22SubscribedContent-338389Enabled%22++%3D+0%0D%0A++++++++%22SubscribedContent-353475Enabled%22++%3D+0%0D%0A++++%7D%0D%0A++++foreach+%28%24Key+in+%24CdmTweaks.Keys%29+%7B%0D%0A++++++++Set-ItemProperty+-Path+%24CdmPathHKLM+-Name+%24Key+-Value+%24CdmTweaks%5B%24Key%5D+-Type+DWord+-Force%0D%0A++++%7D%0D%0A%0D%0A++++%23+%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%0D%0A++++%23+1.5.+%D0%A3%D0%9A%D0%A0%D0%9E%D0%A9%D0%95%D0%9D%D0%98%D0%95+MICROSOFT+EDGE+%D0%98+%D0%9E%D0%91%D0%A9%D0%95%D0%93%D0%9E+%D0%A0%D0%90%D0%91%D0%9E%D0%A7%D0%95%D0%93%D0%9E+%D0%A1%D0%A2%D0%9E%D0%9B%D0%90%0D%0A++++%23+%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%0D%0A++++Write-Host+%22%3E%3E%3E+%D0%9F%D0%BE%D0%BB%D0%BD%D0%B0%D1%8F+%D0%B1%D0%BB%D0%BE%D0%BA%D0%B8%D1%80%D0%BE%D0%B2%D0%BA%D0%B0+Microsoft+Edge+%D0%B8+%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B0+%D0%BE%D0%B1%D1%89%D0%B5%D0%B3%D0%BE+%D1%81%D1%82%D0%BE%D0%BB%D0%B0...%22%0D%0A++++%0D%0A++++%23+%D0%9F%D0%BE%D0%BB%D0%B8%D1%82%D0%B8%D0%BA%D0%B8+HKLM+%D0%B4%D0%BB%D1%8F+Edge%0D%0A++++%24EdgePol+%3D+%22HKLM%3A%5CSOFTWARE%5CPolicies%5CMicrosoft%5CEdge%22%0D%0A++++if+%28%21%28Test-Path+%24EdgePol%29%29+%7B+New-Item+-Path+%24EdgePol+-Force+%7C+Out-Null+%7D%0D%0A++++%24EdgeSettings+%3D+%40%7B%0D%0A++++++++%22HideFirstRunExperience%22++++++++++%3D+1%0D%0A++++++++%22CreateDesktopShortcut%22+++++++++++%3D+0%0D%0A++++++++%22WelcomePageOnFirstLaunchEnabled%22+%3D+0%0D%0A++++++++%22StartupBoostEnabled%22+++++++++++++%3D+0%0D%0A++++++++%22BackgroundModeEnabled%22+++++++++++%3D+0%0D%0A++++++++%22AllowPrelaunch%22++++++++++++++++++%3D+0%0D%0A++++++++%22AutoImportAtFirstRun%22++++++++++++%3D+0%0D%0A++++++++%22HubsSidebarEnabled%22++++++++++++++%3D+0%0D%0A++++%7D%0D%0A++++foreach+%28%24name+in+%24EdgeSettings.Keys%29+%7B%0D%0A++++++++Set-ItemProperty+-Path+%24EdgePol+-Name+%24name+-Value+%24EdgeSettings%5B%24name%5D+-Type+DWord+-Force%0D%0A++++%7D%0D%0A%0D%0A++++%23+%D0%9E%D1%82%D0%BA%D0%BB%D1%8E%D1%87%D0%B5%D0%BD%D0%B8%D0%B5+%D1%81%D0%BB%D1%83%D0%B6%D0%B1+%D0%BE%D0%B1%D0%BD%D0%BE%D0%B2%D0%BB%D0%B5%D0%BD%D0%B8%D1%8F+Edge%0D%0A++++%24EdgeServices+%3D+%40%28%22edgeupdate%22%2C+%22edgeupdatem%22%2C+%22MicrosoftEdgeElevationService%22%29%0D%0A++++foreach+%28%24svc+in+%24EdgeServices%29+%7B%0D%0A++++++++if+%28Get-Service+-Name+%24svc+-ErrorAction+SilentlyContinue%29+%7B%0D%0A++++++++++++Stop-Service+-Name+%24svc+-Force+-ErrorAction+SilentlyContinue%0D%0A++++++++++++Set-Service+-Name+%24svc+-StartupType+Disabled%0D%0A++++++++%7D%0D%0A++++%7D%0D%0A%0D%0A++++%23+%D0%A3%D0%B4%D0%B0%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5+%D0%B7%D0%B0%D0%B4%D0%B0%D1%87+Edge+%D0%B2+%D0%BF%D0%BB%D0%B0%D0%BD%D0%B8%D1%80%D0%BE%D0%B2%D1%89%D0%B8%D0%BA%D0%B5%0D%0A++++Get-ScheduledTask+-TaskPath+%22%5C%22+-ErrorAction+SilentlyContinue+%7C+%0D%0A++++++++Where-Object+%7B+%24_.TaskName+-like+%22*MicrosoftEdge*%22+%7D+%7C+%0D%0A++++++++Disable-ScheduledTask+-ErrorAction+SilentlyContinue%0D%0A%0D%0A++++%23+%D0%9E%D0%B1%D1%85%D0%BE%D0%B4+Active+Setup+%28%D0%BF%D1%80%D0%B5%D0%B4%D0%BE%D1%82%D0%B2%D1%80%D0%B0%D1%89%D0%B0%D0%B5%D1%82+%D1%81%D0%BE%D0%B7%D0%B4%D0%B0%D0%BD%D0%B8%D0%B5+%D1%8F%D1%80%D0%BB%D1%8B%D0%BA%D0%BE%D0%B2+Edge+%D0%BF%D1%80%D0%B8+%D0%B2%D1%85%D0%BE%D0%B4%D0%B5+%D0%BB%D1%8E%D0%B1%D0%BE%D0%B3%D0%BE+%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D1%82%D0%B5%D0%BB%D1%8F%29%0D%0A++++%24ActiveSetup+%3D+%22HKLM%3A%5CSOFTWARE%5CMicrosoft%5CActive+Setup%5CInstalled+Components%22%0D%0A++++Get-ChildItem+%24ActiveSetup+-ErrorAction+SilentlyContinue+%7C+Where-Object+%7B+%28Get-ItemProperty+%24_.PsPath+-ErrorAction+SilentlyContinue%29.StubPath+-like+%22*MicrosoftEdge*%22+%7D+%7C+ForEach-Object+%7B%0D%0A++++++++Set-ItemProperty+-Path+%24_.PsPath+-Name+%22StubPath%22+-Value+%22%22+-Force%0D%0A++++%7D%0D%0A%0D%0A++++%23+%D0%A3%D0%B4%D0%B0%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5+%D1%8F%D1%80%D0%BB%D1%8B%D0%BA%D0%BE%D0%B2+Edge+%D0%B8+Teams+%D1%81+%D0%BE%D0%B1%D1%89%D0%B5%D0%B3%D0%BE+%D0%A0%D0%B0%D0%B1%D0%BE%D1%87%D0%B5%D0%B3%D0%BE+%D1%81%D1%82%D0%BE%D0%BB%D0%B0%0D%0A++++Get-ChildItem+-Path+%22%24env%3APUBLIC%5CDesktop%22+-Filter+%22*.lnk%22+%7C+Where-Object+%7B+%24_.Name+-match+%22Edge%7CTeams%22+%7D+%7C+Remove-Item+-Force+-ErrorAction+SilentlyContinue%0D%0A%0D%0A++++%23+%D0%A1%D0%BE%D0%B7%D0%B4%D0%B0%D0%BD%D0%B8%D0%B5+%D0%BA%D0%B0%D1%81%D1%82%D0%BE%D0%BC%D0%BD%D0%BE%D0%B3%D0%BE+%D0%BC%D0%B0%D0%BA%D0%B5%D1%82%D0%B0+%D0%9F%D0%B0%D0%BD%D0%B5%D0%BB%D0%B8+%D0%B7%D0%B0%D0%B4%D0%B0%D1%87+%28XML%29+%D1%81%D1%80%D0%B0%D0%B7%D1%83+%D0%B2+%D0%BF%D0%B0%D0%BF%D0%BA%D0%B5+Default+User%0D%0A++++Write-Host+%22%3E%3E%3E+%D0%A1%D0%BE%D0%B7%D0%B4%D0%B0%D0%BD%D0%B8%D0%B5+%D1%87%D0%B8%D1%81%D1%82%D0%BE%D0%B3%D0%BE+XML+%D0%BC%D0%B0%D0%BA%D0%B5%D1%82%D0%B0+%D0%9F%D0%B0%D0%BD%D0%B5%D0%BB%D0%B8+%D0%B7%D0%B0%D0%B4%D0%B0%D1%87...%22%0D%0A++++%24LayoutXml+%3D+%40%22%0D%0A%3CLayoutModificationTemplate+xmlns%3D%22http%3A%2F%2Fschemas.microsoft.com%2FStart%2F2014%2FLayoutModification%22+xmlns%3Adefaultlayout%3D%22http%3A%2F%2Fschemas.microsoft.com%2FStart%2F2014%2FFullDefaultLayout%22+xmlns%3Astart%3D%22http%3A%2F%2Fschemas.microsoft.com%2FStart%2F2014%2FStartLayout%22+xmlns%3Ataskbar%3D%22http%3A%2F%2Fschemas.microsoft.com%2FStart%2F2014%2FTaskbarLayout%22+Version%3D%221%22%3E%0D%0A++%3CLayoutOptions+StartTileGroupCellWidth%3D%226%22+%2F%3E%0D%0A++%3CDefaultLayoutOverride%3E%3CStartLayoutCollection%3E%3Cdefaultlayout%3AStartLayout+GroupCellWidth%3D%226%22+%2F%3E%3C%2FStartLayoutCollection%3E%3C%2FDefaultLayoutOverride%3E%0D%0A++%3CCustomTaskbarLayoutCollection+PinListPlacement%3D%22Replace%22%3E%0D%0A++++%3Cdefaultlayout%3ATaskbarLayout%3E%3Ctaskbar%3ATaskbarPinList%3E%0D%0A++++++++%3Ctaskbar%3ADesktopApp+DesktopApplicationID%3D%22Microsoft.Windows.Explorer%22+%2F%3E%0D%0A++++%3C%2Ftaskbar%3ATaskbarPinList%3E%3C%2Fdefaultlayout%3ATaskbarLayout%3E%0D%0A++%3C%2FCustomTaskbarLayoutCollection%3E%0D%0A%3C%2FLayoutModificationTemplate%3E%0D%0A%22%40%0D%0A++++%24D_Shell+%3D+%22C%3A%5CUsers%5CDefault%5CAppData%5CLocal%5CMicrosoft%5CWindows%5CShell%22%0D%0A++++if+%28%21%28Test-Path+%24D_Shell%29%29+%7B+New-Item+-Path+%24D_Shell+-ItemType+Directory+-Force+%7C+Out-Null+%7D%0D%0A++++%24LayoutXml+%7C+Out-File+-FilePath+%22%24D_Shell%5CLayoutModification.xml%22+-Encoding+UTF8+-Force%0D%0A%0D%0A%0D%0A++++%23+%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%0D%0A++++%23+2.+%D0%96%D0%95%D0%A1%D0%A2%D0%9A%D0%98%D0%99+%D0%90%D0%9D%D0%A2%D0%98%D0%94%D0%9E%D0%A2+%D0%9F%D0%A0%D0%9E%D0%A2%D0%98%D0%92+%D0%9E%D0%91%D0%A5%D0%9E%D0%94%D0%90+%D0%9D%D0%9E%D0%92%D0%9E%D0%93%D0%9E+OUTLOOK+%28%D0%A4%D0%B8%D1%88%D0%BA%D0%B0+2025%2F2026+%D0%B3%D0%B3.%29%0D%0A++++%23+%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%0D%0A++++Write-Host+%22%3E%3E%3E+%D0%90%D0%BF%D0%BF%D0%B0%D1%80%D0%B0%D1%82%D0%BD%D0%BE%D0%B5+%D0%BE%D1%82%D0%BA%D0%BB%D1%8E%D1%87%D0%B5%D0%BD%D0%B8%D0%B5+OOBE-%D0%B0%D0%BF%D0%B4%D0%B5%D0%B9%D1%82%D0%B5%D1%80%D0%B0+%D0%B4%D0%BB%D1%8F+Outlook...%22%0D%0A++++%24USchedulerPath+%3D+%22HKLM%3A%5CSOFTWARE%5CMicrosoft%5CWindowsUpdate%5COrchestrator%5CUScheduler_Oobe%22%0D%0A++++if+%28-not+%28Test-Path+%24USchedulerPath%29%29+%7B+New-Item+-Path+%24USchedulerPath+-Force+%7C+Out-Null+%7D%0D%0A++++Set-ItemProperty+-Path+%24USchedulerPath+-Name+%22BlockedOobeUpdaters%22+-Value+%27%5B%22MS_Outlook%22%5D%27+-Type+String+-Force%0D%0A++++%0D%0A++++%24OutlookUpdateTask+%3D+%22HKLM%3A%5CSOFTWARE%5CMicrosoft%5CWindowsUpdate%5COrchestrator%5CUScheduler_Oobe%5COutlookUpdate%22%0D%0A++++if+%28Test-Path+%24OutlookUpdateTask%29+%7B+Remove-Item+-Path+%24OutlookUpdateTask+-Recurse+-Force+%7D%0D%0A%0D%0A++++%24OutlookPolicyPath+%3D+%22HKLM%3A%5CSOFTWARE%5CPolicies%5CMicrosoft%5COffice%5C16.0%5COutlook%5COptions%5CGeneral%22%0D%0A++++if+%28-not+%28Test-Path+%24OutlookPolicyPath%29%29+%7B+New-Item+-Path+%24OutlookPolicyPath+-Force+%7C+Out-Null+%7D%0D%0A++++Set-ItemProperty+-Path+%24OutlookPolicyPath+-Name+%22HideNewOutlookToggle%22+-Value+1+-Type+DWord+-Force%0D%0A++++%0D%0A++++%24OutlookPrefPath+%3D+%22HKLM%3A%5CSOFTWARE%5CPolicies%5CMicrosoft%5COffice%5C16.0%5COutlook%5CPreferences%22%0D%0A++++if+%28-not+%28Test-Path+%24OutlookPrefPath%29%29+%7B+New-Item+-Path+%24OutlookPrefPath+-Force+%7C+Out-Null+%7D%0D%0A++++Set-ItemProperty+-Path+%24OutlookPrefPath+-Name+%22NewOutlookMigrationUserSetting%22+-Value+0+-Type+DWord+-Force%0D%0A%0D%0A%0D%0A++++%23+%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%0D%0A++++%23+3.+%D0%9D%D0%90%D0%A1%D0%A2%D0%A0%D0%9E%D0%99%D0%9A%D0%90+%D0%94%D0%95%D0%A4%D0%9E%D0%9B%D0%A2%D0%9D%D0%9E%D0%93%D0%9E+%D0%9F%D0%A0%D0%9E%D0%A4%D0%98%D0%9B%D0%AF+%D0%9F%D0%9E%D0%9B%D0%AC%D0%97%D0%9E%D0%92%D0%90%D0%A2%D0%95%D0%9B%D0%AF+%28NTUSER.DAT%29%0D%0A++++%23+%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%2D%0D%0A++++Write-Host+%22%3E%3E%3E+%D0%9C%D0%BE%D0%BD%D1%82%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5+%D0%B4%D0%B5%D1%84%D0%BE%D0%BB%D1%82%D0%BD%D0%BE%D0%B3%D0%BE+%D0%BA%D1%83%D1%81%D1%82%D0%B0+%D1%80%D0%B5%D0%B5%D1%81%D1%82%D1%80%D0%B0+%D0%B4%D0%BB%D1%8F+%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B8+%D0%BF%D1%80%D0%BE%D1%84%D0%B8%D0%BB%D0%B5%D0%B9...%22%0D%0A++++%24DefaultHivePath+%3D+%22C%3A%5CUsers%5CDefault%5CNTUSER.DAT%22%0D%0A++++%0D%0A++++if+%28-not+%28Test-Path+%22HKLM%3A%5CTargetUser%22%29%29+%7B%0D%0A++++++++reg+load+%22HKLM%5CTargetUser%22+%24DefaultHivePath+%7C+Out-Null%0D%0A++++%7D%0D%0A%0D%0A++++%24PathsToTweak+%3D+%40%28%0D%0A++++++++%22HKLM%3A%5CTargetUser%5CSoftware%5CMicrosoft%5CWindows%5CCurrentVersion%5CContentDeliveryManager%22%2C%0D%0A++++++++%22HKLM%3A%5CTargetUser%5CSoftware%5CPolicies%5CMicrosoft%5CWindows%5CCloudContent%22%2C%0D%0A++++++++%22HKLM%3A%5CTargetUser%5CSoftware%5CPolicies%5CMicrosoft%5CEdge%22%2C%0D%0A++++++++%22HKLM%3A%5CTargetUser%5CSoftware%5CMicrosoft%5CWindows%5CCurrentVersion%5CSearch%22%2C%0D%0A++++++++%22HKLM%3A%5CTargetUser%5CSoftware%5CMicrosoft%5CWindows%5CCurrentVersion%5CExplorer%5CAdvanced%22%2C%0D%0A++++++++%22HKLM%3A%5CTargetUser%5CSoftware%5CMicrosoft%5CWindows%5CCurrentVersion%5CExplorer%5CHideDesktopIcons%5CNewStartPanel%22%0D%0A++++%29%0D%0A++++foreach+%28%24Path+in+%24PathsToTweak%29+%7B%0D%0A++++++++if+%28-not+%28Test-Path+%24Path%29%29+%7B+New-Item+-Path+%24Path+-Force+%7C+Out-Null+%7D%0D%0A++++%7D%0D%0A%0D%0A++++%23+%D0%9F%D1%80%D0%B8%D0%BC%D0%B5%D0%BD%D1%8F%D0%B5%D0%BC+%D0%B2%D0%B5%D1%81%D1%8C+%D1%81%D0%BF%D0%B5%D0%BA%D1%82%D1%80+%D0%B1%D0%BB%D0%BE%D0%BA%D0%B8%D1%80%D0%BE%D0%B2%D0%BE%D0%BA+%D1%80%D0%B5%D0%BA%D0%BB%D0%B0%D0%BC%D1%8B+%D0%B8+%D0%B0%D0%B2%D1%82%D0%BE%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BE%D0%BA%0D%0A++++Set-ItemProperty+-Path+%22HKLM%3A%5CTargetUser%5CSoftware%5CPolicies%5CMicrosoft%5CWindows%5CCloudContent%22+-Name+%22DisableWindowsConsumerFeatures%22+-Value+1+-Type+DWord+-Force%0D%0A++++Set-ItemProperty+-Path+%22HKLM%3A%5CTargetUser%5CSoftware%5CPolicies%5CMicrosoft%5CWindows%5CCloudContent%22+-Name+%22DisableWindowsSpotlightFeatures%22+-Value+1+-Type+DWord+-Force%0D%0A++++foreach+%28%24Key+in+%24CdmTweaks.Keys%29+%7B%0D%0A++++++++Set-ItemProperty+-Path+%22HKLM%3A%5CTargetUser%5CSoftware%5CMicrosoft%5CWindows%5CCurrentVersion%5CContentDeliveryManager%22+-Name+%24Key+-Value+%24CdmTweaks%5B%24Key%5D+-Type+DWord+-Force%0D%0A++++%7D%0D%0A%0D%0A++++%23+%D0%9D%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B8+Edg&SystemScriptType0=Ps1&FirstLogonScript0=%23+%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%0D%0A%23+%D0%9F%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0+%D0%BF%D1%80%D0%B0%D0%B2+%D0%B0%D0%B4%D0%BC%D0%B8%D0%BD%D0%B8%D1%81%D1%82%D1%80%D0%B0%D1%82%D0%BE%D1%80%D0%B0%0D%0A%23+%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%0D%0A%24isAdmin+%3D+%28%5BSecurity.Principal.WindowsPrincipal%5D%5BSecurity.Principal.WindowsIdentity%5D%3A%3AGetCurrent%28%29%29.IsInRole%28%5BSecurity.Principal.WindowsBuiltInRole%5D%3A%3AAdministrator%29%0D%0A%0D%0Aif+%28-not+%24isAdmin%29+%7B%0D%0A++++%23+%D0%9F%D0%B5%D1%80%D0%B5%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA+%D1%81+%D0%BF%D1%80%D0%B0%D0%B2%D0%B0%D0%BC%D0%B8+%D0%B0%D0%B4%D0%BC%D0%B8%D0%BD%D0%B0+%D0%B8+%D1%81%D0%BA%D1%80%D1%8B%D1%82%D0%B8%D0%B5%D0%BC+%D1%87%D0%B5%D1%80%D0%BD%D0%BE%D0%B3%D0%BE+%D0%BE%D0%BA%D0%BD%D0%B0+%D0%BA%D0%BE%D0%BD%D1%81%D0%BE%D0%BB%D0%B8+%28-WindowStyle+Hidden%29%0D%0A++++Start-Process+powershell.exe+-ArgumentList+%22-NoProfile+-ExecutionPolicy+Bypass+-WindowStyle+Hidden+-File+%60%22%24PSCommandPath%60%22%22+-Verb+RunAs%0D%0A++++exit%0D%0A%7D%0D%0A%0D%0A%23+%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%0D%0A%23+%D0%A4%D1%83%D0%BD%D0%BA%D1%86%D0%B8%D0%B8+%D0%B8+%D0%B8%D0%BD%D1%82%D0%B5%D1%80%D1%84%D0%B5%D0%B9%D1%81+%28WPF%29%0D%0A%23+%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%0D%0AAdd-Type+-AssemblyName+PresentationFramework%0D%0A%0D%0A%23+XAML-%D0%B4%D0%B8%D0%B7%D0%B0%D0%B9%D0%BD+%D0%BE%D0%BA%D0%BD%D0%B0+%28%D1%82%D0%B5%D0%BC%D0%BD%D0%B0%D1%8F+%D1%82%D0%B5%D0%BC%D0%B0%2C+%D1%83%D0%B2%D0%B5%D0%BB%D0%B8%D1%87%D0%B5%D0%BD%D0%B0+%D0%B2%D1%8B%D1%81%D0%BE%D1%82%D0%B0+%D0%B4%D0%BE+340+%D0%B4%D0%BB%D1%8F+%D0%B2%D0%BC%D0%B5%D1%89%D0%B5%D0%BD%D0%B8%D1%8F+%D1%82%D0%B5%D0%BA%D1%81%D1%82%D0%B0%29%0D%0A%5Bxml%5D%24xaml+%3D+%40%22%0D%0A%3CWindow+xmlns%3D%22http%3A%2F%2Fschemas.microsoft.com%2Fwinfx%2F2006%2Fxaml%2Fpresentation%22%0D%0A++++++++xmlns%3Ax%3D%22http%3A%2F%2Fschemas.microsoft.com%2Fwinfx%2F2006%2Fxaml%22%0D%0A++++++++WindowStyle%3D%22None%22+AllowsTransparency%3D%22True%22+Background%3D%22%23151720%22%0D%0A++++++++WindowStartupLocation%3D%22CenterScreen%22+Width%3D%22650%22+Height%3D%22340%22+Topmost%3D%22True%22%3E%0D%0A++++%3CBorder+BorderBrush%3D%22%234C7BB0%22+BorderThickness%3D%221%22+CornerRadius%3D%220%22%3E%0D%0A++++++++%3CGrid+Margin%3D%2230%2C25%2C30%2C25%22%3E%0D%0A++++++++++++%3CGrid.RowDefinitions%3E%0D%0A++++++++++++++++%3CRowDefinition+Height%3D%22Auto%22%2F%3E%0D%0A++++++++++++++++%3CRowDefinition+Height%3D%22Auto%22%2F%3E%0D%0A++++++++++++++++%3CRowDefinition+Height%3D%22*%22%2F%3E%0D%0A++++++++++++++++%3CRowDefinition+Height%3D%22Auto%22%2F%3E%0D%0A++++++++++++++++%3CRowDefinition+Height%3D%22Auto%22%2F%3E%0D%0A++++++++++++%3C%2FGrid.RowDefinitions%3E%0D%0A++++++++++++%0D%0A++++++++++++%3CGrid+Grid.Row%3D%220%22%3E%0D%0A++++++++++++++++%3CTextBlock+Text%3D%22%D0%97%D0%90%D0%93%D0%A0%D0%A3%D0%97%D0%A7%D0%98%D0%9A+%D0%90%D0%92%D0%A2%D0%9E%D0%9C%D0%90%D0%A2%D0%98%D0%A7%D0%95%D0%A1%D0%9A%D0%9E%D0%99+%D0%9D%D0%90%D0%A1%D0%A2%D0%A0%D0%9E%D0%99%D0%9A%D0%98%22+Foreground%3D%22%237A9EEB%22+FontSize%3D%2218%22+FontWeight%3D%22Bold%22+VerticalAlignment%3D%22Center%22+%2F%3E%0D%0A++++++++++++++++%0D%0A++++++++++++++++%3C%21%2D%2D+%D0%9A%D0%B0%D1%81%D1%82%D0%BE%D0%BC%D0%BD%D0%B0%D1%8F+%D0%BA%D0%BD%D0%BE%D0%BF%D0%BA%D0%B0+%D0%B7%D0%B0%D0%BA%D1%80%D1%8B%D1%82%D0%B8%D1%8F+%28%D0%9A%D1%80%D0%B5%D1%81%D1%82%D0%B8%D0%BA+%D1%81%D0%B2%D0%B5%D1%80%D1%85%D1%83%29+%2D%2D%3E%0D%0A++++++++++++++++%3CButton+Name%3D%22BtnCloseTop%22+Content%3D%22%E2%9C%95%22+HorizontalAlignment%3D%22Right%22+VerticalAlignment%3D%22Center%22+Width%3D%2230%22+Height%3D%2230%22+FontSize%3D%2216%22+Cursor%3D%22Hand%22+ToolTip%3D%22%D0%97%D0%B0%D0%BA%D1%80%D1%8B%D1%82%D1%8C%22%3E%0D%0A++++++++++++++++++++%3CButton.Template%3E%0D%0A++++++++++++++++++++++++%3CControlTemplate+TargetType%3D%22Button%22%3E%0D%0A++++++++++++++++++++++++++++%3CBorder+Name%3D%22Border%22+BorderBrush%3D%22%234C7BB0%22+BorderThickness%3D%221%22+Background%3D%22Transparent%22%3E%0D%0A++++++++++++++++++++++++++++++++%3CTextBlock+Text%3D%22%7BTemplateBinding+Content%7D%22+HorizontalAlignment%3D%22Center%22+VerticalAlignment%3D%22Center%22+Margin%3D%220%2C0%2C0%2C2%22%2F%3E%0D%0A++++++++++++++++++++++++++++%3C%2FBorder%3E%0D%0A++++++++++++++++++++++++++++%3CControlTemplate.Triggers%3E%0D%0A++++++++++++++++++++++++++++++++%3CTrigger+Property%3D%22IsMouseOver%22+Value%3D%22True%22%3E%0D%0A++++++++++++++++++++++++++++++++++++%3CSetter+TargetName%3D%22Border%22+Property%3D%22Background%22+Value%3D%22%234C7BB0%22+%2F%3E%0D%0A++++++++++++++++++++++++++++++++++++%3CSetter+Property%3D%22Foreground%22+Value%3D%22White%22+%2F%3E%0D%0A++++++++++++++++++++++++++++++++%3C%2FTrigger%3E%0D%0A++++++++++++++++++++++++++++++++%3CTrigger+Property%3D%22IsMouseOver%22+Value%3D%22False%22%3E%0D%0A++++++++++++++++++++++++++++++++++++%3CSetter+Property%3D%22Foreground%22+Value%3D%22%237A9EEB%22+%2F%3E%0D%0A++++++++++++++++++++++++++++++++%3C%2FTrigger%3E%0D%0A++++++++++++++++++++++++++++%3C%2FControlTemplate.Triggers%3E%0D%0A++++++++++++++++++++++++%3C%2FControlTemplate%3E%0D%0A++++++++++++++++++++%3C%2FButton.Template%3E%0D%0A++++++++++++++++%3C%2FButton%3E%0D%0A++++++++++++%3C%2FGrid%3E%0D%0A++++++++++++%0D%0A++++++++++++%3CRectangle+Grid.Row%3D%221%22+Height%3D%221%22+Fill%3D%22%234C7BB0%22+Margin%3D%220%2C20%2C0%2C25%22%2F%3E%0D%0A++++++++++++%0D%0A++++++++++++%3CTextBlock+Name%3D%22TxtMessage%22+Grid.Row%3D%222%22+Foreground%3D%22White%22+FontSize%3D%2215%22+TextWrapping%3D%22Wrap%22+LineHeight%3D%2224%22+VerticalAlignment%3D%22Top%22+%2F%3E%0D%0A++++++++++++%0D%0A++++++++++++%3CTextBlock+Name%3D%22TxtNote%22+Grid.Row%3D%223%22+Foreground%3D%22%23888888%22+FontSize%3D%2212%22+TextWrapping%3D%22Wrap%22+HorizontalAlignment%3D%22Center%22+Margin%3D%220%2C10%2C0%2C0%22%2F%3E%0D%0A++++++++++++%0D%0A++++++++++++%3C%21%2D%2D+%D0%91%D0%BE%D0%BB%D1%8C%D1%88%D0%B0%D1%8F+%D0%BF%D0%BB%D0%BE%D1%81%D0%BA%D0%B0%D1%8F+%D0%BA%D0%BD%D0%BE%D0%BF%D0%BA%D0%B0+%D0%92%D0%AB%D0%A5%D0%9E%D0%94+%D1%81%D0%BD%D0%B8%D0%B7%D1%83+%2D%2D%3E%0D%0A++++++++++++%3CButton+Name%3D%22BtnExit%22+Grid.Row%3D%224%22+Content%3D%22%D0%92%D0%AB%D0%A5%D0%9E%D0%94%22+Height%3D%2240%22+Margin%3D%220%2C15%2C0%2C0%22+Cursor%3D%22Hand%22+FontWeight%3D%22Bold%22+FontSize%3D%2213%22+Foreground%3D%22White%22%3E%0D%0A++++++++++++++++%3CButton.Template%3E%0D%0A++++++++++++++++++++%3CControlTemplate+TargetType%3D%22Button%22%3E%0D%0A++++++++++++++++++++++++%3C%21%2D%2D+%D0%A6%D0%B2%D0%B5%D1%82+%D1%84%D0%BE%D0%BD%D0%B0+%D0%BA%D0%B0%D0%BA+%D0%BD%D0%B0+%D0%B2%D0%B0%D1%88%D0%B5%D0%BC+%D1%81%D0%BA%D1%80%D0%B8%D0%BD%D1%88%D0%BE%D1%82%D0%B5+%2D%2D%3E%0D%0A++++++++++++++++++++++++%3CBorder+Name%3D%22Border%22+Background%3D%22%23353746%22+BorderThickness%3D%220%22%3E%0D%0A++++++++++++++++++++++++++++%3CTextBlock+Text%3D%22%7BTemplateBinding+Content%7D%22+HorizontalAlignment%3D%22Center%22+VerticalAlignment%3D%22Center%22+Margin%3D%220%2C0%2C0%2C1%22%2F%3E%0D%0A++++++++++++++++++++++++%3C%2FBorder%3E%0D%0A++++++++++++++++++++++++%3CControlTemplate.Triggers%3E%0D%0A++++++++++++++++++++++++++++%3CTrigger+Property%3D%22IsMouseOver%22+Value%3D%22True%22%3E%0D%0A++++++++++++++++++++++++++++++++%3C%21%2D%2D+%D0%9F%D0%BE%D0%B4%D1%81%D0%B2%D0%B5%D1%82%D0%BA%D0%B0+%D0%BF%D1%80%D0%B8+%D0%BD%D0%B0%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B8+%2D%2D%3E%0D%0A++++++++++++++++++++++++++++++++%3CSetter+TargetName%3D%22Border%22+Property%3D%22Background%22+Value%3D%22%234A4D62%22+%2F%3E%0D%0A++++++++++++++++++++++++++++%3C%2FTrigger%3E%0D%0A++++++++++++++++++++++++%3C%2FControlTemplate.Triggers%3E%0D%0A++++++++++++++++++++%3C%2FControlTemplate%3E%0D%0A++++++++++++++++%3C%2FButton.Template%3E%0D%0A++++++++++++%3C%2FButton%3E%0D%0A++++++++%3C%2FGrid%3E%0D%0A++++%3C%2FBorder%3E%0D%0A%3C%2FWindow%3E%0D%0A%22%40%0D%0A%0D%0A%24reader+%3D+%28New-Object+System.Xml.XmlNodeReader+%24xaml%29%0D%0A%24window+%3D+%5BSystem.Windows.Markup.XamlReader%5D%3A%3ALoad%28%24reader%29%0D%0A%0D%0A%24txtMessage++%3D+%24window.FindName%28%22TxtMessage%22%29%0D%0A%24txtNote+++++%3D+%24window.FindName%28%22TxtNote%22%29%0D%0A%24btnCloseTop+%3D+%24window.FindName%28%22BtnCloseTop%22%29%0D%0A%24btnExit+++++%3D+%24window.FindName%28%22BtnExit%22%29%0D%0A%0D%0A%23+%D0%9E%D0%B1%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D1%87%D0%B8%D0%BA%D0%B8+%D0%B7%D0%B0%D0%BA%D1%80%D1%8B%D1%82%D0%B8%D1%8F+%D0%BD%D0%B0+%D0%BE%D0%B1%D0%B5+%D0%BA%D0%BD%D0%BE%D0%BF%D0%BA%D0%B8%0D%0A%24btnCloseTop.Add_Click%28%7B+%24window.Close%28%29%3B+exit+%7D%29%0D%0A%24btnExit.Add_Click%28%7B+%24window.Close%28%29%3B+exit+%7D%29%0D%0A%0D%0A%23+%D0%A4%D1%83%D0%BD%D0%BA%D1%86%D0%B8%D1%8F+%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B8+%D0%B8%D0%BD%D1%82%D0%B5%D1%80%D0%BD%D0%B5%D1%82%D0%B0%0D%0Afunction+Test-Internet+%7B%0D%0A++++try+%7B%0D%0A++++++++%24request+%3D+%5BSystem.Net.WebRequest%5D%3A%3ACreate%28%22http%3A%2F%2Fclients3.google.com%2Fgenerate_204%22%29%0D%0A++++++++%24request.Timeout+%3D+3000%0D%0A++++++++%24response+%3D+%24request.GetResponse%28%29%0D%0A++++++++%24response.Close%28%29%0D%0A++++++++return+%24true%0D%0A++++%7D+catch+%7B%0D%0A++++++++return+%24false%0D%0A++++%7D%0D%0A%7D%0D%0A%0D%0A%23+%D0%9F%D1%83%D1%82%D0%B8+%D0%B4%D0%BB%D1%8F+%D1%81%D0%BE%D0%B7%D0%B4%D0%B0%D0%BD%D0%B8%D1%8F+%D1%84%D0%B0%D0%B9%D0%BB%D0%BE%D0%B2+%D0%BD%D0%B0+%D0%A0%D0%B0%D0%B1%D0%BE%D1%87%D0%B5%D0%BC+%D1%81%D1%82%D0%BE%D0%BB%D0%B5%0D%0A%24desktopPath+++%3D+%5BEnvironment%5D%3A%3AGetFolderPath%28%27Desktop%27%29%0D%0A%24loaderPs1Path+%3D+Join-Path+%24desktopPath+%22loader.ps1%22%0D%0A%24loaderCmdPath+%3D+Join-Path+%24desktopPath+%22Loader.cmd%22%0D%0A%0D%0A%23+%D0%9D%D0%B0%D0%B4%D0%B5%D0%B6%D0%BD%D0%BE%D0%B5+%D0%BE%D0%BF%D1%80%D0%B5%D0%B4%D0%B5%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5+%D0%BF%D1%83%D1%82%D0%B8+%D1%82%D0%B5%D0%BA%D1%83%D1%89%D0%B5%D0%B3%D0%BE+%D0%B7%D0%B0%D0%BF%D1%83%D1%89%D0%B5%D0%BD%D0%BD%D0%BE%D0%B3%D0%BE+%D1%81%D0%BA%D1%80%D0%B8%D0%BF%D1%82%D0%B0%0D%0A%24currentScriptPath+%3D+%24PSCommandPath%0D%0Aif+%28%5Bstring%5D%3A%3AIsNullOrWhiteSpace%28%24currentScriptPath%29%29+%7B%0D%0A++++%24currentScriptPath+%3D+%24MyInvocation.MyCommand.Definition%0D%0A%7D%0D%0A%0D%0A%23+%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%0D%0A%23+%D0%9B%D0%BE%D0%B3%D0%B8%D0%BA%D0%B0%3A+%D0%98%D0%BD%D1%82%D0%B5%D1%80%D0%BD%D0%B5%D1%82+%D0%9E%D0%A2%D0%A1%D0%A3%D0%A2%D0%A1%D0%A2%D0%92%D0%A3%D0%95%D0%A2%0D%0A%23+%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%0D%0Aif+%28-not+%28Test-Internet%29%29+%7B%0D%0A++++if+%28Test-Path+%24currentScriptPath%29+%7B%0D%0A++++++++%23+1.+%D0%9A%D0%BE%D0%BF%D0%B8%D1%80%D1%83%D0%B5%D0%BC+%D1%81%D0%B0%D0%BC+%D1%81%D0%BA%D1%80%D0%B8%D0%BF%D1%82+%28.ps1%29%0D%0A++++++++Copy-Item+-Path+%24currentScriptPath+-Destination+%24loaderPs1Path+-Force%0D%0A++++++++%0D%0A++++++++%23+%D0%94%D0%B5%D0%BB%D0%B0%D0%B5%D0%BC+%D1%84%D0%B0%D0%B9%D0%BB+loader.ps1+%D1%81%D0%BA%D1%80%D1%8B%D1%82%D1%8B%D0%BC%0D%0A++++++++%24ps1File+%3D+Get-Item+-Path+%24loaderPs1Path+-Force%0D%0A++++++++%24ps1File.Attributes+%3D+%24ps1File.Attributes+-bor+%5BSystem.IO.FileAttributes%5D%3A%3AHidden%0D%0A++++++++%0D%0A++++++++%23+2.+%D0%A1%D0%BE%D0%B7%D0%B4%D0%B0%D0%B5%D0%BC+%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA%D0%B0%D1%82%D0%BE%D1%80+Loader.cmd+%28%D0%B2%D0%BD%D1%83%D1%82%D1%80%D0%B8+%D1%81%D0%BA%D1%80%D0%B8%D0%BF%D1%82+%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA%D0%B0%D0%B5%D1%82+powershell+%D1%81%D0%BA%D1%80%D1%8B%D1%82%D0%BD%D0%BE%29%0D%0A++++++++%24cmdContent+%3D+%22%40echo+off%60r%60nPowerShell.exe+-NoProfile+-ExecutionPolicy+Bypass+-WindowStyle+Hidden+-File+%60%22%25~dp0loader.ps1%60%22%22%0D%0A++++++++Set-Content+-Path+%24loaderCmdPath+-Value+%24cmdContent+-Force%0D%0A++++%7D%0D%0A++++%0D%0A++++%23+%D0%9D%D0%B0%D1%81%D1%82%D1%80%D0%B0%D0%B8%D0%B2%D0%B0%D0%B5%D0%BC+%D1%82%D0%B5%D0%BA%D1%81%D1%82+%D0%BE%D0%BA%D0%BD%D0%B0%0D%0A++++%24txtMessage.Text+%3D+%22%D0%A1%D0%BE%D0%B5%D0%B4%D0%B8%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5+%D1%81+%D0%B8%D0%BD%D1%82%D0%B5%D1%80%D0%BD%D0%B5%D1%82%D0%BE%D0%BC+%D0%BD%D0%B5+%D0%BE%D0%B1%D0%BD%D0%B0%D1%80%D1%83%D0%B6%D0%B5%D0%BD%D0%BE%21%60n%60n%D0%9F%D0%BE%D0%B6%D0%B0%D0%BB%D1%83%D0%B9%D1%81%D1%82%D0%B0%2C+%D0%BF%D0%BE%D0%B4%D0%BA%D0%BB%D1%8E%D1%87%D0%B8%D1%82%D0%B5%D1%81%D1%8C+%D0%BA+%D1%81%D0%B5%D1%82%D0%B8+%28%D0%B2%D0%BA%D0%BB%D1%8E%D1%87%D0%B8%D1%82%D0%B5+Wi-Fi+%D0%B8%D0%BB%D0%B8+%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D1%8C%D1%82%D0%B5+Ethernet-%D0%BA%D0%B0%D0%B1%D0%B5%D0%BB%D1%8C%29+%D0%B8+%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D1%82%D0%B8%D1%82%D0%B5+%D0%BF%D0%BE%D1%8F%D0%B2%D0%B8%D0%B2%D1%88%D0%B8%D0%B9%D1%81%D1%8F+%D1%84%D0%B0%D0%B9%D0%BB+%C2%ABLoader.cmd%C2%BB+%D1%81+%D0%A0%D0%B0%D0%B1%D0%BE%D1%87%D0%B5%D0%B3%D0%BE+%D1%81%D1%82%D0%BE%D0%BB%D0%B0.%22%0D%0A++++%24txtMessage.Foreground+%3D+%22%23E57373%22+%23+%D0%9A%D1%80%D0%B0%D1%81%D0%BD%D1%8B%D0%B9+%D0%BE%D1%82%D1%82%D0%B5%D0%BD%D0%BE%D0%BA%0D%0A++++%0D%0A++++%23+%D0%9E%D1%87%D0%B8%D1%89%D0%B0%D0%B5%D0%BC+%D0%BD%D0%B8%D0%B6%D0%BD%D1%8E%D1%8E+%D0%BD%D0%B0%D0%B4%D0%BF%D0%B8%D1%81%D1%8C%2C+%D0%BA%D0%BD%D0%BE%D0%BF%D0%BA%D0%B0+%D0%92%D0%AB%D0%A5%D0%9E%D0%94+%D0%BE%D1%81%D1%82%D0%B0%D0%B5%D1%82%D1%81%D1%8F+%D0%B2%D0%B8%D0%B4%D0%B8%D0%BC%D0%BE%D0%B9%0D%0A++++%24txtNote.Text+%3D+%22%22+%0D%0A++++%0D%0A++++%23+%D0%9F%D0%BE%D0%BA%D0%B0%D0%B7%D1%8B%D0%B2%D0%B0%D0%B5%D0%BC+%D0%BE%D0%BA%D0%BD%D0%BE+%D0%B8+%D0%B6%D0%B4%D0%B5%D0%BC+%D0%B7%D0%B0%D0%BA%D1%80%D1%8B%D1%82%D0%B8%D1%8F%0D%0A++++%24window.ShowDialog%28%29+%7C+Out-Null%0D%0A++++exit%0D%0A%7D%0D%0A%0D%0A%23+%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%0D%0A%23+%D0%9B%D0%BE%D0%B3%D0%B8%D0%BA%D0%B0%3A+%D0%98%D0%BD%D1%82%D0%B5%D1%80%D0%BD%D0%B5%D1%82+%D0%95%D0%A1%D0%A2%D0%AC%0D%0A%23+%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%3D%0D%0A%0D%0A%23+%D0%A3%D0%B4%D0%B0%D0%BB%D1%8F%D0%B5%D0%BC+%D0%B2%D1%80%D0%B5%D0%BC%D0%B5%D0%BD%D0%BD%D1%8B%D0%B5+%D1%84%D0%B0%D0%B9%D0%BB%D1%8B+%D1%81+%D1%80%D0%B0%D0%B1%D0%BE%D1%87%D0%B5%D0%B3%D0%BE+%D1%81%D1%82%D0%BE%D0%BB%D0%B0%2C+%D1%82%D0%B0%D0%BA+%D0%BA%D0%B0%D0%BA+%D0%BE%D0%BD%D0%B8+%D0%B1%D0%BE%D0%BB%D1%8C%D1%88%D0%B5+%D0%BD%D0%B5+%D0%BD%D1%83%D0%B6%D0%BD%D1%8B+%28%D0%B8%D0%BD%D1%82%D0%B5%D1%80%D0%BD%D0%B5%D1%82+%D0%B5%D1%81%D1%82%D1%8C%29%0D%0Aif+%28Test-Path+%24loaderPs1Path%29+%7B+Remove-Item+-Path+%24loaderPs1Path+-Force+-ErrorAction+SilentlyContinue+%7D%0D%0Aif+%28Test-Path+%24loaderCmdPath%29+%7B+Remove-Item+-Path+%24loaderCmdPath+-Force+-ErrorAction+SilentlyContinue+%7D%0D%0A%0D%0A%23+%D0%9D%D0%B0%D1%81%D1%82%D1%80%D0%B0%D0%B8%D0%B2%D0%B0%D0%B5%D0%BC+%D0%BE%D0%BA%D0%BD%D0%BE+%D0%BF%D0%BE%D0%B4+%D0%B7%D0%B0%D0%B3%D1%80%D1%83%D0%B7%D0%BA%D1%83+%28%D0%BF%D1%80%D1%8F%D1%87%D0%B5%D0%BC+%D0%BA%D1%80%D0%B5%D1%81%D1%82%D0%B8%D0%BA+%D1%81%D0%B2%D0%B5%D1%80%D1%85%D1%83+%D0%B8+%D0%BA%D0%BD%D0%BE%D0%BF%D0%BA%D1%83+%D1%81%D0%BD%D0%B8%D0%B7%D1%83%29%0D%0A%24btnCloseTop.Visibility+%3D+%22Hidden%22+%0D%0A%24btnExit.Visibility+%3D+%22Collapsed%22+%23+%D0%A1%D1%85%D0%BB%D0%BE%D0%BF%D1%8B%D0%B2%D0%B0%D0%B5%D0%BC+%D0%BA%D0%BD%D0%BE%D0%BF%D0%BA%D1%83+%D0%92%D0%AB%D0%A5%D0%9E%D0%94%2C+%D1%87%D1%82%D0%BE%D0%B1%D1%8B+%D0%BE%D0%BD%D0%B0+%D0%BD%D0%B5+%D0%B7%D0%B0%D0%BD%D0%B8%D0%BC%D0%B0%D0%BB%D0%B0+%D0%BC%D0%B5%D1%81%D1%82%D0%BE%0D%0A%0D%0A%24txtMessage.Text+%3D+%22%E2%9C%93+%D0%A1%D0%BE%D0%B5%D0%B4%D0%B8%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5+%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BB%D0%B5%D0%BD%D0%BE.%60n%60n%D0%98%D0%B4%D0%B5%D1%82+%D1%81%D0%BA%D0%B0%D1%87%D0%B8%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5+%D1%80%D0%B5%D0%BF%D0%BE%D0%B7%D0%B8%D1%82%D0%BE%D1%80%D0%B8%D1%8F+%D0%B8+%D1%80%D0%B0%D1%81%D0%BF%D0%B0%D0%BA%D0%BE%D0%B2%D0%BA%D0%B0+%D1%84%D0%B0%D0%B9%D0%BB%D0%BE%D0%B2...%60n%D0%9F%D0%BE%D0%B6%D0%B0%D0%BB%D1%83%D0%B9%D1%81%D1%82%D0%B0%2C+%D0%BF%D0%BE%D0%B4%D0%BE%D0%B6%D0%B4%D0%B8%D1%82%D0%B5.%22%0D%0A%24txtMessage.Foreground+%3D+%22%2381C784%22+%23+%D0%97%D0%B5%D0%BB%D0%B5%D0%BD%D1%8B%D0%B9+%D0%BE%D1%82%D1%82%D0%B5%D0%BD%D0%BE%D0%BA%0D%0A%24txtNote.Text+%3D+%22%D0%9F%D0%BE%D0%B6%D0%B0%D0%BB%D1%83%D0%B9%D1%81%D1%82%D0%B0%2C+%D0%BD%D0%B5+%D0%B7%D0%B0%D0%BA%D1%80%D1%8B%D0%B2%D0%B0%D0%B9%D1%82%D0%B5+%D1%8D%D1%82%D0%BE+%D0%BE%D0%BA%D0%BD%D0%BE+%D0%B4%D0%BE+%D0%B7%D0%B0%D0%B2%D0%B5%D1%80%D1%88%D0%B5%D0%BD%D0%B8%D1%8F+%D1%81%D0%BA%D0%B0%D1%87%D0%B8%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F.%22%0D%0A%0D%0A%23+%D0%9F%D0%BE%D0%BA%D0%B0%D0%B7%D1%8B%D0%B2%D0%B0%D0%B5%D0%BC+%D0%BE%D0%BA%D0%BD%D0%BE+%D0%B0%D1%81%D0%B8%D0%BD%D1%85%D1%80%D0%BE%D0%BD%D0%BD%D0%BE%0D%0A%24window.Show%28%29%0D%0A%24window.Dispatcher.Invoke%28%5BAction%5D%7B%7D%2C+%5BSystem.Windows.Threading.DispatcherPriority%5D%3A%3ABackground%29%0D%0A%0D%0A%23+%2D%2D-+%D0%9F%D0%A0%D0%9E%D0%A6%D0%95%D0%A1%D0%A1+%D0%97%D0%90%D0%93%D0%A0%D0%A3%D0%97%D0%9A%D0%98+%2D%2D-%0D%0Atry+%7B%0D%0A++++%5BNet.ServicePointManager%5D%3A%3ASecurityProtocol+%3D+%5BNet.SecurityProtocolType%5D%3A%3ATls12%0D%0A%0D%0A++++%24targetBasePath+%3D+%22C%3A%5CWindows%5CSetup%22%0D%0A++++%24finalScriptsPath+%3D+Join-Path+-Path+%24targetBasePath+-ChildPath+%22Scripts%22%0D%0A++++%24zipPath+%3D+Join-Path+-Path+%24env%3ATEMP+-ChildPath+%22powershell-scripts.zip%22%0D%0A++++%24tempExtractPath+%3D+Join-Path+-Path+%24env%3ATEMP+-ChildPath+%22temp-repo-extract%22%0D%0A%0D%0A++++if+%28-not+%28Test-Path+%24targetBasePath%29%29+%7B+New-Item+-Path+%24targetBasePath+-ItemType+Directory+-Force+%7C+Out-Null+%7D%0D%0A++++if+%28Test-Path+%24tempExtractPath%29+%7B+Remove-Item+-Path+%24tempExtractPath+-Recurse+-Force+%7D%0D%0A++++if+%28Test-Path+%24finalScriptsPath%29+%7B+Remove-Item+-Path+%24finalScriptsPath+-Recurse+-Force+%7D%0D%0A%0D%0A++++%24urlMain+%3D+%22https%3A%2F%2Fgithub.com%2FAgentSharik%2Fpowershell-scripts%2Farchive%2Frefs%2Fheads%2Fmain.zip%22%0D%0A++++%24urlMaster+%3D+%22https%3A%2F%2Fgithub.com%2FAgentSharik%2Fpowershell-scripts%2Farchive%2Frefs%2Fheads%2Fmaster.zip%22%0D%0A%0D%0A++++try+%7B%0D%0A++++++++Invoke-WebRequest+-Uri+%24urlMain+-OutFile+%24zipPath+-ErrorAction+Stop%0D%0A++++%7D+catch+%7B%0D%0A++++++++Invoke-WebRequest+-Uri+%24urlMaster+-OutFile+%24zipPath%0D%0A++++%7D%0D%0A%0D%0A++++Expand-Archive+-Path+%24zipPath+-DestinationPath+%24tempExtractPath+-Force%0D%0A%0D%0A++++%24repoFolder+%3D+Get-ChildItem+-Path+%24tempExtractPath+-Directory+%7C+Select-Object+-First+1%0D%0A++++%24extractedScriptsFolder+%3D+Join-Path+-Path+%24repoFolder.FullName+-ChildPath+%22Scripts%5CScripts+for+Custom+Windows+%28with+Autounattend%29%22%0D%0A%0D%0A++++if+%28Test-Path+%24extractedScriptsFolder%29+%7B%0D%0A++++++++Move-Item+-Path+%24extractedScriptsFolder+-Destination+%24finalScriptsPath+-Force%0D%0A++++++++%0D%0A++++++++%23+%D0%98%D1%81%D0%BF%D1%80%D0%B0%D0%B2%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5+%D0%BA%D0%BE%D0%B4%D0%B8%D1%80%D0%BE%D0%B2%D0%BA%D0%B8+%28BOM%29%0D%0A++++++++%24psFiles+%3D+Get-ChildItem+-Path+%24finalScriptsPath+-Filter+%22*.ps1%22+-Recurse%0D%0A++++++++%24utf8Bom+%3D+New-Object+System.Text.UTF8Encoding%28%24true%29%0D%0A++++++++foreach+%28%24file+in+%24psFiles%29+%7B%0D%0A++++++++++++%24content+%3D+%5BSystem.IO.File%5D%3A%3AReadAllText%28%24file.FullName%2C+%5BSystem.Text.Encoding%5D%3A%3AUTF8%29%0D%0A++++++++++++%5BSystem.IO.File%5D%3A%3AWriteAllText%28%24file.FullName%2C+%24content%2C+%24utf8Bom%29%0D%0A++++++++%7D%0D%0A%0D%0A++++++++%24managerScript+%3D+Join-Path+-Path+%24finalScriptsPath+-ChildPath+%22manager.ps1%22%0D%0A++++++++if+%28Test-Path+%24managerScript%29+%7B%0D%0A++++++++++++%23+%D0%97%D0%B0%D0%BF%D1%83%D1%81%D0%BA%D0%B0%D0%B5%D0%BC+%D0%BE%D1%81%D0%BD%D0%BE%D0%B2%D0%BD%D0%BE%D0%B9+%D1%81%D0%BA%D1%80%D0%B8%D0%BF%D1%82%0D%0A++++++++++++Start-Process+powershell.exe+-ArgumentList+%22-ExecutionPolicy+Bypass+-NoExit+-File+%60%22%24managerScript%60%22%22%0D%0A++++++++%7D%0D%0A++++%7D%0D%0A%0D%0A++++%23+%D0%9E%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B0+Temp%0D%0A++++if+%28Test-Path+%24zipPath%29+%7B+Remove-Item+-Path+%24zipPath+-Force+%7D%0D%0A++++if+%28Test-Path+%24tempExtractPath%29+%7B+Remove-Item+-Path+%24tempExtractPath+-Recurse+-Force+%7D%0D%0A++++%0D%0A%7D+catch+%7B%0D%0A++++Write-Error+%22%D0%9E%D1%88%D0%B8%D0%B1%D0%BA%D0%B0+%D0%BF%D1%80%D0%B8+%D0%B7%D0%B0%D0%B3%D1%80%D1%83%D0%B7%D0%BA%D0%B5%3A+%24%28%24_.Exception.Message%29%22%0D%0A++++Start-Sleep+-Seconds+5%0D%0A%7D+finally+%7B%0D%0A++++%24window.Close%28%29%0D%0A%7D&FirstLogonScriptType0=Ps1&AppLockerMode=Skip-->
+	<settings pass="offlineServicing"></settings>
+	<settings pass="windowsPE">
+		<component name="Microsoft-Windows-International-Core-WinPE" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+			<UILanguage>ru-RU</UILanguage>
+		</component>
+		<component name="Microsoft-Windows-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+			<UserData>
+				<ProductKey>
+					<Key>VK7JG-NPHTM-C97JM-9MPGT-3V66T</Key>
+					<WillShowUI>OnError</WillShowUI>
+				</ProductKey>
+				<AcceptEula>true</AcceptEula>
+			</UserData>
+			<UseConfigurationSet>false</UseConfigurationSet>
+		</component>
+	</settings>
+	<settings pass="generalize"></settings>
+	<settings pass="specialize">
+		<component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+			<ComputerName>PC</ComputerName>
+			<ProductKey>VK7JG-NPHTM-C97JM-9MPGT-3V66T</ProductKey>
+			<TimeZone>Russian Standard Time</TimeZone>
+		</component>
+		<component name="Microsoft-Windows-Deployment" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+			<RunSynchronous>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>1</Order>
+					<Path>powershell.exe -WindowStyle "Normal" -NoProfile -Command "$xml = [xml]::new(); $xml.Load('C:\Windows\Panther\unattend.xml'); $sb = [scriptblock]::Create( $xml.unattend.Extensions.ExtractScript ); Invoke-Command -ScriptBlock $sb -ArgumentList $xml;"</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>2</Order>
+					<Path>powershell.exe -WindowStyle "Normal" -ExecutionPolicy "Unrestricted" -NoProfile -File "C:\Windows\Setup\Scripts\Specialize.ps1"</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>3</Order>
+					<Path>reg.exe load "HKU\DefaultUser" "C:\Users\Default\NTUSER.DAT"</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>4</Order>
+					<Path>powershell.exe -WindowStyle "Normal" -ExecutionPolicy "Unrestricted" -NoProfile -File "C:\Windows\Setup\Scripts\DefaultUser.ps1"</Path>
+				</RunSynchronousCommand>
+				<RunSynchronousCommand wcm:action="add">
+					<Order>5</Order>
+					<Path>reg.exe unload "HKU\DefaultUser"</Path>
+				</RunSynchronousCommand>
+			</RunSynchronous>
+		</component>
+	</settings>
+	<settings pass="auditSystem"></settings>
+	<settings pass="auditUser"></settings>
+	<settings pass="oobeSystem">
+		<component name="Microsoft-Windows-International-Core" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+			<InputLocale>0419:00000419;0409:00000409</InputLocale>
+			<SystemLocale>ru-RU</SystemLocale>
+			<UILanguage>ru-RU</UILanguage>
+			<UserLocale>ru-RU</UserLocale>
+		</component>
+		<component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+			<UserAccounts>
+				<LocalAccounts>
+					<LocalAccount wcm:action="add">
+						<Name>Admin</Name>
+						<DisplayName></DisplayName>
+						<Group>Administrators</Group>
+						<Password>
+							<Value></Value>
+							<PlainText>true</PlainText>
+						</Password>
+					</LocalAccount>
+				</LocalAccounts>
+			</UserAccounts>
+			<AutoLogon>
+				<Username>Admin</Username>
+				<Enabled>true</Enabled>
+				<LogonCount>1</LogonCount>
+				<Password>
+					<Value></Value>
+					<PlainText>true</PlainText>
+				</Password>
+			</AutoLogon>
+			<OOBE>
+				<ProtectYourPC>3</ProtectYourPC>
+				<HideEULAPage>true</HideEULAPage>
+				<HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
+				<HideOnlineAccountScreens>false</HideOnlineAccountScreens>
+			</OOBE>
+			<FirstLogonCommands>
+				<SynchronousCommand wcm:action="add">
+					<Order>1</Order>
+					<CommandLine>powershell.exe -WindowStyle "Normal" -ExecutionPolicy "Unrestricted" -NoProfile -File "C:\Windows\Setup\Scripts\FirstLogon.ps1"</CommandLine>
+				</SynchronousCommand>
+			</FirstLogonCommands>
+		</component>
+	</settings>
+	<Extensions xmlns="https://schneegans.de/windows/unattend-generator/">
+		<Build>
+			<Commit>
+				<Hash>3b34a7d05ccee82794c463fe5ecc5b921322f2e0</Hash>
+				<GitHubUrl>https://github.com/cschneegans/unattend-generator/commit/3b34a7d05ccee82794c463fe5ecc5b921322f2e0</GitHubUrl>
+			</Commit>
+		</Build>
+		<ExtractScript>
+param(
+    [xml] $Document
+);
+
+foreach( $file in $Document.unattend.Extensions.File ) {
+    $path = [System.Environment]::ExpandEnvironmentVariables( $file.GetAttribute( 'path' ) );
+    mkdir -Path( $path | Split-Path -Parent ) -ErrorAction 'SilentlyContinue';
+    $encoding = switch( [System.IO.Path]::GetExtension( $path ) ) {
+        { $_ -in '.ps1', '.xml' } { [System.Text.Encoding]::UTF8; }
+        { $_ -in '.reg', '.vbs', '.js' } { [System.Text.UnicodeEncoding]::new( $false, $true ); }
+        default { [System.Text.Encoding]::Default; }
+    };
+    $bytes = $encoding.GetPreamble() + $encoding.GetBytes( $file.InnerText.Trim() );
+    [System.IO.File]::WriteAllBytes( $path, $bytes );
+}
+		</ExtractScript>
+		<File path="C:\Windows\Setup\Scripts\RemovePackages.ps1">
+$selectors = @(
+	'Microsoft.Microsoft3DViewer';
+	'Microsoft.BingSearch';
+	'Microsoft.WindowsCamera';
+	'Clipchamp.Clipchamp';
+	'Microsoft.Copilot';
+	'Microsoft.549981C3F5F10';
+	'Microsoft.Windows.DevHome';
+	'MicrosoftCorporationII.MicrosoftFamily';
+	'Microsoft.WindowsFeedbackHub';
+	'Microsoft.Edge.GameAssist';
+	'Microsoft.GetHelp';
+	'Microsoft.Getstarted';
+	'microsoft.windowscommunicationsapps';
+	'Microsoft.WindowsMaps';
+	'Microsoft.MixedReality.Portal';
+	'Microsoft.BingNews';
+	'Microsoft.MicrosoftOfficeHub';
+	'Microsoft.Office.OneNote';
+	'Microsoft.OutlookForWindows';
+	'Microsoft.People';
+	'Microsoft.SkypeApp';
+	'Microsoft.MicrosoftSolitaireCollection';
+	'Microsoft.MicrosoftStickyNotes';
+	'MicrosoftTeams';
+	'MSTeams';
+	'Microsoft.Todos';
+	'Microsoft.WindowsSoundRecorder';
+	'Microsoft.Wallet';
+	'Microsoft.BingWeather';
+	'Microsoft.YourPhone';
+);
+$getCommand = {
+  Get-AppxProvisionedPackage -Online;
+};
+$filterCommand = {
+  $_.DisplayName -eq $selector;
+};
+$removeCommand = {
+  [CmdletBinding()]
+  param(
+    [Parameter( Mandatory, ValueFromPipeline )]
+    $InputObject
+  );
+  process {
+    $InputObject | Remove-AppxProvisionedPackage -AllUsers -Online -ErrorAction 'Continue';
+  }
+};
+$type = 'Package';
+$logfile = 'C:\Windows\Setup\Scripts\RemovePackages.log';
+&amp; {
+	$installed = &amp; $getCommand;
+	foreach( $selector in $selectors ) {
+		$result = [ordered] @{
+			Selector = $selector;
+		};
+		$found = $installed | Where-Object -FilterScript $filterCommand;
+		if( $found ) {
+			$result.Output = $found | &amp; $removeCommand;
+			if( $? ) {
+				$result.Message = "$type removed.";
+			} else {
+				$result.Message = "$type not removed.";
+				$result.Error = $Error[0];
+			}
+		} else {
+			$result.Message = "$type not installed.";
+		}
+		$result | ConvertTo-Json -Depth 3 -Compress;
+	}
+} *&gt;&amp;1 | Out-String -Width 1KB -Stream &gt;&gt; $logfile;
+		</File>
+		<File path="C:\Windows\Setup\Scripts\RemoveCapabilities.ps1">
+$selectors = @(
+	'Language.Handwriting';
+	'MathRecognizer';
+	'OneCoreUAP.OneSync';
+	'Language.Speech';
+	'Language.TextToSpeech';
+	'App.StepsRecorder';
+	'Hello.Face.18967';
+	'Hello.Face.Migration.18967';
+	'Hello.Face.20134';
+);
+$getCommand = {
+  Get-WindowsCapability -Online | Where-Object -Property 'State' -NotIn -Value @(
+    'NotPresent';
+    'Removed';
+  );
+};
+$filterCommand = {
+  ($_.Name -split '~')[0] -eq $selector;
+};
+$removeCommand = {
+  [CmdletBinding()]
+  param(
+    [Parameter( Mandatory, ValueFromPipeline )]
+    $InputObject
+  );
+  process {
+    $InputObject | Remove-WindowsCapability -Online -ErrorAction 'Continue';
+  }
+};
+$type = 'Capability';
+$logfile = 'C:\Windows\Setup\Scripts\RemoveCapabilities.log';
+&amp; {
+	$installed = &amp; $getCommand;
+	foreach( $selector in $selectors ) {
+		$result = [ordered] @{
+			Selector = $selector;
+		};
+		$found = $installed | Where-Object -FilterScript $filterCommand;
+		if( $found ) {
+			$result.Output = $found | &amp; $removeCommand;
+			if( $? ) {
+				$result.Message = "$type removed.";
+			} else {
+				$result.Message = "$type not removed.";
+				$result.Error = $Error[0];
+			}
+		} else {
+			$result.Message = "$type not installed.";
+		}
+		$result | ConvertTo-Json -Depth 3 -Compress;
+	}
+} *&gt;&amp;1 | Out-String -Width 1KB -Stream &gt;&gt; $logfile;
+		</File>
+		<File path="C:\Windows\Setup\Scripts\RemoveFeatures.ps1">
+$selectors = @(
+	'Recall';
+);
+$getCommand = {
+  Get-WindowsOptionalFeature -Online | Where-Object -Property 'State' -NotIn -Value @(
+    'Disabled';
+    'DisabledWithPayloadRemoved';
+  );
+};
+$filterCommand = {
+  $_.FeatureName -eq $selector;
+};
+$removeCommand = {
+  [CmdletBinding()]
+  param(
+    [Parameter( Mandatory, ValueFromPipeline )]
+    $InputObject
+  );
+  process {
+    $InputObject | Disable-WindowsOptionalFeature -Online -Remove -NoRestart -ErrorAction 'Continue';
+  }
+};
+$type = 'Feature';
+$logfile = 'C:\Windows\Setup\Scripts\RemoveFeatures.log';
+&amp; {
+	$installed = &amp; $getCommand;
+	foreach( $selector in $selectors ) {
+		$result = [ordered] @{
+			Selector = $selector;
+		};
+		$found = $installed | Where-Object -FilterScript $filterCommand;
+		if( $found ) {
+			$result.Output = $found | &amp; $removeCommand;
+			if( $? ) {
+				$result.Message = "$type removed.";
+			} else {
+				$result.Message = "$type not removed.";
+				$result.Error = $Error[0];
+			}
+		} else {
+			$result.Message = "$type not installed.";
+		}
+		$result | ConvertTo-Json -Depth 3 -Compress;
+	}
+} *&gt;&amp;1 | Out-String -Width 1KB -Stream &gt;&gt; $logfile;
+		</File>
+		<File path="C:\Windows\Setup\Scripts\TaskbarLayoutModification.xml">
+&lt;LayoutModificationTemplate xmlns="http://schemas.microsoft.com/Start/2014/LayoutModification" xmlns:defaultlayout="http://schemas.microsoft.com/Start/2014/FullDefaultLayout" xmlns:start="http://schemas.microsoft.com/Start/2014/StartLayout" xmlns:taskbar="http://schemas.microsoft.com/Start/2014/TaskbarLayout" Version="1"&gt;
+	&lt;CustomTaskbarLayoutCollection PinListPlacement="Replace"&gt;
+		&lt;defaultlayout:TaskbarLayout&gt;
+			&lt;taskbar:TaskbarPinList&gt;
+				&lt;taskbar:DesktopApp DesktopApplicationID="Microsoft.Windows.Explorer" /&gt;
+			&lt;/taskbar:TaskbarPinList&gt;
+		&lt;/defaultlayout:TaskbarLayout&gt;
+	&lt;/CustomTaskbarLayoutCollection&gt;
+&lt;/LayoutModificationTemplate&gt;
+		</File>
+		<File path="C:\Windows\Setup\Scripts\UnlockStartLayout.vbs">
+HKU = &amp;H80000003
+Set reg = GetObject("winmgmts://./root/default:StdRegProv")
+Set fso = CreateObject("Scripting.FileSystemObject")
+
+If reg.EnumKey(HKU, "", sids) = 0 Then
+	If Not IsNull(sids) Then
+		For Each sid In sids
+			key = sid + "\Software\Policies\Microsoft\Windows\Explorer"
+			name = "LockedStartLayout"
+			If reg.GetDWORDValue(HKU, key, name, existing) = 0 Then
+				reg.SetDWORDValue HKU, key, name, 0
+			End If
+		Next
+	End If
+End If
+		</File>
+		<File path="C:\Windows\Setup\Scripts\UnlockStartLayout.xml">
+&lt;Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task"&gt;
+	&lt;Triggers&gt;
+		&lt;EventTrigger&gt;
+			&lt;Enabled&gt;true&lt;/Enabled&gt;
+			&lt;Subscription&gt;&amp;lt;QueryList&amp;gt;&amp;lt;Query Id="0" Path="Application"&amp;gt;&amp;lt;Select Path="Application"&amp;gt;*[System[Provider[@Name='UnattendGenerator'] and EventID=1]]&amp;lt;/Select&amp;gt;&amp;lt;/Query&amp;gt;&amp;lt;/QueryList&amp;gt;&lt;/Subscription&gt;
+		&lt;/EventTrigger&gt;
+	&lt;/Triggers&gt;
+	&lt;Principals&gt;
+		&lt;Principal id="Author"&gt;
+			&lt;UserId&gt;S-1-5-18&lt;/UserId&gt;
+			&lt;RunLevel&gt;LeastPrivilege&lt;/RunLevel&gt;
+		&lt;/Principal&gt;
+	&lt;/Principals&gt;
+	&lt;Settings&gt;
+		&lt;MultipleInstancesPolicy&gt;IgnoreNew&lt;/MultipleInstancesPolicy&gt;
+		&lt;DisallowStartIfOnBatteries&gt;false&lt;/DisallowStartIfOnBatteries&gt;
+		&lt;StopIfGoingOnBatteries&gt;false&lt;/StopIfGoingOnBatteries&gt;
+		&lt;AllowHardTerminate&gt;true&lt;/AllowHardTerminate&gt;
+		&lt;StartWhenAvailable&gt;false&lt;/StartWhenAvailable&gt;
+		&lt;RunOnlyIfNetworkAvailable&gt;false&lt;/RunOnlyIfNetworkAvailable&gt;
+		&lt;IdleSettings&gt;
+			&lt;StopOnIdleEnd&gt;true&lt;/StopOnIdleEnd&gt;
+			&lt;RestartOnIdle&gt;false&lt;/RestartOnIdle&gt;
+		&lt;/IdleSettings&gt;
+		&lt;AllowStartOnDemand&gt;true&lt;/AllowStartOnDemand&gt;
+		&lt;Enabled&gt;true&lt;/Enabled&gt;
+		&lt;Hidden&gt;false&lt;/Hidden&gt;
+		&lt;RunOnlyIfIdle&gt;false&lt;/RunOnlyIfIdle&gt;
+		&lt;WakeToRun&gt;false&lt;/WakeToRun&gt;
+		&lt;ExecutionTimeLimit&gt;PT72H&lt;/ExecutionTimeLimit&gt;
+		&lt;Priority&gt;7&lt;/Priority&gt;
+	&lt;/Settings&gt;
+	&lt;Actions Context="Author"&gt;
+		&lt;Exec&gt;
+			&lt;Command&gt;C:\Windows\System32\wscript.exe&lt;/Command&gt;
+			&lt;Arguments&gt;C:\Windows\Setup\Scripts\UnlockStartLayout.vbs&lt;/Arguments&gt;
+		&lt;/Exec&gt;
+	&lt;/Actions&gt;
+&lt;/Task&gt;
+		</File>
+		<File path="C:\Windows\Setup\Scripts\PauseWindowsUpdate.xml">
+&lt;Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task"&gt;
+	&lt;Triggers&gt;
+		&lt;BootTrigger&gt;
+			&lt;Repetition&gt;
+				&lt;Interval&gt;P1D&lt;/Interval&gt;
+				&lt;StopAtDurationEnd&gt;false&lt;/StopAtDurationEnd&gt;
+			&lt;/Repetition&gt;
+			&lt;Enabled&gt;true&lt;/Enabled&gt;
+		&lt;/BootTrigger&gt;
+	&lt;/Triggers&gt;
+	&lt;Principals&gt;
+		&lt;Principal id="Author"&gt;
+			&lt;UserId&gt;S-1-5-19&lt;/UserId&gt;
+			&lt;RunLevel&gt;LeastPrivilege&lt;/RunLevel&gt;
+		&lt;/Principal&gt;
+	&lt;/Principals&gt;
+	&lt;Settings&gt;
+		&lt;MultipleInstancesPolicy&gt;IgnoreNew&lt;/MultipleInstancesPolicy&gt;
+		&lt;DisallowStartIfOnBatteries&gt;false&lt;/DisallowStartIfOnBatteries&gt;
+		&lt;StopIfGoingOnBatteries&gt;false&lt;/StopIfGoingOnBatteries&gt;
+		&lt;AllowHardTerminate&gt;true&lt;/AllowHardTerminate&gt;
+		&lt;StartWhenAvailable&gt;false&lt;/StartWhenAvailable&gt;
+		&lt;RunOnlyIfNetworkAvailable&gt;false&lt;/RunOnlyIfNetworkAvailable&gt;
+		&lt;IdleSettings&gt;
+			&lt;StopOnIdleEnd&gt;true&lt;/StopOnIdleEnd&gt;
+			&lt;RestartOnIdle&gt;false&lt;/RestartOnIdle&gt;
+		&lt;/IdleSettings&gt;
+		&lt;AllowStartOnDemand&gt;true&lt;/AllowStartOnDemand&gt;
+		&lt;Enabled&gt;true&lt;/Enabled&gt;
+		&lt;Hidden&gt;false&lt;/Hidden&gt;
+		&lt;RunOnlyIfIdle&gt;false&lt;/RunOnlyIfIdle&gt;
+		&lt;WakeToRun&gt;false&lt;/WakeToRun&gt;
+		&lt;ExecutionTimeLimit&gt;PT72H&lt;/ExecutionTimeLimit&gt;
+		&lt;Priority&gt;7&lt;/Priority&gt;
+	&lt;/Settings&gt;
+	&lt;Actions Context="Author"&gt;
+		&lt;Exec&gt;
+			&lt;Command&gt;C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe&lt;/Command&gt;
+			&lt;Arguments&gt;-WindowStyle Hidden -NoProfile -NonInteractive -Command "$format = 'yyyy-MM-ddTHH\:mm\:ssK'; $now = [datetime]::UtcNow; $start = $now.ToString($format); $end = $now.AddDays(7).ToString($format); $params = @{ LiteralPath = 'Registry::HKLM\Software\Microsoft\WindowsUpdate\UX\Settings'; Type = 'String'; Force = $true; Verbose = $true; }; 'PauseFeatureUpdatesStartTime', 'PauseQualityUpdatesStartTime', 'PauseUpdatesStartTime' | foreach { Set-ItemProperty @params -Name $_ -Value $start; }; 'PauseFeatureUpdatesEndTime', 'PauseQualityUpdatesEndTime', 'PauseUpdatesExpiryTime' | foreach { Set-ItemProperty @params -Name $_ -Value $end; };"&lt;/Arguments&gt;
+		&lt;/Exec&gt;
+	&lt;/Actions&gt;
+&lt;/Task&gt;
+		</File>
+		<File path="C:\Users\Default\AppData\Local\Microsoft\Windows\Shell\LayoutModification.xml">
+&lt;LayoutModificationTemplate Version="1" xmlns="http://schemas.microsoft.com/Start/2014/LayoutModification"&gt;
+	&lt;LayoutOptions StartTileGroupCellWidth="6" /&gt;
+	&lt;DefaultLayoutOverride&gt;
+		&lt;StartLayoutCollection&gt;
+			&lt;StartLayout GroupCellWidth="6" xmlns="http://schemas.microsoft.com/Start/2014/FullDefaultLayout" /&gt;
+		&lt;/StartLayoutCollection&gt;
+	&lt;/DefaultLayoutOverride&gt;
+&lt;/LayoutModificationTemplate&gt;
+		</File>
+		<File path="C:\Windows\Setup\Scripts\unattend-01.ps1">
+# =========================================================================
+# &#x418;&#x43C;&#x44F; &#x444;&#x430;&#x439;&#x43B;&#x430;: system-logon-init.ps1
+# &#x41D;&#x430;&#x437;&#x43D;&#x430;&#x447;&#x435;&#x43D;&#x438;&#x435;: &#x411;&#x435;&#x441;&#x43A;&#x43E;&#x43C;&#x43F;&#x440;&#x43E;&#x43C;&#x438;&#x441;&#x441;&#x43D;&#x430;&#x44F; &#x431;&#x43B;&#x43E;&#x43A;&#x438;&#x440;&#x43E;&#x432;&#x43A;&#x430; &#x440;&#x435;&#x43A;&#x43B;&#x430;&#x43C;&#x44B;, &#x442;&#x435;&#x43B;&#x435;&#x43C;&#x435;&#x442;&#x440;&#x438;&#x438;, Outlook, &#x42F;&#x43D;&#x434;&#x435;&#x43A;&#x441;.&#x41C;&#x443;&#x437;&#x44B;&#x43A;&#x438;, Edge &#x438; &#x43D;&#x430;&#x441;&#x442;&#x440;&#x43E;&#x439;&#x43A;&#x430; UI
+# &#x42D;&#x442;&#x430;&#x43F;: System Logon / Pre-OOBE (&#x412;&#x44B;&#x43F;&#x43E;&#x43B;&#x43D;&#x44F;&#x435;&#x442;&#x441;&#x44F; &#x43E;&#x442; &#x438;&#x43C;&#x435;&#x43D;&#x438; SYSTEM)
+# &#x41B;&#x43E;&#x433;&#x438;&#x440;&#x43E;&#x432;&#x430;&#x43D;&#x438;&#x435;: &#x414;&#x43E;&#x43A;&#x443;&#x43C;&#x435;&#x43D;&#x442;&#x44B; &#x434;&#x435;&#x444;&#x43E;&#x43B;&#x442;&#x43D;&#x43E;&#x433;&#x43E; &#x43F;&#x43E;&#x43B;&#x44C;&#x437;&#x43E;&#x432;&#x430;&#x442;&#x435;&#x43B;&#x44F;
+# =========================================================================
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+$ProgressPreference    = 'SilentlyContinue'
+
+# &#x41D;&#x430;&#x441;&#x442;&#x440;&#x43E;&#x439;&#x43A;&#x430; &#x43B;&#x43E;&#x433;&#x438;&#x440;&#x43E;&#x432;&#x430;&#x43D;&#x438;&#x44F; &#x432; C:\Users\Default\Documents
+$LogDir = "C:\Users\Default\Documents"
+if (-not (Test-Path $LogDir)) { New-Item -ItemType Directory -Force -Path $LogDir | Out-Null }
+Start-Transcript -Path (Join-Path $LogDir "System_Logon_Initialization.log") -Append
+
+try {
+    Write-Host "========================================================="
+    Write-Host " &#x421;&#x422;&#x410;&#x420;&#x422; &#x420;&#x410;&#x421;&#x428;&#x418;&#x420;&#x415;&#x41D;&#x41D;&#x41E;&#x419; &#x41E;&#x41F;&#x422;&#x418;&#x41C;&#x418;&#x417;&#x410;&#x426;&#x418;&#x418; &#x421;&#x418;&#x421;&#x422;&#x415;&#x41C;&#x42B; (SYSTEM CONTEXT)"
+    Write-Host "========================================================="
+
+    # ----------------------------------------------------
+    # 1. &#x413;&#x41B;&#x41E;&#x411;&#x410;&#x41B;&#x42C;&#x41D;&#x42B;&#x415; &#x41F;&#x41E;&#x41B;&#x418;&#x422;&#x418;&#x41A;&#x418; (HKLM) &#x41F;&#x420;&#x41E;&#x422;&#x418;&#x412; &#x420;&#x415;&#x41A;&#x41B;&#x410;&#x41C;&#x42B; &#x418; &#x41C;&#x423;&#x421;&#x41E;&#x420;&#x410;
+    # ----------------------------------------------------
+    Write-Host "&gt;&gt;&gt; &#x41D;&#x430;&#x441;&#x442;&#x440;&#x43E;&#x439;&#x43A;&#x430; &#x433;&#x43B;&#x43E;&#x431;&#x430;&#x43B;&#x44C;&#x43D;&#x44B;&#x445; &#x43F;&#x43E;&#x43B;&#x438;&#x442;&#x438;&#x43A; CloudContent &#x438; &#x432;&#x438;&#x434;&#x436;&#x435;&#x442;&#x43E;&#x432;..."
+    $CloudContentPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent"
+    if (-not (Test-Path $CloudContentPath)) { New-Item -Path $CloudContentPath -Force | Out-Null }
+    Set-ItemProperty -Path $CloudContentPath -Name "DisableWindowsConsumerFeatures" -Value 1 -Type DWord -Force
+    Set-ItemProperty -Path $CloudContentPath -Name "DisableWindowsSpotlightFeatures" -Value 1 -Type DWord -Force
+    Set-ItemProperty -Path $CloudContentPath -Name "DisableThirdPartySuggestions" -Value 1 -Type DWord -Force
+
+    # &#x41E;&#x442;&#x43A;&#x43B;&#x44E;&#x447;&#x435;&#x43D;&#x438;&#x435; &#x432;&#x438;&#x434;&#x436;&#x435;&#x442;&#x43E;&#x432; (Feeds) &#x43D;&#x430; &#x43F;&#x430;&#x43D;&#x435;&#x43B;&#x438; &#x437;&#x430;&#x434;&#x430;&#x447; &#x434;&#x43B;&#x44F; &#x432;&#x441;&#x435;&#x445;
+    $Feeds = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Feeds"
+    if (!(Test-Path $Feeds)) { New-Item -Path $Feeds -Force | Out-Null }
+    Set-ItemProperty -Path $Feeds -Name "EnableFeeds" -Value 0 -Type DWord -Force
+
+    Write-Host "&gt;&gt;&gt; &#x413;&#x43B;&#x443;&#x431;&#x43E;&#x43A;&#x430;&#x44F; &#x43A;&#x43E;&#x43D;&#x444;&#x438;&#x433;&#x443;&#x440;&#x430;&#x446;&#x438;&#x44F; &#x433;&#x43B;&#x43E;&#x431;&#x430;&#x43B;&#x44C;&#x43D;&#x43E;&#x433;&#x43E; ContentDeliveryManager..."
+    $CdmPathHKLM = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"
+    if (-not (Test-Path $CdmPathHKLM)) { New-Item -Path $CdmPathHKLM -Force | Out-Null }
+    
+    $CdmTweaks = @{
+        "SilentInstalledAppsEnabled"       = 0
+        "ContentDeliveryAllowed"           = 0
+        "OemPreInstalledAppsEnabled"       = 0
+        "PreInstalledAppsEnabled"          = 0
+        "PreInstalledAppsReady"            = 0
+        "SubscribedContentEnabled"         = 0
+        "SystemPaneSuggestionsEnabled"     = 0
+        "SubscribedContent-310093Enabled"  = 0
+        "SubscribedContent-338387Enabled"  = 0
+        "SubscribedContent-338388Enabled"  = 0
+        "SubscribedContent-338389Enabled"  = 0
+        "SubscribedContent-353475Enabled"  = 0
+    }
+    foreach ($Key in $CdmTweaks.Keys) {
+        Set-ItemProperty -Path $CdmPathHKLM -Name $Key -Value $CdmTweaks[$Key] -Type DWord -Force
+    }
+
+    # ----------------------------------------------------
+    # 1.5. &#x423;&#x41A;&#x420;&#x41E;&#x429;&#x415;&#x41D;&#x418;&#x415; MICROSOFT EDGE &#x418; &#x41E;&#x411;&#x429;&#x415;&#x413;&#x41E; &#x420;&#x410;&#x411;&#x41E;&#x427;&#x415;&#x413;&#x41E; &#x421;&#x422;&#x41E;&#x41B;&#x410;
+    # ----------------------------------------------------
+    Write-Host "&gt;&gt;&gt; &#x41F;&#x43E;&#x43B;&#x43D;&#x430;&#x44F; &#x431;&#x43B;&#x43E;&#x43A;&#x438;&#x440;&#x43E;&#x432;&#x43A;&#x430; Microsoft Edge &#x438; &#x43E;&#x447;&#x438;&#x441;&#x442;&#x43A;&#x430; &#x43E;&#x431;&#x449;&#x435;&#x433;&#x43E; &#x441;&#x442;&#x43E;&#x43B;&#x430;..."
+    
+    # &#x41F;&#x43E;&#x43B;&#x438;&#x442;&#x438;&#x43A;&#x438; HKLM &#x434;&#x43B;&#x44F; Edge
+    $EdgePol = "HKLM:\SOFTWARE\Policies\Microsoft\Edge"
+    if (!(Test-Path $EdgePol)) { New-Item -Path $EdgePol -Force | Out-Null }
+    $EdgeSettings = @{
+        "HideFirstRunExperience"          = 1
+        "CreateDesktopShortcut"           = 0
+        "WelcomePageOnFirstLaunchEnabled" = 0
+        "StartupBoostEnabled"             = 0
+        "BackgroundModeEnabled"           = 0
+        "AllowPrelaunch"                  = 0
+        "AutoImportAtFirstRun"            = 0
+        "HubsSidebarEnabled"              = 0
+    }
+    foreach ($name in $EdgeSettings.Keys) {
+        Set-ItemProperty -Path $EdgePol -Name $name -Value $EdgeSettings[$name] -Type DWord -Force
+    }
+
+    # &#x41E;&#x442;&#x43A;&#x43B;&#x44E;&#x447;&#x435;&#x43D;&#x438;&#x435; &#x441;&#x43B;&#x443;&#x436;&#x431; &#x43E;&#x431;&#x43D;&#x43E;&#x432;&#x43B;&#x435;&#x43D;&#x438;&#x44F; Edge
+    $EdgeServices = @("edgeupdate", "edgeupdatem", "MicrosoftEdgeElevationService")
+    foreach ($svc in $EdgeServices) {
+        if (Get-Service -Name $svc -ErrorAction SilentlyContinue) {
+            Stop-Service -Name $svc -Force -ErrorAction SilentlyContinue
+            Set-Service -Name $svc -StartupType Disabled
+        }
+    }
+
+    # &#x423;&#x434;&#x430;&#x43B;&#x435;&#x43D;&#x438;&#x435; &#x437;&#x430;&#x434;&#x430;&#x447; Edge &#x432; &#x43F;&#x43B;&#x430;&#x43D;&#x438;&#x440;&#x43E;&#x432;&#x449;&#x438;&#x43A;&#x435;
+    Get-ScheduledTask -TaskPath "\" -ErrorAction SilentlyContinue | 
+        Where-Object { $_.TaskName -like "*MicrosoftEdge*" } | 
+        Disable-ScheduledTask -ErrorAction SilentlyContinue
+
+    # &#x41E;&#x431;&#x445;&#x43E;&#x434; Active Setup (&#x43F;&#x440;&#x435;&#x434;&#x43E;&#x442;&#x432;&#x440;&#x430;&#x449;&#x430;&#x435;&#x442; &#x441;&#x43E;&#x437;&#x434;&#x430;&#x43D;&#x438;&#x435; &#x44F;&#x440;&#x43B;&#x44B;&#x43A;&#x43E;&#x432; Edge &#x43F;&#x440;&#x438; &#x432;&#x445;&#x43E;&#x434;&#x435; &#x43B;&#x44E;&#x431;&#x43E;&#x433;&#x43E; &#x43F;&#x43E;&#x43B;&#x44C;&#x437;&#x43E;&#x432;&#x430;&#x442;&#x435;&#x43B;&#x44F;)
+    $ActiveSetup = "HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components"
+    Get-ChildItem $ActiveSetup -ErrorAction SilentlyContinue | Where-Object { (Get-ItemProperty $_.PsPath -ErrorAction SilentlyContinue).StubPath -like "*MicrosoftEdge*" } | ForEach-Object {
+        Set-ItemProperty -Path $_.PsPath -Name "StubPath" -Value "" -Force
+    }
+
+    # &#x423;&#x434;&#x430;&#x43B;&#x435;&#x43D;&#x438;&#x435; &#x44F;&#x440;&#x43B;&#x44B;&#x43A;&#x43E;&#x432; Edge &#x438; Teams &#x441; &#x43E;&#x431;&#x449;&#x435;&#x433;&#x43E; &#x420;&#x430;&#x431;&#x43E;&#x447;&#x435;&#x433;&#x43E; &#x441;&#x442;&#x43E;&#x43B;&#x430;
+    Get-ChildItem -Path "$env:PUBLIC\Desktop" -Filter "*.lnk" | Where-Object { $_.Name -match "Edge|Teams" } | Remove-Item -Force -ErrorAction SilentlyContinue
+
+    # &#x421;&#x43E;&#x437;&#x434;&#x430;&#x43D;&#x438;&#x435; &#x43A;&#x430;&#x441;&#x442;&#x43E;&#x43C;&#x43D;&#x43E;&#x433;&#x43E; &#x43C;&#x430;&#x43A;&#x435;&#x442;&#x430; &#x41F;&#x430;&#x43D;&#x435;&#x43B;&#x438; &#x437;&#x430;&#x434;&#x430;&#x447; (XML) &#x441;&#x440;&#x430;&#x437;&#x443; &#x432; &#x43F;&#x430;&#x43F;&#x43A;&#x435; Default User
+    Write-Host "&gt;&gt;&gt; &#x421;&#x43E;&#x437;&#x434;&#x430;&#x43D;&#x438;&#x435; &#x447;&#x438;&#x441;&#x442;&#x43E;&#x433;&#x43E; XML &#x43C;&#x430;&#x43A;&#x435;&#x442;&#x430; &#x41F;&#x430;&#x43D;&#x435;&#x43B;&#x438; &#x437;&#x430;&#x434;&#x430;&#x447;..."
+    $LayoutXml = @"
+&lt;LayoutModificationTemplate xmlns="http://schemas.microsoft.com/Start/2014/LayoutModification" xmlns:defaultlayout="http://schemas.microsoft.com/Start/2014/FullDefaultLayout" xmlns:start="http://schemas.microsoft.com/Start/2014/StartLayout" xmlns:taskbar="http://schemas.microsoft.com/Start/2014/TaskbarLayout" Version="1"&gt;
+  &lt;LayoutOptions StartTileGroupCellWidth="6" /&gt;
+  &lt;DefaultLayoutOverride&gt;&lt;StartLayoutCollection&gt;&lt;defaultlayout:StartLayout GroupCellWidth="6" /&gt;&lt;/StartLayoutCollection&gt;&lt;/DefaultLayoutOverride&gt;
+  &lt;CustomTaskbarLayoutCollection PinListPlacement="Replace"&gt;
+    &lt;defaultlayout:TaskbarLayout&gt;&lt;taskbar:TaskbarPinList&gt;
+        &lt;taskbar:DesktopApp DesktopApplicationID="Microsoft.Windows.Explorer" /&gt;
+    &lt;/taskbar:TaskbarPinList&gt;&lt;/defaultlayout:TaskbarLayout&gt;
+  &lt;/CustomTaskbarLayoutCollection&gt;
+&lt;/LayoutModificationTemplate&gt;
+"@
+    $D_Shell = "C:\Users\Default\AppData\Local\Microsoft\Windows\Shell"
+    if (!(Test-Path $D_Shell)) { New-Item -Path $D_Shell -ItemType Directory -Force | Out-Null }
+    $LayoutXml | Out-File -FilePath "$D_Shell\LayoutModification.xml" -Encoding UTF8 -Force
+
+
+    # ----------------------------------------------------
+    # 2. &#x416;&#x415;&#x421;&#x422;&#x41A;&#x418;&#x419; &#x410;&#x41D;&#x422;&#x418;&#x414;&#x41E;&#x422; &#x41F;&#x420;&#x41E;&#x422;&#x418;&#x412; &#x41E;&#x411;&#x425;&#x41E;&#x414;&#x410; &#x41D;&#x41E;&#x412;&#x41E;&#x413;&#x41E; OUTLOOK (&#x424;&#x438;&#x448;&#x43A;&#x430; 2025/2026 &#x433;&#x433;.)
+    # ----------------------------------------------------
+    Write-Host "&gt;&gt;&gt; &#x410;&#x43F;&#x43F;&#x430;&#x440;&#x430;&#x442;&#x43D;&#x43E;&#x435; &#x43E;&#x442;&#x43A;&#x43B;&#x44E;&#x447;&#x435;&#x43D;&#x438;&#x435; OOBE-&#x430;&#x43F;&#x434;&#x435;&#x439;&#x442;&#x435;&#x440;&#x430; &#x434;&#x43B;&#x44F; Outlook..."
+    $USchedulerPath = "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe"
+    if (-not (Test-Path $USchedulerPath)) { New-Item -Path $USchedulerPath -Force | Out-Null }
+    Set-ItemProperty -Path $USchedulerPath -Name "BlockedOobeUpdaters" -Value '["MS_Outlook"]' -Type String -Force
+    
+    $OutlookUpdateTask = "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\OutlookUpdate"
+    if (Test-Path $OutlookUpdateTask) { Remove-Item -Path $OutlookUpdateTask -Recurse -Force }
+
+    $OutlookPolicyPath = "HKLM:\SOFTWARE\Policies\Microsoft\Office\16.0\Outlook\Options\General"
+    if (-not (Test-Path $OutlookPolicyPath)) { New-Item -Path $OutlookPolicyPath -Force | Out-Null }
+    Set-ItemProperty -Path $OutlookPolicyPath -Name "HideNewOutlookToggle" -Value 1 -Type DWord -Force
+    
+    $OutlookPrefPath = "HKLM:\SOFTWARE\Policies\Microsoft\Office\16.0\Outlook\Preferences"
+    if (-not (Test-Path $OutlookPrefPath)) { New-Item -Path $OutlookPrefPath -Force | Out-Null }
+    Set-ItemProperty -Path $OutlookPrefPath -Name "NewOutlookMigrationUserSetting" -Value 0 -Type DWord -Force
+
+
+    # ----------------------------------------------------
+    # 3. &#x41D;&#x410;&#x421;&#x422;&#x420;&#x41E;&#x419;&#x41A;&#x410; &#x414;&#x415;&#x424;&#x41E;&#x41B;&#x422;&#x41D;&#x41E;&#x413;&#x41E; &#x41F;&#x420;&#x41E;&#x424;&#x418;&#x41B;&#x42F; &#x41F;&#x41E;&#x41B;&#x42C;&#x417;&#x41E;&#x412;&#x410;&#x422;&#x415;&#x41B;&#x42F; (NTUSER.DAT)
+    # ----------------------------------------------------
+    Write-Host "&gt;&gt;&gt; &#x41C;&#x43E;&#x43D;&#x442;&#x438;&#x440;&#x43E;&#x432;&#x430;&#x43D;&#x438;&#x435; &#x434;&#x435;&#x444;&#x43E;&#x43B;&#x442;&#x43D;&#x43E;&#x433;&#x43E; &#x43A;&#x443;&#x441;&#x442;&#x430; &#x440;&#x435;&#x435;&#x441;&#x442;&#x440;&#x430; &#x434;&#x43B;&#x44F; &#x43D;&#x430;&#x441;&#x442;&#x440;&#x43E;&#x439;&#x43A;&#x438; &#x43F;&#x440;&#x43E;&#x444;&#x438;&#x43B;&#x435;&#x439;..."
+    $DefaultHivePath = "C:\Users\Default\NTUSER.DAT"
+    
+    if (-not (Test-Path "HKLM:\TargetUser")) {
+        reg load "HKLM\TargetUser" $DefaultHivePath | Out-Null
+    }
+
+    $PathsToTweak = @(
+        "HKLM:\TargetUser\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager",
+        "HKLM:\TargetUser\Software\Policies\Microsoft\Windows\CloudContent",
+        "HKLM:\TargetUser\Software\Policies\Microsoft\Edge",
+        "HKLM:\TargetUser\Software\Microsoft\Windows\CurrentVersion\Search",
+        "HKLM:\TargetUser\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced",
+        "HKLM:\TargetUser\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel"
+    )
+    foreach ($Path in $PathsToTweak) {
+        if (-not (Test-Path $Path)) { New-Item -Path $Path -Force | Out-Null }
+    }
+
+    # &#x41F;&#x440;&#x438;&#x43C;&#x435;&#x43D;&#x44F;&#x435;&#x43C; &#x432;&#x435;&#x441;&#x44C; &#x441;&#x43F;&#x435;&#x43A;&#x442;&#x440; &#x431;&#x43B;&#x43E;&#x43A;&#x438;&#x440;&#x43E;&#x432;&#x43E;&#x43A; &#x440;&#x435;&#x43A;&#x43B;&#x430;&#x43C;&#x44B; &#x438; &#x430;&#x432;&#x442;&#x43E;&#x443;&#x441;&#x442;&#x430;&#x43D;&#x43E;&#x432;&#x43E;&#x43A;
+    Set-ItemProperty -Path "HKLM:\TargetUser\Software\Policies\Microsoft\Windows\CloudContent" -Name "DisableWindowsConsumerFeatures" -Value 1 -Type DWord -Force
+    Set-ItemProperty -Path "HKLM:\TargetUser\Software\Policies\Microsoft\Windows\CloudContent" -Name "DisableWindowsSpotlightFeatures" -Value 1 -Type DWord -Force
+    foreach ($Key in $CdmTweaks.Keys) {
+        Set-ItemProperty -Path "HKLM:\TargetUser\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name $Key -Value $CdmTweaks[$Key] -Type DWord -Force
+    }
+
+    # &#x41D;&#x430;&#x441;&#x442;&#x440;&#x43E;&#x439;&#x43A;&#x438; Edg
+		</File>
+		<File path="C:\Windows\Setup\Scripts\unattend-02.ps1">
+# ==============================================================================
+# &#x41F;&#x440;&#x43E;&#x432;&#x435;&#x440;&#x43A;&#x430; &#x43F;&#x440;&#x430;&#x432; &#x430;&#x434;&#x43C;&#x438;&#x43D;&#x438;&#x441;&#x442;&#x440;&#x430;&#x442;&#x43E;&#x440;&#x430;
+# ==============================================================================
+$isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+
+if (-not $isAdmin) {
+    # &#x41F;&#x435;&#x440;&#x435;&#x437;&#x430;&#x43F;&#x443;&#x441;&#x43A; &#x441; &#x43F;&#x440;&#x430;&#x432;&#x430;&#x43C;&#x438; &#x430;&#x434;&#x43C;&#x438;&#x43D;&#x430; &#x438; &#x441;&#x43A;&#x440;&#x44B;&#x442;&#x438;&#x435;&#x43C; &#x447;&#x435;&#x440;&#x43D;&#x43E;&#x433;&#x43E; &#x43E;&#x43A;&#x43D;&#x430; &#x43A;&#x43E;&#x43D;&#x441;&#x43E;&#x43B;&#x438; (-WindowStyle Hidden)
+    Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PSCommandPath`"" -Verb RunAs
+    exit
+}
+
+# ==============================================================================
+# &#x424;&#x443;&#x43D;&#x43A;&#x446;&#x438;&#x438; &#x438; &#x438;&#x43D;&#x442;&#x435;&#x440;&#x444;&#x435;&#x439;&#x441; (WPF)
+# ==============================================================================
+Add-Type -AssemblyName PresentationFramework
+
+# XAML-&#x434;&#x438;&#x437;&#x430;&#x439;&#x43D; &#x43E;&#x43A;&#x43D;&#x430; (&#x442;&#x435;&#x43C;&#x43D;&#x430;&#x44F; &#x442;&#x435;&#x43C;&#x430;, &#x443;&#x432;&#x435;&#x43B;&#x438;&#x447;&#x435;&#x43D;&#x430; &#x432;&#x44B;&#x441;&#x43E;&#x442;&#x430; &#x434;&#x43E; 340 &#x434;&#x43B;&#x44F; &#x432;&#x43C;&#x435;&#x449;&#x435;&#x43D;&#x438;&#x44F; &#x442;&#x435;&#x43A;&#x441;&#x442;&#x430;)
+[xml]$xaml = @"
+&lt;Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        WindowStyle="None" AllowsTransparency="True" Background="#151720"
+        WindowStartupLocation="CenterScreen" Width="650" Height="340" Topmost="True"&gt;
+    &lt;Border BorderBrush="#4C7BB0" BorderThickness="1" CornerRadius="0"&gt;
+        &lt;Grid Margin="30,25,30,25"&gt;
+            &lt;Grid.RowDefinitions&gt;
+                &lt;RowDefinition Height="Auto"/&gt;
+                &lt;RowDefinition Height="Auto"/&gt;
+                &lt;RowDefinition Height="*"/&gt;
+                &lt;RowDefinition Height="Auto"/&gt;
+                &lt;RowDefinition Height="Auto"/&gt;
+            &lt;/Grid.RowDefinitions&gt;
+            
+            &lt;Grid Grid.Row="0"&gt;
+                &lt;TextBlock Text="&#x417;&#x410;&#x413;&#x420;&#x423;&#x417;&#x427;&#x418;&#x41A; &#x410;&#x412;&#x422;&#x41E;&#x41C;&#x410;&#x422;&#x418;&#x427;&#x415;&#x421;&#x41A;&#x41E;&#x419; &#x41D;&#x410;&#x421;&#x422;&#x420;&#x41E;&#x419;&#x41A;&#x418;" Foreground="#7A9EEB" FontSize="18" FontWeight="Bold" VerticalAlignment="Center" /&gt;
+                
+                &lt;!-- &#x41A;&#x430;&#x441;&#x442;&#x43E;&#x43C;&#x43D;&#x430;&#x44F; &#x43A;&#x43D;&#x43E;&#x43F;&#x43A;&#x430; &#x437;&#x430;&#x43A;&#x440;&#x44B;&#x442;&#x438;&#x44F; (&#x41A;&#x440;&#x435;&#x441;&#x442;&#x438;&#x43A; &#x441;&#x432;&#x435;&#x440;&#x445;&#x443;) --&gt;
+                &lt;Button Name="BtnCloseTop" Content="&#x2715;" HorizontalAlignment="Right" VerticalAlignment="Center" Width="30" Height="30" FontSize="16" Cursor="Hand" ToolTip="&#x417;&#x430;&#x43A;&#x440;&#x44B;&#x442;&#x44C;"&gt;
+                    &lt;Button.Template&gt;
+                        &lt;ControlTemplate TargetType="Button"&gt;
+                            &lt;Border Name="Border" BorderBrush="#4C7BB0" BorderThickness="1" Background="Transparent"&gt;
+                                &lt;TextBlock Text="{TemplateBinding Content}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,2"/&gt;
+                            &lt;/Border&gt;
+                            &lt;ControlTemplate.Triggers&gt;
+                                &lt;Trigger Property="IsMouseOver" Value="True"&gt;
+                                    &lt;Setter TargetName="Border" Property="Background" Value="#4C7BB0" /&gt;
+                                    &lt;Setter Property="Foreground" Value="White" /&gt;
+                                &lt;/Trigger&gt;
+                                &lt;Trigger Property="IsMouseOver" Value="False"&gt;
+                                    &lt;Setter Property="Foreground" Value="#7A9EEB" /&gt;
+                                &lt;/Trigger&gt;
+                            &lt;/ControlTemplate.Triggers&gt;
+                        &lt;/ControlTemplate&gt;
+                    &lt;/Button.Template&gt;
+                &lt;/Button&gt;
+            &lt;/Grid&gt;
+            
+            &lt;Rectangle Grid.Row="1" Height="1" Fill="#4C7BB0" Margin="0,20,0,25"/&gt;
+            
+            &lt;TextBlock Name="TxtMessage" Grid.Row="2" Foreground="White" FontSize="15" TextWrapping="Wrap" LineHeight="24" VerticalAlignment="Top" /&gt;
+            
+            &lt;TextBlock Name="TxtNote" Grid.Row="3" Foreground="#888888" FontSize="12" TextWrapping="Wrap" HorizontalAlignment="Center" Margin="0,10,0,0"/&gt;
+            
+            &lt;!-- &#x411;&#x43E;&#x43B;&#x44C;&#x448;&#x430;&#x44F; &#x43F;&#x43B;&#x43E;&#x441;&#x43A;&#x430;&#x44F; &#x43A;&#x43D;&#x43E;&#x43F;&#x43A;&#x430; &#x412;&#x42B;&#x425;&#x41E;&#x414; &#x441;&#x43D;&#x438;&#x437;&#x443; --&gt;
+            &lt;Button Name="BtnExit" Grid.Row="4" Content="&#x412;&#x42B;&#x425;&#x41E;&#x414;" Height="40" Margin="0,15,0,0" Cursor="Hand" FontWeight="Bold" FontSize="13" Foreground="White"&gt;
+                &lt;Button.Template&gt;
+                    &lt;ControlTemplate TargetType="Button"&gt;
+                        &lt;!-- &#x426;&#x432;&#x435;&#x442; &#x444;&#x43E;&#x43D;&#x430; &#x43A;&#x430;&#x43A; &#x43D;&#x430; &#x432;&#x430;&#x448;&#x435;&#x43C; &#x441;&#x43A;&#x440;&#x438;&#x43D;&#x448;&#x43E;&#x442;&#x435; --&gt;
+                        &lt;Border Name="Border" Background="#353746" BorderThickness="0"&gt;
+                            &lt;TextBlock Text="{TemplateBinding Content}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,1"/&gt;
+                        &lt;/Border&gt;
+                        &lt;ControlTemplate.Triggers&gt;
+                            &lt;Trigger Property="IsMouseOver" Value="True"&gt;
+                                &lt;!-- &#x41F;&#x43E;&#x434;&#x441;&#x432;&#x435;&#x442;&#x43A;&#x430; &#x43F;&#x440;&#x438; &#x43D;&#x430;&#x432;&#x435;&#x434;&#x435;&#x43D;&#x438;&#x438; --&gt;
+                                &lt;Setter TargetName="Border" Property="Background" Value="#4A4D62" /&gt;
+                            &lt;/Trigger&gt;
+                        &lt;/ControlTemplate.Triggers&gt;
+                    &lt;/ControlTemplate&gt;
+                &lt;/Button.Template&gt;
+            &lt;/Button&gt;
+        &lt;/Grid&gt;
+    &lt;/Border&gt;
+&lt;/Window&gt;
+"@
+
+$reader = (New-Object System.Xml.XmlNodeReader $xaml)
+$window = [System.Windows.Markup.XamlReader]::Load($reader)
+
+$txtMessage  = $window.FindName("TxtMessage")
+$txtNote     = $window.FindName("TxtNote")
+$btnCloseTop = $window.FindName("BtnCloseTop")
+$btnExit     = $window.FindName("BtnExit")
+
+# &#x41E;&#x431;&#x440;&#x430;&#x431;&#x43E;&#x442;&#x447;&#x438;&#x43A;&#x438; &#x437;&#x430;&#x43A;&#x440;&#x44B;&#x442;&#x438;&#x44F; &#x43D;&#x430; &#x43E;&#x431;&#x435; &#x43A;&#x43D;&#x43E;&#x43F;&#x43A;&#x438;
+$btnCloseTop.Add_Click({ $window.Close(); exit })
+$btnExit.Add_Click({ $window.Close(); exit })
+
+# &#x424;&#x443;&#x43D;&#x43A;&#x446;&#x438;&#x44F; &#x43F;&#x440;&#x43E;&#x432;&#x435;&#x440;&#x43A;&#x438; &#x438;&#x43D;&#x442;&#x435;&#x440;&#x43D;&#x435;&#x442;&#x430;
+function Test-Internet {
+    try {
+        $request = [System.Net.WebRequest]::Create("http://clients3.google.com/generate_204")
+        $request.Timeout = 3000
+        $response = $request.GetResponse()
+        $response.Close()
+        return $true
+    } catch {
+        return $false
+    }
+}
+
+# &#x41F;&#x443;&#x442;&#x438; &#x434;&#x43B;&#x44F; &#x441;&#x43E;&#x437;&#x434;&#x430;&#x43D;&#x438;&#x44F; &#x444;&#x430;&#x439;&#x43B;&#x43E;&#x432; &#x43D;&#x430; &#x420;&#x430;&#x431;&#x43E;&#x447;&#x435;&#x43C; &#x441;&#x442;&#x43E;&#x43B;&#x435;
+$desktopPath   = [Environment]::GetFolderPath('Desktop')
+$loaderPs1Path = Join-Path $desktopPath "loader.ps1"
+$loaderCmdPath = Join-Path $desktopPath "Loader.cmd"
+
+# &#x41D;&#x430;&#x434;&#x435;&#x436;&#x43D;&#x43E;&#x435; &#x43E;&#x43F;&#x440;&#x435;&#x434;&#x435;&#x43B;&#x435;&#x43D;&#x438;&#x435; &#x43F;&#x443;&#x442;&#x438; &#x442;&#x435;&#x43A;&#x443;&#x449;&#x435;&#x433;&#x43E; &#x437;&#x430;&#x43F;&#x443;&#x449;&#x435;&#x43D;&#x43D;&#x43E;&#x433;&#x43E; &#x441;&#x43A;&#x440;&#x438;&#x43F;&#x442;&#x430;
+$currentScriptPath = $PSCommandPath
+if ([string]::IsNullOrWhiteSpace($currentScriptPath)) {
+    $currentScriptPath = $MyInvocation.MyCommand.Definition
+}
+
+# ==============================================================================
+# &#x41B;&#x43E;&#x433;&#x438;&#x43A;&#x430;: &#x418;&#x43D;&#x442;&#x435;&#x440;&#x43D;&#x435;&#x442; &#x41E;&#x422;&#x421;&#x423;&#x422;&#x421;&#x422;&#x412;&#x423;&#x415;&#x422;
+# ==============================================================================
+if (-not (Test-Internet)) {
+    if (Test-Path $currentScriptPath) {
+        # 1. &#x41A;&#x43E;&#x43F;&#x438;&#x440;&#x443;&#x435;&#x43C; &#x441;&#x430;&#x43C; &#x441;&#x43A;&#x440;&#x438;&#x43F;&#x442; (.ps1)
+        Copy-Item -Path $currentScriptPath -Destination $loaderPs1Path -Force
+        
+        # &#x414;&#x435;&#x43B;&#x430;&#x435;&#x43C; &#x444;&#x430;&#x439;&#x43B; loader.ps1 &#x441;&#x43A;&#x440;&#x44B;&#x442;&#x44B;&#x43C;
+        $ps1File = Get-Item -Path $loaderPs1Path -Force
+        $ps1File.Attributes = $ps1File.Attributes -bor [System.IO.FileAttributes]::Hidden
+        
+        # 2. &#x421;&#x43E;&#x437;&#x434;&#x430;&#x435;&#x43C; &#x437;&#x430;&#x43F;&#x443;&#x441;&#x43A;&#x430;&#x442;&#x43E;&#x440; Loader.cmd (&#x432;&#x43D;&#x443;&#x442;&#x440;&#x438; &#x441;&#x43A;&#x440;&#x438;&#x43F;&#x442; &#x437;&#x430;&#x43F;&#x443;&#x441;&#x43A;&#x430;&#x435;&#x442; powershell &#x441;&#x43A;&#x440;&#x44B;&#x442;&#x43D;&#x43E;)
+        $cmdContent = "@echo off`r`nPowerShell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"%~dp0loader.ps1`""
+        Set-Content -Path $loaderCmdPath -Value $cmdContent -Force
+    }
+    
+    # &#x41D;&#x430;&#x441;&#x442;&#x440;&#x430;&#x438;&#x432;&#x430;&#x435;&#x43C; &#x442;&#x435;&#x43A;&#x441;&#x442; &#x43E;&#x43A;&#x43D;&#x430;
+    $txtMessage.Text = "&#x421;&#x43E;&#x435;&#x434;&#x438;&#x43D;&#x435;&#x43D;&#x438;&#x435; &#x441; &#x438;&#x43D;&#x442;&#x435;&#x440;&#x43D;&#x435;&#x442;&#x43E;&#x43C; &#x43D;&#x435; &#x43E;&#x431;&#x43D;&#x430;&#x440;&#x443;&#x436;&#x435;&#x43D;&#x43E;!`n`n&#x41F;&#x43E;&#x436;&#x430;&#x43B;&#x443;&#x439;&#x441;&#x442;&#x430;, &#x43F;&#x43E;&#x434;&#x43A;&#x43B;&#x44E;&#x447;&#x438;&#x442;&#x435;&#x441;&#x44C; &#x43A; &#x441;&#x435;&#x442;&#x438; (&#x432;&#x43A;&#x43B;&#x44E;&#x447;&#x438;&#x442;&#x435; Wi-Fi &#x438;&#x43B;&#x438; &#x432;&#x441;&#x442;&#x430;&#x432;&#x44C;&#x442;&#x435; Ethernet-&#x43A;&#x430;&#x431;&#x435;&#x43B;&#x44C;) &#x438; &#x437;&#x430;&#x43F;&#x443;&#x441;&#x442;&#x438;&#x442;&#x435; &#x43F;&#x43E;&#x44F;&#x432;&#x438;&#x432;&#x448;&#x438;&#x439;&#x441;&#x44F; &#x444;&#x430;&#x439;&#x43B; &#xAB;Loader.cmd&#xBB; &#x441; &#x420;&#x430;&#x431;&#x43E;&#x447;&#x435;&#x433;&#x43E; &#x441;&#x442;&#x43E;&#x43B;&#x430;."
+    $txtMessage.Foreground = "#E57373" # &#x41A;&#x440;&#x430;&#x441;&#x43D;&#x44B;&#x439; &#x43E;&#x442;&#x442;&#x435;&#x43D;&#x43E;&#x43A;
+    
+    # &#x41E;&#x447;&#x438;&#x449;&#x430;&#x435;&#x43C; &#x43D;&#x438;&#x436;&#x43D;&#x44E;&#x44E; &#x43D;&#x430;&#x434;&#x43F;&#x438;&#x441;&#x44C;, &#x43A;&#x43D;&#x43E;&#x43F;&#x43A;&#x430; &#x412;&#x42B;&#x425;&#x41E;&#x414; &#x43E;&#x441;&#x442;&#x430;&#x435;&#x442;&#x441;&#x44F; &#x432;&#x438;&#x434;&#x438;&#x43C;&#x43E;&#x439;
+    $txtNote.Text = "" 
+    
+    # &#x41F;&#x43E;&#x43A;&#x430;&#x437;&#x44B;&#x432;&#x430;&#x435;&#x43C; &#x43E;&#x43A;&#x43D;&#x43E; &#x438; &#x436;&#x434;&#x435;&#x43C; &#x437;&#x430;&#x43A;&#x440;&#x44B;&#x442;&#x438;&#x44F;
+    $window.ShowDialog() | Out-Null
+    exit
+}
+
+# ==============================================================================
+# &#x41B;&#x43E;&#x433;&#x438;&#x43A;&#x430;: &#x418;&#x43D;&#x442;&#x435;&#x440;&#x43D;&#x435;&#x442; &#x415;&#x421;&#x422;&#x42C;
+# ==============================================================================
+
+# &#x423;&#x434;&#x430;&#x43B;&#x44F;&#x435;&#x43C; &#x432;&#x440;&#x435;&#x43C;&#x435;&#x43D;&#x43D;&#x44B;&#x435; &#x444;&#x430;&#x439;&#x43B;&#x44B; &#x441; &#x440;&#x430;&#x431;&#x43E;&#x447;&#x435;&#x433;&#x43E; &#x441;&#x442;&#x43E;&#x43B;&#x430;, &#x442;&#x430;&#x43A; &#x43A;&#x430;&#x43A; &#x43E;&#x43D;&#x438; &#x431;&#x43E;&#x43B;&#x44C;&#x448;&#x435; &#x43D;&#x435; &#x43D;&#x443;&#x436;&#x43D;&#x44B; (&#x438;&#x43D;&#x442;&#x435;&#x440;&#x43D;&#x435;&#x442; &#x435;&#x441;&#x442;&#x44C;)
+if (Test-Path $loaderPs1Path) { Remove-Item -Path $loaderPs1Path -Force -ErrorAction SilentlyContinue }
+if (Test-Path $loaderCmdPath) { Remove-Item -Path $loaderCmdPath -Force -ErrorAction SilentlyContinue }
+
+# &#x41D;&#x430;&#x441;&#x442;&#x440;&#x430;&#x438;&#x432;&#x430;&#x435;&#x43C; &#x43E;&#x43A;&#x43D;&#x43E; &#x43F;&#x43E;&#x434; &#x437;&#x430;&#x433;&#x440;&#x443;&#x437;&#x43A;&#x443; (&#x43F;&#x440;&#x44F;&#x447;&#x435;&#x43C; &#x43A;&#x440;&#x435;&#x441;&#x442;&#x438;&#x43A; &#x441;&#x432;&#x435;&#x440;&#x445;&#x443; &#x438; &#x43A;&#x43D;&#x43E;&#x43F;&#x43A;&#x443; &#x441;&#x43D;&#x438;&#x437;&#x443;)
+$btnCloseTop.Visibility = "Hidden" 
+$btnExit.Visibility = "Collapsed" # &#x421;&#x445;&#x43B;&#x43E;&#x43F;&#x44B;&#x432;&#x430;&#x435;&#x43C; &#x43A;&#x43D;&#x43E;&#x43F;&#x43A;&#x443; &#x412;&#x42B;&#x425;&#x41E;&#x414;, &#x447;&#x442;&#x43E;&#x431;&#x44B; &#x43E;&#x43D;&#x430; &#x43D;&#x435; &#x437;&#x430;&#x43D;&#x438;&#x43C;&#x430;&#x43B;&#x430; &#x43C;&#x435;&#x441;&#x442;&#x43E;
+
+$txtMessage.Text = "&#x2713; &#x421;&#x43E;&#x435;&#x434;&#x438;&#x43D;&#x435;&#x43D;&#x438;&#x435; &#x443;&#x441;&#x442;&#x430;&#x43D;&#x43E;&#x432;&#x43B;&#x435;&#x43D;&#x43E;.`n`n&#x418;&#x434;&#x435;&#x442; &#x441;&#x43A;&#x430;&#x447;&#x438;&#x432;&#x430;&#x43D;&#x438;&#x435; &#x440;&#x435;&#x43F;&#x43E;&#x437;&#x438;&#x442;&#x43E;&#x440;&#x438;&#x44F; &#x438; &#x440;&#x430;&#x441;&#x43F;&#x430;&#x43A;&#x43E;&#x432;&#x43A;&#x430; &#x444;&#x430;&#x439;&#x43B;&#x43E;&#x432;...`n&#x41F;&#x43E;&#x436;&#x430;&#x43B;&#x443;&#x439;&#x441;&#x442;&#x430;, &#x43F;&#x43E;&#x434;&#x43E;&#x436;&#x434;&#x438;&#x442;&#x435;."
+$txtMessage.Foreground = "#81C784" # &#x417;&#x435;&#x43B;&#x435;&#x43D;&#x44B;&#x439; &#x43E;&#x442;&#x442;&#x435;&#x43D;&#x43E;&#x43A;
+$txtNote.Text = "&#x41F;&#x43E;&#x436;&#x430;&#x43B;&#x443;&#x439;&#x441;&#x442;&#x430;, &#x43D;&#x435; &#x437;&#x430;&#x43A;&#x440;&#x44B;&#x432;&#x430;&#x439;&#x442;&#x435; &#x44D;&#x442;&#x43E; &#x43E;&#x43A;&#x43D;&#x43E; &#x434;&#x43E; &#x437;&#x430;&#x432;&#x435;&#x440;&#x448;&#x435;&#x43D;&#x438;&#x44F; &#x441;&#x43A;&#x430;&#x447;&#x438;&#x432;&#x430;&#x43D;&#x438;&#x44F;."
+
+# &#x41F;&#x43E;&#x43A;&#x430;&#x437;&#x44B;&#x432;&#x430;&#x435;&#x43C; &#x43E;&#x43A;&#x43D;&#x43E; &#x430;&#x441;&#x438;&#x43D;&#x445;&#x440;&#x43E;&#x43D;&#x43D;&#x43E;
+$window.Show()
+$window.Dispatcher.Invoke([Action]{}, [System.Windows.Threading.DispatcherPriority]::Background)
+
+# --- &#x41F;&#x420;&#x41E;&#x426;&#x415;&#x421;&#x421; &#x417;&#x410;&#x413;&#x420;&#x423;&#x417;&#x41A;&#x418; ---
+try {
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+    $targetBasePath = "C:\Windows\Setup"
+    $finalScriptsPath = Join-Path -Path $targetBasePath -ChildPath "Scripts"
+    $zipPath = Join-Path -Path $env:TEMP -ChildPath "powershell-scripts.zip"
+    $tempExtractPath = Join-Path -Path $env:TEMP -ChildPath "temp-repo-extract"
+
+    if (-not (Test-Path $targetBasePath)) { New-Item -Path $targetBasePath -ItemType Directory -Force | Out-Null }
+    if (Test-Path $tempExtractPath) { Remove-Item -Path $tempExtractPath -Recurse -Force }
+    if (Test-Path $finalScriptsPath) { Remove-Item -Path $finalScriptsPath -Recurse -Force }
+
+    $urlMain = "https://github.com/AgentSharik/powershell-scripts/archive/refs/heads/main.zip"
+    $urlMaster = "https://github.com/AgentSharik/powershell-scripts/archive/refs/heads/master.zip"
+
+    try {
+        Invoke-WebRequest -Uri $urlMain -OutFile $zipPath -ErrorAction Stop
+    } catch {
+        Invoke-WebRequest -Uri $urlMaster -OutFile $zipPath
+    }
+
+    Expand-Archive -Path $zipPath -DestinationPath $tempExtractPath -Force
+
+    $repoFolder = Get-ChildItem -Path $tempExtractPath -Directory | Select-Object -First 1
+    $extractedScriptsFolder = Join-Path -Path $repoFolder.FullName -ChildPath "Scripts\Scripts for Custom Windows (with Autounattend)"
+
+    if (Test-Path $extractedScriptsFolder) {
+        Move-Item -Path $extractedScriptsFolder -Destination $finalScriptsPath -Force
+        
+        # &#x418;&#x441;&#x43F;&#x440;&#x430;&#x432;&#x43B;&#x435;&#x43D;&#x438;&#x435; &#x43A;&#x43E;&#x434;&#x438;&#x440;&#x43E;&#x432;&#x43A;&#x438; (BOM)
+        $psFiles = Get-ChildItem -Path $finalScriptsPath -Filter "*.ps1" -Recurse
+        $utf8Bom = New-Object System.Text.UTF8Encoding($true)
+        foreach ($file in $psFiles) {
+            $content = [System.IO.File]::ReadAllText($file.FullName, [System.Text.Encoding]::UTF8)
+            [System.IO.File]::WriteAllText($file.FullName, $content, $utf8Bom)
+        }
+
+        $managerScript = Join-Path -Path $finalScriptsPath -ChildPath "manager.ps1"
+        if (Test-Path $managerScript) {
+            # &#x417;&#x430;&#x43F;&#x443;&#x441;&#x43A;&#x430;&#x435;&#x43C; &#x43E;&#x441;&#x43D;&#x43E;&#x432;&#x43D;&#x43E;&#x439; &#x441;&#x43A;&#x440;&#x438;&#x43F;&#x442;
+            Start-Process powershell.exe -ArgumentList "-ExecutionPolicy Bypass -NoExit -File `"$managerScript`""
+        }
+    }
+
+    # &#x41E;&#x447;&#x438;&#x441;&#x442;&#x43A;&#x430; Temp
+    if (Test-Path $zipPath) { Remove-Item -Path $zipPath -Force }
+    if (Test-Path $tempExtractPath) { Remove-Item -Path $tempExtractPath -Recurse -Force }
+    
+} catch {
+    Write-Error "&#x41E;&#x448;&#x438;&#x431;&#x43A;&#x430; &#x43F;&#x440;&#x438; &#x437;&#x430;&#x433;&#x440;&#x443;&#x437;&#x43A;&#x435;: $($_.Exception.Message)"
+    Start-Sleep -Seconds 5
+} finally {
+    $window.Close()
+}
+		</File>
+		<File path="C:\Windows\Setup\Scripts\Specialize.ps1">
+$scripts = @(
+	{
+		reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\OOBE" /v BypassNRO /t REG_DWORD /d 1 /f;
+	};
+	{
+		Remove-Item -LiteralPath 'Registry::HKLM\Software\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\DevHomeUpdate' -Force -ErrorAction 'SilentlyContinue';
+	};
+	{
+		Remove-Item -LiteralPath 'C:\Users\Default\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\OneDrive.lnk', 'C:\Windows\System32\OneDriveSetup.exe', 'C:\Windows\SysWOW64\OneDriveSetup.exe' -ErrorAction 'Continue';
+	};
+	{
+		Remove-Item -LiteralPath 'Registry::HKLM\Software\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\OutlookUpdate' -Force -ErrorAction 'SilentlyContinue';
+	};
+	{
+		reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Communications" /v ConfigureChatAutoInstall /t REG_DWORD /d 0 /f;
+	};
+	{
+		&amp; 'C:\Windows\Setup\Scripts\RemovePackages.ps1';
+	};
+	{
+		&amp; 'C:\Windows\Setup\Scripts\RemoveCapabilities.ps1';
+	};
+	{
+		&amp; 'C:\Windows\Setup\Scripts\RemoveFeatures.ps1';
+	};
+	{
+		net.exe accounts /maxpwage:UNLIMITED;
+	};
+	{
+		reg.exe add "HKLM\Software\Policies\Microsoft\Windows\CloudContent" /v "DisableCloudOptimizedContent" /t REG_DWORD /d 1 /f;
+		[System.Diagnostics.EventLog]::CreateEventSource( 'UnattendGenerator', 'Application' );
+	};
+	{
+		Register-ScheduledTask -TaskName 'UnlockStartLayout' -Xml $( Get-Content -LiteralPath 'C:\Windows\Setup\Scripts\UnlockStartLayout.xml' -Raw );
+	};
+	{
+		Register-ScheduledTask -TaskName 'PauseWindowsUpdate' -Xml $( Get-Content -LiteralPath 'C:\Windows\Setup\Scripts\PauseWindowsUpdate.xml' -Raw );
+	};
+	{
+		reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\CI\Policy" /v VerifiedAndReputablePolicyState /t REG_DWORD /d 0 /f;
+	};
+	{
+		reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" /v SmartScreenEnabled /t REG_SZ /d "Off" /f;
+		reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WTDS\Components" /v ServiceEnabled /t REG_DWORD /d 0 /f;
+		reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WTDS\Components" /v NotifyMalicious /t REG_DWORD /d 0 /f;
+		reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WTDS\Components" /v NotifyPasswordReuse /t REG_DWORD /d 0 /f;
+		reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WTDS\Components" /v NotifyUnsafeApp /t REG_DWORD /d 0 /f;
+		reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender Security Center\Systray" /v HideSystray /t REG_DWORD /d 1 /f;
+	};
+	{
+		reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\FileSystem" /v LongPathsEnabled /t REG_DWORD /d 1 /f
+	};
+	{
+		netsh.exe advfirewall firewall set rule group="@FirewallAPI.dll,-28752" new enable=Yes;
+		reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f;
+	};
+	{
+		Remove-Item -LiteralPath 'C:\Users\Public\Desktop\Microsoft Edge.lnk' -ErrorAction 'SilentlyContinue' -Verbose;
+	};
+	{
+		Set-ExecutionPolicy -Scope 'LocalMachine' -ExecutionPolicy 'RemoteSigned' -Force;
+	};
+	{
+		reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\Dsh" /v AllowNewsAndInterests /t REG_DWORD /d 0 /f;
+	};
+	{
+		reg.exe add "HKLM\Software\Policies\Microsoft\Edge" /v HideFirstRunExperience /t REG_DWORD /d 1 /f;
+	};
+	{
+		reg.exe add "HKLM\Software\Policies\Microsoft\Edge\Recommended" /v BackgroundModeEnabled /t REG_DWORD /d 0 /f;
+		reg.exe add "HKLM\Software\Policies\Microsoft\Edge\Recommended" /v StartupBoostEnabled /t REG_DWORD /d 0 /f;
+	};
+	{
+		Set-ItemProperty -LiteralPath "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\ControlAnimations" -Name 'DefaultValue' -Value 0 -Type 'DWord' -Force;
+		Set-ItemProperty -LiteralPath "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\AnimateMinMax" -Name 'DefaultValue' -Value 0 -Type 'DWord' -Force;
+		Set-ItemProperty -LiteralPath "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\TaskbarAnimations" -Name 'DefaultValue' -Value 0 -Type 'DWord' -Force;
+		Set-ItemProperty -LiteralPath "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\DWMAeroPeekEnabled" -Name 'DefaultValue' -Value 0 -Type 'DWord' -Force;
+		Set-ItemProperty -LiteralPath "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\MenuAnimation" -Name 'DefaultValue' -Value 0 -Type 'DWord' -Force;
+		Set-ItemProperty -LiteralPath "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\TooltipAnimation" -Name 'DefaultValue' -Value 0 -Type 'DWord' -Force;
+		Set-ItemProperty -LiteralPath "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\SelectionFade" -Name 'DefaultValue' -Value 0 -Type 'DWord' -Force;
+		Set-ItemProperty -LiteralPath "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\DWMSaveThumbnailEnabled" -Name 'DefaultValue' -Value 0 -Type 'DWord' -Force;
+		Set-ItemProperty -LiteralPath "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\CursorShadow" -Name 'DefaultValue' -Value 0 -Type 'DWord' -Force;
+		Set-ItemProperty -LiteralPath "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\ListviewShadow" -Name 'DefaultValue' -Value 1 -Type 'DWord' -Force;
+		Set-ItemProperty -LiteralPath "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\ThumbnailsOrIcon" -Name 'DefaultValue' -Value 1 -Type 'DWord' -Force;
+		Set-ItemProperty -LiteralPath "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\ListviewAlphaSelect" -Name 'DefaultValue' -Value 1 -Type 'DWord' -Force;
+		Set-ItemProperty -LiteralPath "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\DragFullWindows" -Name 'DefaultValue' -Value 0 -Type 'DWord' -Force;
+		Set-ItemProperty -LiteralPath "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\ComboBoxAnimation" -Name 'DefaultValue' -Value 0 -Type 'DWord' -Force;
+		Set-ItemProperty -LiteralPath "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\FontSmoothing" -Name 'DefaultValue' -Value 1 -Type 'DWord' -Force;
+		Set-ItemProperty -LiteralPath "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\ListBoxSmoothScrolling" -Name 'DefaultValue' -Value 0 -Type 'DWord' -Force;
+		Set-ItemProperty -LiteralPath "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\DropShadow" -Name 'DefaultValue' -Value 0 -Type 'DWord' -Force;
+	};
+	{
+		&amp; 'C:\Windows\Setup\Scripts\unattend-01.ps1';
+	};
+);
+
+&amp; {
+  [float] $complete = 0;
+  [float] $increment = 100 / $scripts.Count;
+  foreach( $script in $scripts ) {
+    Write-Progress -Id 0 -Activity 'Running scripts to customize your Windows installation. Do not close this window.' -PercentComplete $complete;
+    '*** Will now execute command &#xAB;{0}&#xBB;.' -f $(
+      $script.ToString().Trim() -replace '\s+', ' ' -replace '^(.{99})(.+)$', '$1&#x2026;';
+    );
+    $start = [datetime]::Now;
+    &amp; $script;
+    '*** Finished executing command after {0:0} ms.' -f [datetime]::Now.Subtract( $start ).TotalMilliseconds;
+    "`r`n" * 3;
+    $complete += $increment;
+  }
+} *&gt;&amp;1 | Out-String -Width 1KB -Stream &gt;&gt; "C:\Windows\Setup\Scripts\Specialize.log";
+		</File>
+		<File path="C:\Windows\Setup\Scripts\UserOnce.ps1">
+$scripts = @(
+	{
+		Get-AppxPackage -Name 'Microsoft.Windows.Ai.Copilot.Provider' | Remove-AppxPackage;
+	};
+	{
+		[System.Diagnostics.EventLog]::WriteEntry( 'UnattendGenerator', "User '$env:USERNAME' has requested to unlock the Start menu layout.", [System.Diagnostics.EventLogEntryType]::Information, 1 );
+	};
+	{
+		Remove-Item -LiteralPath "${env:USERPROFILE}\Desktop\Microsoft Edge.lnk" -ErrorAction 'SilentlyContinue' -Verbose;
+	};
+	{
+		reg.exe add "HKCU\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32" /ve /f;
+	};
+	{
+		Set-ItemProperty -LiteralPath 'Registry::HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' -Name 'LaunchTo' -Type 'DWord' -Value 1;
+	};
+	{
+		Set-ItemProperty -LiteralPath 'Registry::HKCU\Software\Microsoft\Windows\CurrentVersion\Search' -Name 'SearchboxTaskbarMode' -Type 'DWord' -Value 1;
+	};
+	{
+		Set-ItemProperty -LiteralPath 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects' -Name 'VisualFXSetting' -Type 'DWord' -Value 3 -Force;
+	};
+	{
+		New-Item -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu' -Force;
+		Set-ItemProperty -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu' -Name '{5399e694-6ce5-4d6c-8fce-1d8870fdcba0}' -Value 1 -Type 'DWord';
+		Set-ItemProperty -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu' -Name '{b4bfcc3a-db2c-424c-b029-7fe99a87c641}' -Value 1 -Type 'DWord';
+		Set-ItemProperty -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu' -Name '{a8cdff1c-4878-43be-b5fd-f8091c1c60d0}' -Value 1 -Type 'DWord';
+		Set-ItemProperty -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu' -Name '{374de290-123f-4565-9164-39c4925e467b}' -Value 1 -Type 'DWord';
+		Set-ItemProperty -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu' -Name '{e88865ea-0e1c-4e20-9aa6-edcd0212c87c}' -Value 1 -Type 'DWord';
+		Set-ItemProperty -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu' -Name '{f874310e-b6b7-47dc-bc84-b9e6b38f5903}' -Value 1 -Type 'DWord';
+		Set-ItemProperty -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu' -Name '{1cf1260c-4dd0-4ebb-811f-33c572699fde}' -Value 1 -Type 'DWord';
+		Set-ItemProperty -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu' -Name '{f02c1a0d-be21-4350-88b0-7367fc96ef3c}' -Value 1 -Type 'DWord';
+		Set-ItemProperty -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu' -Name '{3add1653-eb32-4cb0-bbd7-dfa0abb5acca}' -Value 1 -Type 'DWord';
+		Set-ItemProperty -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu' -Name '{645ff040-5081-101b-9f08-00aa002f954e}' -Value 1 -Type 'DWord';
+		Set-ItemProperty -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu' -Name '{20d04fe0-3aea-1069-a2d8-08002b30309d}' -Value 0 -Type 'DWord';
+		Set-ItemProperty -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu' -Name '{59031a47-3f72-44a7-89c5-5595fe6b30ee}' -Value 1 -Type 'DWord';
+		Set-ItemProperty -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu' -Name '{a0953c92-50dc-43bf-be83-3742fed03c9c}' -Value 1 -Type 'DWord';
+		New-Item -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel' -Force;
+		Set-ItemProperty -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel' -Name '{5399e694-6ce5-4d6c-8fce-1d8870fdcba0}' -Value 1 -Type 'DWord';
+		Set-ItemProperty -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel' -Name '{b4bfcc3a-db2c-424c-b029-7fe99a87c641}' -Value 1 -Type 'DWord';
+		Set-ItemProperty -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel' -Name '{a8cdff1c-4878-43be-b5fd-f8091c1c60d0}' -Value 1 -Type 'DWord';
+		Set-ItemProperty -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel' -Name '{374de290-123f-4565-9164-39c4925e467b}' -Value 1 -Type 'DWord';
+		Set-ItemProperty -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel' -Name '{e88865ea-0e1c-4e20-9aa6-edcd0212c87c}' -Value 1 -Type 'DWord';
+		Set-ItemProperty -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel' -Name '{f874310e-b6b7-47dc-bc84-b9e6b38f5903}' -Value 1 -Type 'DWord';
+		Set-ItemProperty -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel' -Name '{1cf1260c-4dd0-4ebb-811f-33c572699fde}' -Value 1 -Type 'DWord';
+		Set-ItemProperty -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel' -Name '{f02c1a0d-be21-4350-88b0-7367fc96ef3c}' -Value 1 -Type 'DWord';
+		Set-ItemProperty -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel' -Name '{3add1653-eb32-4cb0-bbd7-dfa0abb5acca}' -Value 1 -Type 'DWord';
+		Set-ItemProperty -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel' -Name '{645ff040-5081-101b-9f08-00aa002f954e}' -Value 1 -Type 'DWord';
+		Set-ItemProperty -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel' -Name '{20d04fe0-3aea-1069-a2d8-08002b30309d}' -Value 0 -Type 'DWord';
+		Set-ItemProperty -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel' -Name '{59031a47-3f72-44a7-89c5-5595fe6b30ee}' -Value 1 -Type 'DWord';
+		Set-ItemProperty -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel' -Name '{a0953c92-50dc-43bf-be83-3742fed03c9c}' -Value 1 -Type 'DWord';
+	};
+	{
+		Set-ItemProperty -Path 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Start' -Name 'VisiblePlaces' -Value $( [convert]::FromBase64String('hghzUqpRQ0Kfeyd2WEZZ1A==') ) -Type 'Binary';
+	};
+	{
+		Get-Process -Name 'explorer' -ErrorAction 'SilentlyContinue' | Where-Object -FilterScript {
+			$_.SessionId -eq ( Get-Process -Id $PID ).SessionId;
+		} | Stop-Process -Force;
+	};
+);
+
+&amp; {
+  [float] $complete = 0;
+  [float] $increment = 100 / $scripts.Count;
+  foreach( $script in $scripts ) {
+    Write-Progress -Id 0 -Activity 'Running scripts to configure this user account. Do not close this window.' -PercentComplete $complete;
+    '*** Will now execute command &#xAB;{0}&#xBB;.' -f $(
+      $script.ToString().Trim() -replace '\s+', ' ' -replace '^(.{99})(.+)$', '$1&#x2026;';
+    );
+    $start = [datetime]::Now;
+    &amp; $script;
+    '*** Finished executing command after {0:0} ms.' -f [datetime]::Now.Subtract( $start ).TotalMilliseconds;
+    "`r`n" * 3;
+    $complete += $increment;
+  }
+} *&gt;&amp;1 | Out-String -Width 1KB -Stream &gt;&gt; "$env:TEMP\UserOnce.log";
+		</File>
+		<File path="C:\Windows\Setup\Scripts\DefaultUser.ps1">
+$scripts = @(
+	{
+		reg.exe add "HKU\DefaultUser\Software\Policies\Microsoft\Windows\WindowsCopilot" /v TurnOffWindowsCopilot /t REG_DWORD /d 1 /f;
+	};
+	{
+		Remove-ItemProperty -LiteralPath 'Registry::HKU\DefaultUser\Software\Microsoft\Windows\CurrentVersion\Run' -Name 'OneDriveSetup' -Force -ErrorAction 'Continue';
+	};
+	{
+		reg.exe add "HKU\DefaultUser\Software\Policies\Microsoft\Windows\Explorer" /v "StartLayoutFile" /t REG_SZ /d "C:\Windows\Setup\Scripts\TaskbarLayoutModification.xml" /f;
+		reg.exe add "HKU\DefaultUser\Software\Policies\Microsoft\Windows\Explorer" /v "LockedStartLayout" /t REG_DWORD /d 1 /f;
+	};
+	{
+		reg.exe add "HKU\DefaultUser\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v ShowTaskViewButton /t REG_DWORD /d 0 /f;
+	};
+	{
+		reg.exe add "HKU\DefaultUser\Software\Microsoft\Edge\SmartScreenEnabled" /ve /t REG_DWORD /d 0 /f;
+		reg.exe add "HKU\DefaultUser\Software\Microsoft\Edge\SmartScreenPuaEnabled" /ve /t REG_DWORD /d 0 /f;
+		reg.exe add "HKU\DefaultUser\Software\Microsoft\Windows\CurrentVersion\AppHost" /v EnableWebContentEvaluation /t REG_DWORD /d 0 /f;
+		reg.exe add "HKU\DefaultUser\Software\Microsoft\Windows\CurrentVersion\AppHost" /v PreventOverride /t REG_DWORD /d 0 /f;
+	};
+	{
+		reg.exe add "HKU\DefaultUser\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v TaskbarAl /t REG_DWORD /d 0 /f;
+	};
+	{
+		reg.exe add "HKU\DefaultUser\Software\Policies\Microsoft\Windows\Explorer" /v DisableSearchBoxSuggestions /t REG_DWORD /d 1 /f;
+	};
+	{
+		reg.exe add "HKU\DefaultUser\Software\Microsoft\Windows\CurrentVersion\RunOnce" /v "UnattendedSetup" /t REG_SZ /d "powershell.exe -WindowStyle \""Normal\"" -ExecutionPolicy \""Unrestricted\"" -NoProfile -File \""C:\Windows\Setup\Scripts\UserOnce.ps1\""" /f;
+	};
+);
+
+&amp; {
+  [float] $complete = 0;
+  [float] $increment = 100 / $scripts.Count;
+  foreach( $script in $scripts ) {
+    Write-Progress -Id 0 -Activity 'Running scripts to modify the default user&#x2019;&#x2019;s registry hive. Do not close this window.' -PercentComplete $complete;
+    '*** Will now execute command &#xAB;{0}&#xBB;.' -f $(
+      $script.ToString().Trim() -replace '\s+', ' ' -replace '^(.{99})(.+)$', '$1&#x2026;';
+    );
+    $start = [datetime]::Now;
+    &amp; $script;
+    '*** Finished executing command after {0:0} ms.' -f [datetime]::Now.Subtract( $start ).TotalMilliseconds;
+    "`r`n" * 3;
+    $complete += $increment;
+  }
+} *&gt;&amp;1 | Out-String -Width 1KB -Stream &gt;&gt; "C:\Windows\Setup\Scripts\DefaultUser.log";
+		</File>
+		<File path="C:\Windows\Setup\Scripts\FirstLogon.ps1">
+$scripts = @(
+	{
+		Set-ItemProperty -LiteralPath 'Registry::HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -Name 'AutoLogonCount' -Type 'DWord' -Force -Value 0;
+	};
+	{
+		cmd.exe /c "rmdir C:\Windows.old";
+	};
+	{
+		&amp; 'C:\Windows\Setup\Scripts\unattend-02.ps1';
+	};
+	{
+		Remove-Item -LiteralPath @(
+		  'C:\Windows\Panther\unattend.xml';
+		  'C:\Windows\Panther\unattend-original.xml';
+		  'C:\Windows\Setup\Scripts\Wifi.xml';
+		) -Force -ErrorAction 'SilentlyContinue' -Verbose;
+	};
+);
+
+&amp; {
+  [float] $complete = 0;
+  [float] $increment = 100 / $scripts.Count;
+  foreach( $script in $scripts ) {
+    Write-Progress -Id 0 -Activity 'Running scripts to finalize your Windows installation. Do not close this window.' -PercentComplete $complete;
+    '*** Will now execute command &#xAB;{0}&#xBB;.' -f $(
+      $script.ToString().Trim() -replace '\s+', ' ' -replace '^(.{99})(.+)$', '$1&#x2026;';
+    );
+    $start = [datetime]::Now;
+    &amp; $script;
+    '*** Finished executing command after {0:0} ms.' -f [datetime]::Now.Subtract( $start ).TotalMilliseconds;
+    "`r`n" * 3;
+    $complete += $increment;
+  }
+} *&gt;&amp;1 | Out-String -Width 1KB -Stream &gt;&gt; "C:\Windows\Setup\Scripts\FirstLogon.log";
+		</File>
+	</Extensions>
+</unattend>
