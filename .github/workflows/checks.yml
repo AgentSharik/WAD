@@ -1,80 +1,28 @@
 name: checks
 
+# NOTE: this file must stay ASCII-only.
+# GitHub runs inline `run:` blocks through Windows PowerShell 5.1, which reads
+# script text as ANSI - any non-ASCII characters get mangled and break the step
+# (first CI run on 2026-09-10 failed exactly on this). All checks live in
+# tools/check.ps1 - a UTF-8 file WITH BOM, where non-ASCII text is safe.
+
 on:
   push:
   pull_request:
 
 jobs:
-  syntax:
-    name: Синтаксис и анализ скриптов
+  checks:
+    name: Syntax and static analysis
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
 
-      # Важно: проверяем именно Windows PowerShell 5.1 — у пользователя на машине
-      # именно он, а не PowerShell 7. Синтаксис у них различается.
-      - name: Разбор всех .ps1 (Windows PowerShell 5.1)
-        shell: powershell
-        run: |
-          $bad = 0
-          # extras/audit/extracted — справочные копии скриптов из autounattend.xml,
-          # они XML-экранированы (&amp; вместо &) и намеренно не являются валидным PowerShell.
-          $exclude = '\.git\\|\.cache\\|extras[\\/]audit[\\/]extracted'
-          $files = Get-ChildItem -Path . -Recurse -Filter *.ps1 -File | Where-Object { $_.FullName -notmatch $exclude }
-          Write-Host "Проверяем файлов: $($files.Count)"
-          foreach ($f in $files) {
-            $tokens = $null
-            $errors = $null
-            [void][System.Management.Automation.Language.Parser]::ParseFile($f.FullName, [ref]$tokens, [ref]$errors)
-            if ($errors.Count -gt 0) {
-              $bad++
-              Write-Host "ОШИБКА РАЗБОРА: $($f.FullName)"
-              foreach ($e in $errors) {
-                Write-Host ("  строка {0}: {1}" -f $e.Extent.StartLineNumber, $e.Message)
-              }
-            }
-          }
-          if ($bad -gt 0) {
-            Write-Host "Файлов с ошибками разбора: $bad"
-            exit 1
-          }
-          Write-Host "Разбор пройден без ошибок."
-
-      - name: Статический анализ (PSScriptAnalyzer, ошибки)
+      - name: Install PSScriptAnalyzer
         shell: powershell
         run: |
           Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -ErrorAction SilentlyContinue
           Install-Module PSScriptAnalyzer -Force -Scope CurrentUser -AllowClobber
-          $exclude = '\.git\\|\.cache\\|extras[\\/]audit[\\/]extracted'
-          $files = Get-ChildItem -Path . -Recurse -Filter *.ps1 -File | Where-Object { $_.FullName -notmatch $exclude }
-          $issues = $files | ForEach-Object { Invoke-ScriptAnalyzer -Path $_.FullName -Severity Error }
-          if ($issues) {
-            $issues | Select-Object RuleName, Severity, @{n='File';e={$_.ScriptName}}, Line, Message |
-              Format-Table -AutoSize | Out-String -Width 200 | Write-Host
-            Write-Host "Найдены ошибки анализа."
-            exit 1
-          }
-          Write-Host "Ошибок анализа нет."
 
-      # Скрипты с русским текстом должны быть в UTF-8 с BOM, иначе в Windows
-      # PowerShell 5.1 кириллица превращается в кракозябры.
-      # Пока это предупреждение, а не падение: один файл в репозитории без BOM.
-      - name: Кодировка файлов (UTF-8 с BOM)
+      - name: Run repository checks
         shell: powershell
-        run: |
-          $withoutBom = @()
-          $exclude = '\.git\\|\.cache\\|extras[\\/]audit[\\/]extracted'
-          foreach ($f in (Get-ChildItem -Path . -Recurse -Filter *.ps1 -File | Where-Object { $_.FullName -notmatch $exclude })) {
-            $head = [System.IO.File]::ReadAllBytes($f.FullName)[0..2]
-            $hasBom = ($head[0] -eq 0xEF -and $head[1] -eq 0xBB -and $head[2] -eq 0xBF)
-            if (-not $hasBom) {
-              $withoutBom += $f.FullName
-              Write-Warning "Без BOM: $($f.FullName)"
-            }
-          }
-          if ($withoutBom.Count -gt 0) {
-            Write-Host "Файлов без BOM: $($withoutBom.Count)"
-            Write-Host "После исправления кодировки этот шаг нужно переключить на exit 1."
-          } else {
-            Write-Host "Все скрипты с BOM."
-          }
+        run: ./tools/check.ps1
