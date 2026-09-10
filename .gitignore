@@ -1,0 +1,38 @@
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Временное и служебное
+*.tmp
+*.temp
+~$*
+*.zip
+*.7z
+*.rar
+
+# Логи (в репозиторий не попадают: скрипты пишут их в «Документы» пользователя)
+*.log
+
+# Редакторы
+.vscode/
+.idea/
+*.swp
+
+# Скриншоты автора и прочее не для репозитория
+uploads/
+extras/audit/tmp/
+
+# Тяжёлые файлы в историю не коммитить
+*.iso
+*.wim
+*.esd
+*.mp4
+*.img
+
+# Кэши инструментов (PowerShell, модули, NuGet) — в репозиторий не нужны
+.cache/
+.config/
+.local/
