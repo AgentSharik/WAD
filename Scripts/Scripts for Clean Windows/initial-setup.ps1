@@ -5,6 +5,35 @@
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+
+# ==============================================================================
+# Честный статус для менеджера
+# ------------------------------------------------------------------------------
+# Менеджер судит о результате задачи по коду возврата процесса. Раньше ошибки
+# глушились в предупреждения, скрипт завершался с кодом 0, и задача показывалась
+# зелёной, хотя не установилось ничего. В этих скриптах Write-Warning всегда
+# означает проблему, поэтому перехватываем их и в конце отдаём код 1.
+# Нужно простое информационное сообщение — используй Write-Host.
+# ==============================================================================
+$script:Failures = New-Object System.Collections.Generic.List[string]
+
+function Write-Warning {
+    param([Parameter(Position = 0)][string]$Message)
+    Microsoft.PowerShell.Utility\Write-Warning $Message
+    $script:Failures.Add($Message)
+}
+
+function Show-FailureVerdict {
+    Write-Host ""
+    if ($script:Failures.Count -gt 0) {
+        Write-Host "ИТОГ: замечаний - $($script:Failures.Count):"
+        foreach ($failure in $script:Failures) { Write-Host "  - $failure" }
+        Write-Host "Этап завершён с замечаниями, статус задачи - сбой."
+    } else {
+        Write-Host "ИТОГ: замечаний нет."
+    }
+}
+
 $ProgressPreference    = 'SilentlyContinue'
 
 # --- НАСТРОЙКА ЛОГИРОВАНИЯ ---
@@ -34,7 +63,7 @@ try {
     Register-ScheduledTask -Xml $TaskXml -TaskName $TaskName -Force | Out-Null
     Start-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
     Write-Host "  [УСПЕШНО] Задача создана."
-} catch { Write-Host "  [ОШИБКА] Обновления: $_" }
+} catch { Write-Host "  [ОШИБКА] Обновления: $_"; $script:Failures.Add("Обновления: $($_.Exception.Message)") }
 
 # ==============================================================================
 # 2. Укрощение Microsoft Edge (КРИТИЧЕСКИЙ БЛОК)
@@ -79,7 +108,7 @@ try {
     }
 
     Write-Host "  [УСПЕШНО] Edge максимально подавлен."
-} catch { Write-Host "  [ОШИБКА] Edge: $_" }
+} catch { Write-Host "  [ОШИБКА] Edge: $_"; $script:Failures.Add("Edge: $($_.Exception.Message)") }
 
 # ==============================================================================
 # 3. Интерфейс, Панель задач, Виджеты
@@ -98,7 +127,7 @@ try {
     Set-ItemProperty -Path $Feeds -Name "EnableFeeds" -Value 0 -Type DWord -Force
 
     Write-Host "  [УСПЕШНО] Виджеты и лишние кнопки скрыты."
-} catch { Write-Host "  [ОШИБКА] Интерфейс: $_" }
+} catch { Write-Host "  [ОШИБКА] Интерфейс: $_"; $script:Failures.Add("Интерфейс: $($_.Exception.Message)") }
 
 # ==============================================================================
 # 4. Настройка Рабочего стола
@@ -112,7 +141,7 @@ try {
     if (!(Test-Path $Icons)) { New-Item -Path $Icons -Force | Out-Null }
     Set-ItemProperty -Path $Icons -Name "{20D04FE0-3AEA-1069-A2D8-08002B30309D}" -Value 0 -Force # Этот компьютер
     Write-Host "  [УСПЕШНО] Значки настроены."
-} catch { Write-Host "  [ОШИБКА] Стол: $_" }
+} catch { Write-Host "  [ОШИБКА] Стол: $_"; $script:Failures.Add("Стол: $($_.Exception.Message)") }
 
 # ==============================================================================
 # 5. Макет Пуска и Панели задач (XML)
@@ -134,7 +163,7 @@ try {
     if (!(Test-Path $ShellPath)) { New-Item -Path $ShellPath -Force | Out-Null }
     $LayoutXml | Out-File -FilePath "$ShellPath\LayoutModification.xml" -Encoding UTF8 -Force
     Write-Host "  [УСПЕШНО] XML макет создан."
-} catch { Write-Host "  [ОШИБКА] Макет: $_" }
+} catch { Write-Host "  [ОШИБКА] Макет: $_"; $script:Failures.Add("Макет: $($_.Exception.Message)") }
 
 # ==============================================================================
 # 6. Отключение телеметрии и мусора (Copilot, Consumer Features)
@@ -149,7 +178,7 @@ try {
     Set-ItemProperty -Path $Cdm -Name "SilentInstalledAppsEnabled" -Value 0 -Type DWord -Force
     
     Write-Host "  [УСПЕШНО] Реклама и автоустановка приложений отключены."
-} catch { Write-Host "  [ОШИБКА] Мусор: $_" }
+} catch { Write-Host "  [ОШИБКА] Мусор: $_"; $script:Failures.Add("Мусор: $($_.Exception.Message)") }
 
 # ==============================================================================
 # 7. Глобализация: Применение к Default User (Для новых пользователей)
@@ -186,6 +215,7 @@ try {
     Write-Host "  [УСПЕШНО] Настройки Default User применены."
 } catch {
     Write-Host "  [ОШИБКА] Глобализация: $_"
+    $script:Failures.Add("Глобализация: $($_.Exception.Message)")
 } finally {
     if ($DefaultUserMounted) {
         [System.GC]::Collect()
@@ -213,4 +243,6 @@ try {
     Write-Host "=========================================================" -ForegroundColor Cyan
 } catch { Write-Host "Ошибка при завершении." }
 
+Show-FailureVerdict
 Stop-Transcript
+if ($script:Failures.Count -gt 0) { exit 1 }

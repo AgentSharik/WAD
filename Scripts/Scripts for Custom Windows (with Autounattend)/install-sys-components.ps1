@@ -5,6 +5,35 @@
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+
+# ==============================================================================
+# Честный статус для менеджера
+# ------------------------------------------------------------------------------
+# Менеджер судит о результате задачи по коду возврата процесса. Раньше ошибки
+# глушились в предупреждения, скрипт завершался с кодом 0, и задача показывалась
+# зелёной, хотя не установилось ничего. В этих скриптах Write-Warning всегда
+# означает проблему, поэтому перехватываем их и в конце отдаём код 1.
+# Нужно простое информационное сообщение — используй Write-Host.
+# ==============================================================================
+$script:Failures = New-Object System.Collections.Generic.List[string]
+
+function Write-Warning {
+    param([Parameter(Position = 0)][string]$Message)
+    Microsoft.PowerShell.Utility\Write-Warning $Message
+    $script:Failures.Add($Message)
+}
+
+function Show-FailureVerdict {
+    Write-Host ""
+    if ($script:Failures.Count -gt 0) {
+        Write-Host "ИТОГ: замечаний - $($script:Failures.Count):"
+        foreach ($failure in $script:Failures) { Write-Host "  - $failure" }
+        Write-Host "Этап завершён с замечаниями, статус задачи - сбой."
+    } else {
+        Write-Host "ИТОГ: замечаний нет."
+    }
+}
+
 $ProgressPreference    = 'SilentlyContinue'
 
 # Логи в Документы Администратора (поддерживает русское имя пользователя)
@@ -135,5 +164,7 @@ try {
 } catch {
     Write-Warning "Произошел непредвиденный критический сбой ядра скрипта: $($_.Exception.Message)"
 } finally {
+    Show-FailureVerdict
     Stop-Transcript
 }
+if ($script:Failures.Count -gt 0) { exit 1 }

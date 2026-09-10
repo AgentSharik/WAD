@@ -124,7 +124,11 @@ try {
     }
 
 } catch {
-    Write-Warning "Ошибка во время оптимизации: $($_.Exception.Message)"
+    # Менеджер судит о результате по коду возврата процесса.
+    # Раньше ошибка глушилась в предупреждение и задача показывалась как «✓ Готово».
+    Write-Host "ОШИБКА: $($_.Exception.Message)"
+    $ScriptFailed = $true
 } finally {
     Stop-Transcript
 }
+if ($ScriptFailed) { exit 1 }

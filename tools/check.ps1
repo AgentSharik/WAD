@@ -6,9 +6,10 @@
 #
 # Что делает:
 #   1) разбор синтаксиса всех .ps1 проекта;
-#   2) статический анализ PSScriptAnalyzer (только ошибки), если модуль доступен;
+#   2) сверка копий, которые обязаны совпадать в обоих режимах;
 #   3) проверка кодировки UTF-8 с BOM (без BOM в Windows PowerShell 5.1
-#      кириллица превращается в кракозябры).
+#      кириллица превращается в кракозябры);
+#   4) статический анализ PSScriptAnalyzer (только ошибки), если модуль доступен.
 #
 # Файл обязан быть в UTF-8 с BOM: среда исполнения читает .ps1 как ANSI без BOM.
 # ==============================================================================
@@ -42,7 +43,37 @@ if ($bad -gt 0) {
 }
 Write-Host "Разбор синтаксиса: ошибок нет."
 
-# --- 2. Кодировка -------------------------------------------------------------
+# --- 2. Сверка копий между режимами -------------------------------------------
+# Файлы из $mustMatch обязаны совпадать байт-в-байт: они делают одно и то же
+# в обоих режимах. Если правишь поведение — правь обе копии, иначе режимы
+# разъедутся молча (так уже было: кнопка Git, файл подкачки, ассоциации фото).
+$modeClean  = 'Scripts/Scripts for Clean Windows'
+$modeCustom = 'Scripts/Scripts for Custom Windows (with Autounattend)'
+$mustMatch  = @('apps-install.ps1', 'install-sys-components.ps1', 'office-install.ps1', 'reset-setup-scripts.ps1')
+$mayDiffer  = @('manager.ps1'         # разный список задач и подписи
+                'clean-and-photo.ps1') # разный список мусора: файл ответов уже убрал 16 пакетов
+
+$skew = @()
+foreach ($name in $mustMatch) {
+    $a = Join-Path $modeClean  $name
+    $b = Join-Path $modeCustom $name
+    if (-not (Test-Path $a) -or -not (Test-Path $b)) {
+        Write-Host "НЕТ ФАЙЛА: $name (ожидается в обеих папках режимов)"
+        $skew += $name
+        continue
+    }
+    if ((Get-FileHash $a -Algorithm SHA256).Hash -ne (Get-FileHash $b -Algorithm SHA256).Hash) {
+        Write-Host "РАСХОЖДЕНИЕ КОПИЙ: $name"
+        $skew += $name
+    }
+}
+if ($skew.Count -gt 0) {
+    Write-Host "Копии разошлись, файлов: $($skew.Count)"
+    exit 1
+}
+Write-Host "Копии совпадают: $($mustMatch.Count) файла(ов). По замыслу различаются: $($mayDiffer -join ', ')."
+
+# --- 3. Кодировка -------------------------------------------------------------
 $noBom = @()
 foreach ($f in $files) {
     $head = [System.IO.File]::ReadAllBytes($f.FullName)
@@ -57,7 +88,7 @@ if ($noBom.Count -gt 0) {
     Write-Host "Все файлы в UTF-8 с BOM."
 }
 
-# --- 3. Статический анализ ----------------------------------------------------
+# --- 4. Статический анализ ----------------------------------------------------
 if (Get-Module -ListAvailable -Name PSScriptAnalyzer) {
     Import-Module PSScriptAnalyzer -ErrorAction SilentlyContinue
     $issues = @()
