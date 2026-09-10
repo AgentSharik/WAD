@@ -17,7 +17,10 @@ jobs:
         shell: powershell
         run: |
           $bad = 0
-          $files = Get-ChildItem -Path . -Recurse -Filter *.ps1 -File
+          # extras/audit/extracted — справочные копии скриптов из autounattend.xml,
+          # они XML-экранированы (&amp; вместо &) и намеренно не являются валидным PowerShell.
+          $exclude = '\.git\\|\.cache\\|extras[\\/]audit[\\/]extracted'
+          $files = Get-ChildItem -Path . -Recurse -Filter *.ps1 -File | Where-Object { $_.FullName -notmatch $exclude }
           Write-Host "Проверяем файлов: $($files.Count)"
           foreach ($f in $files) {
             $tokens = $null
@@ -42,7 +45,9 @@ jobs:
         run: |
           Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -ErrorAction SilentlyContinue
           Install-Module PSScriptAnalyzer -Force -Scope CurrentUser -AllowClobber
-          $issues = Invoke-ScriptAnalyzer -Path . -Recurse -Severity Error
+          $exclude = '\.git\\|\.cache\\|extras[\\/]audit[\\/]extracted'
+          $files = Get-ChildItem -Path . -Recurse -Filter *.ps1 -File | Where-Object { $_.FullName -notmatch $exclude }
+          $issues = $files | ForEach-Object { Invoke-ScriptAnalyzer -Path $_.FullName -Severity Error }
           if ($issues) {
             $issues | Select-Object RuleName, Severity, @{n='File';e={$_.ScriptName}}, Line, Message |
               Format-Table -AutoSize | Out-String -Width 200 | Write-Host
@@ -58,7 +63,8 @@ jobs:
         shell: powershell
         run: |
           $withoutBom = @()
-          foreach ($f in Get-ChildItem -Path . -Recurse -Filter *.ps1 -File) {
+          $exclude = '\.git\\|\.cache\\|extras[\\/]audit[\\/]extracted'
+          foreach ($f in (Get-ChildItem -Path . -Recurse -Filter *.ps1 -File | Where-Object { $_.FullName -notmatch $exclude })) {
             $head = [System.IO.File]::ReadAllBytes($f.FullName)[0..2]
             $hasBom = ($head[0] -eq 0xEF -and $head[1] -eq 0xBB -and $head[2] -eq 0xBF)
             if (-not $hasBom) {
