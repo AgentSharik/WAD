@@ -17,7 +17,7 @@
 cd /home/user
 # 1. Синхронизация с GitHub (GitHub — источник истины, воркплейс может отставать)
 mkdir -p .git/refs/heads .git/refs/tags
-ls .git/config 2>/dev/null || printf '[core]\n\trepositoryformatversion = 0\n\tfilemode = true\n\tbare = false\n\tlogallrefupdates = true\n[remote "origin"]\n\turl = https://github.com/AgentSharik/powershell-scripts.git\n\tfetch = +refs/heads/*:refs/remotes/origin/*\n[branch "main"]\n\tremote = origin\n\tmerge = refs/heads/main\n' > .git/config
+ls .git/config 2>/dev/null || printf '[core]\n\trepositoryformatversion = 0\n\tfilemode = true\n\tbare = false\n\tlogallrefupdates = true\n[remote "origin"]\n\turl = https://github.com/AgentSharik/WAD.git\n\tfetch = +refs/heads/*:refs/remotes/origin/*\n[branch "main"]\n\tremote = origin\n\tmerge = refs/heads/main\n' > .git/config
 git fetch -q origin main && git rev-parse HEAD FETCH_HEAD     # должны совпасть; если HEAD отстал и своих правок нет → git reset --hard FETCH_HEAD
 git status -sb
 ```
@@ -57,14 +57,15 @@ python3 extras/audit/tools/url_check.py 2>/dev/null | head        # живост
 - Автор — не сетевой эксперт: объяснять без жаргона, на его же коде.
 - В примерах и доках — только вымышленные данные (`PC`, `Admin`, `C:\Windows\Setup\Scripts`).
 - Интерфейс не должен врать: если что-то не проверено — писать «не проверено», а не предполагать.
-- **Открытый вопрос:** называть ли в README палитру интерфейса (Catppuccin Mocha). В ADK есть правило не упоминать
-  источники стиля — если распространяем на WAD, из README это имя убрать, писать «тёмная палитра». Решение за автором.
+- **Палитра интерфейса:** в README название палитры **не упоминается** (решение автора 2026-09-11: читателю это ничего
+  не говорит). Описываем словами: тёмное окно, спокойные сине-серые тона, контраст текста не ниже 7:1. Точные значения
+  цветов — в разделе Д; в код без нужды не лезть.
 
 ---
 
 ## В. Структура репозитория
 
-Репозиторий **https://github.com/AgentSharik/powershell-scripts** = ворксплейс `/home/user/` целиком, ветка `main`
+Репозиторий **https://github.com/AgentSharik/WAD** = ворксплейс `/home/user/` целиком, ветка `main`
 (корень воркспейса и есть корень репозитория — так же, как в ADK).
 Проект — в корне; **всё, что не проект, — в `extras/`**.
 
@@ -189,14 +190,14 @@ python3 extras/audit/tools/url_check.py 2>/dev/null | head        # живост
 ```bash
 cd /home/user && find . -name __pycache__ -type d -not -path "./.git/*" -exec rm -rf {} + 2>/dev/null
 git add -A && git -c user.name="AgentSharik" -c user.email="agentsharik@users.noreply.github.com" commit -q -m "0.3.1: что сделано, по-русски"
-git push -q "https://x-access-token:${T}@github.com/AgentSharik/powershell-scripts.git" main
-curl -s https://api.github.com/repos/AgentSharik/powershell-scripts/commits/main | grep -m1 '"sha"'   # сверить с git rev-parse HEAD
+git push -q "https://x-access-token:${T}@github.com/AgentSharik/WAD.git" main
+curl -s https://api.github.com/repos/AgentSharik/WAD/commits/main | grep -m1 '"sha"'   # сверить с git rev-parse HEAD
 ```
 
 - Если push отклонён из-за файлов в `.github/workflows/` — у токена нет права **Workflows**: попросить автора.
 - Массовое удаление (перезачистка папок, сведение копий) — тоже обычный коммит: производственные файлы не теряются,
   история сохраняется.
-- Проверка бейджа: `curl -sI https://github.com/AgentSharik/powershell-scripts/actions/workflows/checks.yml/badge.svg | head -1`.
+- Проверка бейджа: `curl -sI https://github.com/AgentSharik/WAD/actions/workflows/checks.yml/badge.svg | head -1`.
 
 ---
 
@@ -224,8 +225,8 @@ git rev-list --objects --all | git cat-file --batch-check='%(objecttype) %(objec
 pip install -q git-filter-repo
 mkdir -p /tmp/keep && cp <актуальные файлы> /tmp/keep/
 git filter-repo --force --invert-paths --path-glob '*.iso' --path-glob '*.wim'
-git remote add origin https://github.com/AgentSharik/powershell-scripts.git
-git push -q --force "https://x-access-token:${T}@github.com/AgentSharik/powershell-scripts.git" main
+git remote add origin https://github.com/AgentSharik/WAD.git
+git push -q --force "https://x-access-token:${T}@github.com/AgentSharik/WAD.git" main
 ```
 
 - В песочнице `.git/config` не сохраняется между сессиями — перед `filter-repo` создать его вручную (раздел А),
@@ -239,11 +240,13 @@ git push -q --force "https://x-access-token:${T}@github.com/AgentSharik/powershe
 - **0.2 (22 июля 2026)** — два режима: Clean (5 задач) и Custom (4 задачи), `initial-setup.ps1`, урезанный список очистки.
 - **0.3 (25 июля 2026)** — ассоциации просмотра фото через DISM, вторая ветка файла подкачки (≥32 ГБ — отключение),
   чистые логи без управляющих последовательностей, строгая проверка кода DISM.
+- **Репозиторий переименован** `powershell-scripts` → `WAD` (2026-09-11). Старые адреса GitHub отдаёт редиректом
+  (301), включая архивы `archive/refs/heads/main.zip` — уже распространённые копии лоадера продолжают работать.
 - **Текущая работа** — оформление репозитория (README/CHANGELOG/HANDOVER, проверки CI, папка `extras/`)
   и подготовка v2 (раздел О.7 и план ниже).
 
 Открытые задачи: сведение копий файлов; v2 — общая библиотека, честные статусы, продолжение после сбоя;
-выбор лицензии; решение по переименованию репозитория в `WAD`; протокол прогона в ВМ.
+протокол прогона в ВМ. Решено: репозиторий переименован в `WAD` (2026-09-11); лицензии пока нет (решение автора).
 
 ---
 
@@ -269,6 +272,11 @@ git push -q --force "https://x-access-token:${T}@github.com/AgentSharik/powershe
   (2026-09-10). Проект под Windows — значит и имена должны быть Windows-совместимыми.
 - **Копии расходятся.** 4 файла в двух каталогах идентичны байт-в-байт; править нужно оба, иначе появляется дрейф
   (уже есть: кнопка GitHub, BOM).
+- **Репозиторий переименован `powershell-scripts` → `WAD` (2026-09-11).** Старые адреса GitHub отдаёт редиректом
+  (проверено: `archive/refs/heads/main.zip` — 301→302→200), поэтому уже установленные копии лоадера качают архив дальше.
+  Для `raw.githubusercontent.com` редирект **не проверялся** — в скриптах ссылаться только на `github.com/.../archive/...`.
+  При любой правке ссылок менять их сразу в: `loader.ps1`, `autounattend.xml` (включая провенанс-комментарий в строке 3,
+  где полезная нагрузка закодирована), оба `manager.ps1`, бейдж в README.
 
 ---
 

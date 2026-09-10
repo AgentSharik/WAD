@@ -192,7 +192,7 @@ C:\ProgramData\AutoSetup\logs\         ← логи вместо «Докуме�
 
 1. **Токен GitHub** — когда будешь готов:
    - Settings → Developer settings → Personal access tokens → **Fine-grained tokens**;
-   - Repository access: **Only select repositories** → `AgentSharik/powershell-scripts`;
+   - Repository access: **Only select repositories** → `AgentSharik/WAD`;
    - Permissions: **Contents: Read and write** (+ **Pull requests: Read and write**, если хочешь, чтобы я сам открывал PR);
    - Expiration: **7 дней**.
    Токен будет виден в переписке — после работы отзови его (Revoke) не глядя.

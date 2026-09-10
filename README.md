@@ -1,13 +1,13 @@
 # 🚀 WAD — Windows Auto-Deployment
 
-![checks](https://github.com/AgentSharik/powershell-scripts/actions/workflows/checks.yml/badge.svg)
+![checks](https://github.com/AgentSharik/WAD/actions/workflows/checks.yml/badge.svg)
 ![powershell](https://img.shields.io/badge/PowerShell-5.1-5391FE) ![windows](https://img.shields.io/badge/Windows-10%2F11-0078D4) ![status](https://img.shields.io/badge/статус-бета-yellow)
 
 **Автоматическое развёртывание и пост-установка Windows: от разметки диска до готовой системы с софтом.**
 Один запуск — и на выходе чистая настроенная система: без встроенного мусора и рекламы, с библиотеками,
 базовым набором программ и офисным пакетом. Единственное, что делает человек, — выбирает раздел при установке.
 
-**Стек:** Windows PowerShell 5.1 · WinForms + GDI (свой интерфейс, палитра Catppuccin Mocha) · файл ответов `autounattend.xml` · GitHub Actions (проверки)
+**Стек:** Windows PowerShell 5.1 · WinForms + GDI (свой интерфейс: тёмное окно, спокойные сине-серые тона, контраст текста не ниже 7:1) · файл ответов `autounattend.xml` · GitHub Actions (проверки)
 
 ## 🎬 Как это выглядит
 

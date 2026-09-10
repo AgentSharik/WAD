@@ -111,7 +111,7 @@ function Show-ExitDialog {
     $BtnGit.FlatAppearance.BorderSize = 0
     $BtnGit.Cursor = [System.Windows.Forms.Cursors]::Hand
     $BtnGit.Font = New-Object System.Drawing.Font("Segoe UI Semibold", 10, [System.Drawing.FontStyle]::Bold)
-    $BtnGit.Add_Click({ [System.Diagnostics.Process]::Start("https://github.com/alexejnekrasov/powershell-scripts/tree/main") })
+    $BtnGit.Add_Click({ [System.Diagnostics.Process]::Start("https://github.com/AgentSharik/WAD/tree/main") })
     $Border.Controls.Add($BtnGit)
 
     $BtnOk = New-Object System.Windows.Forms.Button

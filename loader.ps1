@@ -113,7 +113,7 @@ try {
     New-Item -Path $finalScriptsPath -ItemType Directory -Force | Out-Null
 
     # Скачивание архива
-    $url = "https://github.com/AgentSharik/powershell-scripts/archive/refs/heads/main.zip"
+    $url = "https://github.com/AgentSharik/WAD/archive/refs/heads/main.zip"
     Invoke-WebRequest -Uri $url -OutFile $zipPath
 
     # Распаковка
