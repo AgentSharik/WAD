@@ -9,7 +9,8 @@
 #   2) сверка копий, которые обязаны совпадать в обоих режимах;
 #   3) проверка кодировки UTF-8 с BOM (без BOM в Windows PowerShell 5.1
 #      кириллица превращается в кракозябры);
-#   4) статический анализ PSScriptAnalyzer (только ошибки), если модуль доступен.
+#   4) статический анализ PSScriptAnalyzer (только ошибки), если модуль доступен;
+#   5) проверка, что код совместим с Windows PowerShell 5.1 (а не только с 7).
 #
 # Файл обязан быть в UTF-8 с BOM: среда исполнения читает .ps1 как ANSI без BOM.
 # ==============================================================================
@@ -105,6 +106,30 @@ if (Get-Module -ListAvailable -Name PSScriptAnalyzer) {
     Write-Host "PSScriptAnalyzer (уровень Error): чисто."
 } else {
     Write-Host "PSScriptAnalyzer не установлен - шаг анализа пропущен."
+}
+
+# --- 5. Совместимость с Windows PowerShell 5.1 ---------------------------------
+# Локально работают оба PowerShell, но на домашних ПК стоит именно 5.1.
+# Он, например, не разбирает вызов функции внутри выражения: $w = $x + F 10
+# (нужно $x + (F 10)) — PowerShell 7 такое пропускает, 5.1 падает при запуске.
+if (Get-Module -ListAvailable -Name PSScriptAnalyzer) {
+    Import-Module PSScriptAnalyzer -ErrorAction SilentlyContinue
+    $compatSettings = @{
+        IncludeRules = @('PSUseCompatibleSyntax')
+        Rules        = @{ PSUseCompatibleSyntax = @{ Enable = $true; TargetVersions = @('5.1') } }
+    }
+    $compat = @()
+    foreach ($f in $files) {
+        $compat += Invoke-ScriptAnalyzer -Path $f.FullName -Settings $compatSettings -ErrorAction SilentlyContinue
+    }
+    if ($compat.Count -gt 0) {
+        Write-Host "НЕСОВМЕСТИМО С POWERSHELL 5.1:"
+        foreach ($c in $compat) {
+            Write-Host ("    {0}:{1} {2}" -f (Split-Path $c.ScriptName -Leaf), $c.Line, $c.Message)
+        }
+        exit 1
+    }
+    Write-Host "Совместимость с Windows PowerShell 5.1: чисто."
 }
 
 Write-Host "ПРОВЕРКА ПРОЙДЕНА."
