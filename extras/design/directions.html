@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>WAD — три направления для экрана задач</title>
+<style>
+  body { margin: 0; padding: 28px; background: #0f0f16; color: #cdd6f4;
+         font-family: "Segoe UI", system-ui, -apple-system, sans-serif; }
+  h1 { font-size: 20px; font-weight: 600; color: #89b4fa; margin: 0 0 6px; }
+  .lead { color: #a6adc8; font-size: 13.5px; margin: 0 0 10px; max-width: 1150px; line-height: 1.55; }
+  h2 { font-size: 15px; font-weight: 600; margin: 36px 0 4px; }
+  h2.b { color: #89b4fa; } h2.c { color: #a6e3a1; } h2.d { color: #f9e2af; }
+  h2.a { color: #9399b2; }
+  .sub { color: #9399b2; font-size: 12.5px; margin: 0 0 16px; line-height: 1.5; max-width: 1150px; }
+  .row { display: flex; flex-wrap: wrap; gap: 30px; align-items: flex-start; }
+  .cap { font-size: 12.5px; color: #9399b2; margin: 8px 2px 0; max-width: 620px; line-height: 1.55; }
+  .cap b { color: #cdd6f4; }
+  .win { position: relative; width: 580px; height: 480px; overflow: hidden; flex: 0 0 auto; }
+
+  /* ================= направление Б: отчёт установщика ================= */
+  .bwin { background: #101019; }
+  .bhead { position: absolute; left: 24px; top: 20px; font-size: 11px; letter-spacing: 1.6px; color: #6c7086; font-weight: 600; }
+  .bclose { position: absolute; right: 20px; top: 18px; width: 26px; height: 26px; color: #6c7086; text-align: center;
+            line-height: 24px; border: 1px solid #313244; }
+  .bcount { position: absolute; right: 60px; top: 12px; font-size: 22px; font-weight: 700; color: #89b4fa; }
+  .bcount span { font-size: 13px; color: #6c7086; font-weight: 400; }
+  .bthin { position: absolute; left: 24px; top: 56px; width: 532px; height: 3px; background: #232334; }
+  .bthin i { position: absolute; left: 0; top: 0; bottom: 0; width: 60%; background: #89b4fa; }
+
+  .brow { position: absolute; left: 24px; width: 532px; height: 34px; border-bottom: 1px solid #1b1b28; }
+  .brow .idx { position: absolute; left: 0; top: 8px; width: 20px; color: #45475a; font-size: 12px; }
+  .brow .nm { position: absolute; left: 24px; top: 7px; font-size: 12.5px; color: #cdd6f4; }
+  .brow .tag { position: absolute; right: 0; top: 6px; font-family: Consolas, monospace; font-size: 11px;
+               padding: 3px 8px; border: 1px solid #45475a; }
+  .bg-ok  { color: #a6e3a1; border-color: #2f4a35 !important; background: #16211a; }
+  .bg-run { color: #89dceb; border-color: #24404a !important; background: #131f24; }
+  .bg-wait{ color: #6c7086; }
+  .bg-fail{ color: #f38ba8; border-color: #4a2731 !important; background: #241318; }
+
+  .blog { position: absolute; left: 24px; top: 246px; width: 532px; height: 158px; background: #0a0a10;
+          border: 1px solid #232334; font-family: Consolas, "Courier New", monospace; font-size: 11.5px;
+          line-height: 1.75; padding: 10px 12px; color: #a6adc8; box-sizing: border-box; overflow: hidden; }
+  .blog .ts { color: #45475a; }
+  .blog .bad { color: #f38ba8; }
+  .blog .good { color: #a6e3a1; }
+  .bfoot { position: absolute; left: 24px; top: 418px; width: 532px; font-size: 11.5px; color: #6c7086; }
+  .bfoot b { color: #a6adc8; font-weight: 600; }
+
+  /* ================= направление В: издалека ================= */
+  .cwin { background: #181825; border: 3px solid #313244; box-sizing: border-box; }
+  .cstate { position: absolute; left: 0; right: 0; top: 46px; text-align: center; font-size: 30px; font-weight: 700;
+            letter-spacing: 3px; color: #89dceb; }
+  .cnums { position: absolute; left: 0; right: 0; top: 96px; text-align: center; font-size: 96px; font-weight: 700;
+           color: #cdd6f4; line-height: 1; }
+  .cnums small { font-size: 30px; color: #6c7086; font-weight: 600; }
+  .cbar { position: absolute; left: 60px; right: 60px; top: 214px; height: 16px; background: #232334; }
+  .cbar i { position: absolute; left: 0; top: 0; bottom: 0; width: 60%; background: #89dceb; }
+  .csegs { position: absolute; left: 60px; right: 60px; top: 250px; display: flex; gap: 8px; }
+  .cseg { flex: 1; height: 44px; background: #232334; color: #6c7086; font-size: 11px; text-align: center;
+          padding-top: 6px; box-sizing: border-box; line-height: 1.25; }
+  .cseg.ok { background: #1c2b20; color: #a6e3a1; }
+  .cseg.run { background: #16262c; color: #89dceb; box-shadow: 0 0 0 2px #89dceb inset; }
+  .chint { position: absolute; left: 0; right: 0; bottom: 34px; text-align: center; font-size: 14px; color: #9399b2; }
+  .cfail { position: relative; width: 580px; height: 150px; background: #241318; border: 3px solid #f38ba8;
+           box-sizing: border-box; flex: 0 0 auto; }
+  .cfail .h { position: absolute; left: 0; right: 0; top: 24px; text-align: center; font-size: 30px; font-weight: 700;
+              letter-spacing: 3px; color: #f38ba8; }
+  .cfail .s { position: absolute; left: 20px; right: 20px; top: 72px; text-align: center; font-size: 15px; color: #cdd6f4; }
+  .cfail .w { position: absolute; left: 20px; right: 20px; top: 100px; text-align: center; font-size: 12.5px; color: #9399b2; }
+
+  /* ================= направление Г: тихий виджет ================= */
+  .dwin { position: relative; width: 420px; height: 96px; background: #181825; border: 1px solid #313244;
+          box-sizing: border-box; flex: 0 0 auto; }
+  .dwin .t { position: absolute; left: 16px; top: 14px; font-size: 13.5px; color: #cdd6f4; }
+  .dwin .c { position: absolute; right: 16px; top: 13px; font-size: 13.5px; font-weight: 600; color: #89b4fa; }
+  .dwin .bar { position: absolute; left: 16px; right: 16px; top: 44px; height: 6px; background: #232334; }
+  .dwin .bar i { position: absolute; left: 0; top: 0; bottom: 0; width: 60%; background: #89b4fa; }
+  .dwin .h { position: absolute; left: 16px; top: 60px; font-size: 11.5px; color: #6c7086; }
+  .dwin .e { position: absolute; right: 16px; top: 58px; font-size: 11.5px; color: #89b4fa; }
+
+  .dpop { position: relative; width: 420px; height: 210px; background: #181825; border: 1px solid #f38ba8;
+          box-sizing: border-box; flex: 0 0 auto; }
+  .dpop .t { position: absolute; left: 20px; top: 18px; font-size: 15px; font-weight: 700; color: #f38ba8; }
+  .dpop .m { position: absolute; left: 20px; top: 48px; right: 20px; font-size: 12.5px; color: #cdd6f4; line-height: 1.5; }
+  .dpop .l { position: absolute; left: 20px; top: 108px; right: 20px; font-size: 11.5px; color: #9399b2; line-height: 1.6;
+             font-family: Consolas, monospace; }
+  .dpop .btn { position: absolute; left: 20px; top: 158px; width: 180px; height: 34px; background: #313244; color: #cdd6f4;
+               font-size: 12px; font-weight: 600; text-align: center; line-height: 34px; }
+  .dpop .btn2 { position: absolute; left: 212px; top: 158px; width: 188px; height: 34px; background: #89b4fa; color: #181825;
+                font-size: 12px; font-weight: 600; text-align: center; line-height: 34px; }
+
+  table { border-collapse: collapse; font-size: 12.5px; margin-top: 16px; width: 100%; max-width: 1150px; }
+  th, td { text-align: left; padding: 8px 16px 8px 0; border-bottom: 1px solid #2b2b3b; vertical-align: top; line-height: 1.5; }
+  th { color: #a6adc8; font-weight: 600; }
+  td.first { color: #cdd6f4; font-weight: 600; white-space: nowrap; }
+  .mini { position: relative; width: 290px; height: 240px; background: #1e1e2e; overflow: hidden; border: 1px solid #313244; }
+  .mini .p { position: absolute; left: 1px; top: 1px; right: 1px; bottom: 1px; background: #181825; transform: scale(.5); transform-origin: top left;
+             width: 576px; height: 476px; }
+  .scale { transform: scale(.5); transform-origin: top left; width: 580px; height: 480px; position: absolute; left: 0; top: 0; }
+</style>
+</head>
+<body>
+
+<h1>Три направления для экрана задач</h1>
+<p class="lead">
+  Один и тот же экран, три разных ответа на вопрос «как человек поймёт, что происходит». Все нарисованы в одном
+  размере 580×480 — чтобы сравнивать честно. Ниже — таблица, что каждое направление даёт и чего стоит в коде.
+  Это макеты, не обещания: выбираем направление, потом рисую его подробно и переношу в WinForms.
+</p>
+
+<h2 class="a">Сейчас — для сравнения</h2>
+<p class="sub">Пять строк, справа статус, снизу полоса. Всё мелкое и одинаковое по важности: и «Готово», и «Сбой»
+  выглядят как строка текста в общем списке. С двух метров не читается вообще.</p>
+
+<h2 class="b">Направление Б — «отчёт установщика»</h2>
+<p class="sub">Плотный, информативный, похож на лог установщика. Счётчик «3 из 5» сверху, задачи компактными строками
+  с тегами состояния, внизу живой журнал — последние строки того, что реально происходит. Провал виден и в теге, и в журнале.</p>
+<div class="row">
+  <div>
+    <div class="win bwin">
+      <div class="bhead">УСТАНОВКА WINDOWS</div>
+      <div class="bcount">3 <span>/ 5</span></div>
+      <div class="bclose">✕</div>
+      <div class="bthin"><i></i></div>
+
+      <div class="brow" style="top:74px">
+        <div class="idx">1</div><div class="nm">Первоначальная настройка ОС</div>
+        <div class="tag bg-ok">[ ГОТОВО ]</div>
+      </div>
+      <div class="brow" style="top:108px">
+        <div class="idx">2</div><div class="nm">Оптимизация и настройка ОС</div>
+        <div class="tag bg-ok">[ ГОТОВО ]</div>
+      </div>
+      <div class="brow" style="top:142px">
+        <div class="idx">3</div><div class="nm">Установка системных компонентов</div>
+        <div class="tag bg-run">[ ИДЁТ ]</div>
+      </div>
+      <div class="brow" style="top:176px">
+        <div class="idx">4</div><div class="nm">Установка софта</div>
+        <div class="tag bg-fail">[ СБОЙ 1 ]</div>
+      </div>
+      <div class="brow" style="top:210px">
+        <div class="idx">5</div><div class="nm">Установка и активация Microsoft Office</div>
+        <div class="tag bg-wait">[ ЖДЁТ ]</div>
+      </div>
+
+      <div class="blog">
+        <span class="ts">12:44:52</span> initial-setup.ps1 <span class="good">— замечаний нет</span><br>
+        <span class="ts">12:46:10</span> install-sys-components.ps1 — Visual C++ 2015-2022: код 0<br>
+        <span class="ts">12:47:33</span> apps-install.ps1 — Chrome: скачано 118 МБ, установка…<br>
+        <span class="bad">12:48:02</span> <span class="bad">apps-install.ps1 — ShareX: не удалось установить (код 1603)</span><br>
+        <span class="bad">12:48:02</span> <span class="bad">apps-install.ps1 — K-Lite: ссылка не отвечает</span><br>
+        <span class="ts">12:48:05</span> apps-install.ps1 — итог: замечаний 2, статус задачи — сбой
+      </div>
+      <div class="bfoot">Журналы: <b>Документы \ software-install.log</b> · окно можно закрыть, установка продолжится</div>
+    </div>
+    <div class="cap"><b>Чем хорош:</b> это единственный вариант, где видно <i>причину</i>, а не только факт.
+      Человек не гадает, что случилось — причина прямо в окне. Дёшево в WinForms: строки и моноширинный блок<br>
+      рисуются существующими средствами.<br><b>Чем плох:</b> много текста, издалека не читается; окно становится
+      «рабочим инструментом», а не индикатором.</div>
+  </div>
+</div>
+
+<h2 class="c">Направление В — «издалека»</h2>
+<p class="sub">Ставка на один вопрос: подошёл человек к компьютеру — за секунду понял. Крупное состояние, огромный
+  счётчик, толстая полоса, пять сегментов-этапов. Никаких подробностей, они в журнале на диске.</p>
+<div class="row">
+  <div>
+    <div class="win cwin">
+      <div class="cstate">ИДЁТ УСТАНОВКА</div>
+      <div class="cnums">3<small> / 5</small></div>
+      <div class="cbar"><i></i></div>
+      <div class="csegs">
+        <div class="cseg ok">Настройка<br>✓</div>
+        <div class="cseg ok">Очистка<br>✓</div>
+        <div class="cseg run">Компоненты<br>идёт</div>
+        <div class="cseg">Софт</div>
+        <div class="cseg">Office</div>
+      </div>
+      <div class="chint">Не выключайте компьютер. Окно можно свернуть.</div>
+    </div>
+    <div class="cap">Рабочее состояние. Цвет состояния виден даже боковым зрением: спокойный голубой — «идёт, не трогай».</div>
+  </div>
+  <div>
+    <div class="cfail">
+      <div class="h">НУЖНО ВНИМАНИЕ</div>
+      <div class="s">Завершено 4 из 5 задач, в одной замечания</div>
+      <div class="w">Подробности: Документы \ software-install.log · кнопка «Подробнее» покажет список</div>
+    </div>
+    <div class="cap" style="margin-bottom:22px">То же окно при сбое: заголовок и цвет меняются целиком, а не одна строка
+      в списке. Человек, который «поставил и забил», возвращается к этому экрану и сразу видит, что нужен он.</div>
+    <div class="cfail" style="background:#1c2b20; border-color:#a6e3a1; height:112px">
+      <div class="h" style="color:#a6e3a1; top:20px">ГОТОВО</div>
+      <div class="s" style="top:64px">Все 5 задач выполнены, замечаний нет</div>
+      <div class="w" style="top:88px">Перезагрузите компьютер — и можно пользоваться</div>
+    </div>
+    <div class="cap">Успех. Зелёный экран — единственный случай, когда можно не читать. Три состояния, три цвета,
+      три разных сообщения.</div>
+  </div>
+</div>
+
+<h2 class="d">Направление Г — «тихий виджет»</h2>
+<p class="sub">Ставка на «поставил и забил»: пока всё хорошо — окно не занимает экран. Маленькая полоска в углу
+  показывает, что работа идёт. Разворачивается в <i>полное</i> окно только когда нужен человек.</p>
+<div class="row">
+  <div>
+    <div class="dwin">
+      <div class="t">Установка идёт</div>
+      <div class="c">3 из 5 · Компоненты</div>
+      <div class="bar"><i></i></div>
+      <div class="h">Осталось примерно 12 минут</div>
+      <div class="e">развернуть</div>
+    </div>
+    <div class="cap">Обычное состояние — компактная полоса, её можно перетащить в угол и забыть. Оценка времени
+      честная: считается по длительности прошлых задач, а пока нечего считать — не показывается вовсе.</div>
+  </div>
+  <div>
+    <div class="dpop">
+      <div class="t">НУЖНО ВНИМАНИЕ</div>
+      <div class="m">Установка софта завершилась с замечаниями: 2 программы не установились.
+        Остальные задачи выполнены, систему можно использовать.</div>
+      <div class="l">
+        ShareX — не удалось установить (код 1603)<br>
+        K-Lite Codec Pack — ссылка не отвечает
+      </div>
+      <div class="btn">Подробнее в журнале</div>
+      <div class="btn2">Понятно</div>
+    </div>
+    <div class="cap">Развёрнутое окно появляется <b>только при проблеме</b> — и сразу с причиной, а не с фактом.
+      Нажатие «Понятно» сворачивает обратно в полоску. Так «поставил и забил» не превращается в «поставил
+      и не заметил».</div>
+  </div>
+</div>
+
+<h2>Сравнение</h2>
+<table>
+  <tr>
+    <th>Направление</th><th>Видно с 2 метров</th><th>Видна причина сбоя</th><th>Занимает экран</th>
+    <th>Стоимость в WinForms</th><th>Кому подходит</th>
+  </tr>
+  <tr>
+    <td class="first">А — как сейчас</td>
+    <td>Нет</td>
+    <td>Нет, только «Сбой (Код: 1)»</td>
+    <td>580×480 всегда</td>
+    <td>Уже есть</td>
+    <td>Тем, кто сидит за компьютером во время установки</td>
+  </tr>
+  <tr>
+    <td class="first">Б — отчёт установщика</td>
+    <td>Нет</td>
+    <td><b>Да</b>, причина в журнале окна</td>
+    <td>580×480 всегда</td>
+    <td>Низкая: строки, теги, текстовый блок</td>
+    <td>Тем, кто хочет контролировать процесс и разбираться</td>
+  </tr>
+  <tr>
+    <td class="first">В — издалека</td>
+    <td><b>Да</b>, состояние и счётчик</td>
+    <td>Нет — только «сколько и где»</td>
+    <td>580×480 всегда</td>
+    <td>Низкая: крупные подписи и сегменты</td>
+    <td>Домашним ПК и «поставил и забил»</td>
+  </tr>
+  <tr>
+    <td class="first">Г — тихий виджет</td>
+    <td>Полоска — да, подробности — нет</td>
+    <td><b>Да</b>, при разворачивании</td>
+    <td>420×96 в покое, окно только при сбое</td>
+    <td>Средняя: два окна, переключение между ними</td>
+    <td>Тем, кто ставит и уходит по делам</td>
+  </tr>
+</table>
+
+<p class="lead" style="margin-top:18px">
+  Направления не исключают друг друга: В в рабочем состоянии + Г при сбое — это одна схема, а не две.
+  Б можно взять как «подробности» внутри любого из них. Скажите, какое ближе — нарисую его целиком,
+  в трёх состояниях, и уже потом буду переносить в код.
+</p>
+
+</body>
+</html>

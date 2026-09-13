@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>WAD — что человек видит на каждом шаге</title>
+<style>
+  body { margin: 0; padding: 28px; background: #0f0f16; color: #cdd6f4;
+         font-family: "Segoe UI", system-ui, -apple-system, sans-serif; }
+  h1 { font-size: 20px; font-weight: 600; color: #89b4fa; margin: 0 0 6px; }
+  .lead { color: #a6adc8; font-size: 13.5px; margin: 0 0 8px; max-width: 1150px; line-height: 1.55; }
+  h2 { font-size: 15px; font-weight: 600; color: #cba6f7; margin: 34px 0 4px; }
+  .sub { color: #9399b2; font-size: 12.5px; margin: 0 0 14px; line-height: 1.5; max-width: 1150px; }
+  .row { display: flex; flex-wrap: wrap; gap: 30px; align-items: flex-start; }
+  .cap { font-size: 12.5px; color: #9399b2; margin: 8px 2px 0; max-width: 660px; line-height: 1.5; }
+  .cap b { color: #cdd6f4; }
+  .own { display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 3px; font-weight: 600; }
+  .own.yes { background: #2b3d2f; color: #a6e3a1; }
+  .own.no  { background: #40272e; color: #f38ba8; }
+
+  /* ---------- этап 1: загрузчик, WPF 650×340 ---------- */
+  .ldr { position: relative; width: 650px; height: 340px; background: #151720; border: 1px solid #4c7bb0; }
+  .ldr .head { position: absolute; left: 30px; top: 25px; right: 30px; height: 30px; }
+  .ldr .title { position: absolute; left: 0; top: 4px; font-size: 18pt; font-weight: 700; color: #7a9eeb; }
+  .ldr .x { position: absolute; right: 0; top: 0; width: 30px; height: 30px; border: 1px solid #4c7bb0;
+            color: #cdd6f4; text-align: center; line-height: 28px; font-size: 16pt; }
+  .ldr .rule { position: absolute; left: 30px; top: 70px; width: 590px; height: 1px; background: #4c7bb0; }
+  .ldr .msg { position: absolute; left: 30px; top: 95px; width: 590px; font-size: 15pt; line-height: 24px; color: #fff; }
+  .ldr .note { position: absolute; left: 30px; top: 205px; width: 590px; text-align: center; color: #888; font-size: 12pt; }
+  .ldr .exit { position: absolute; left: 30px; bottom: 25px; width: 590px; height: 40px; background: #353746;
+               color: #fff; font-size: 13pt; font-weight: 700; text-align: center; line-height: 40px; }
+
+  /* ---------- этап 2: консоль Windows ---------- */
+  .con { width: 880px; background: #0c0c0c; border: 1px solid #2b2b2b; font-family: Consolas, "Courier New", monospace; }
+  .con .bar { height: 28px; background: #1f1f1f; color: #ccc; font-size: 12px; line-height: 28px; padding: 0 12px;
+              border-bottom: 1px solid #2b2b2b; font-family: "Segoe UI", sans-serif; }
+  .con .prog { height: 20px; margin: 14px 12px 6px; background: #1f1f1f; position: relative; }
+  .con .prog i { position: absolute; left: 0; top: 0; bottom: 0; width: 38%; background: #0a4a8f; }
+  .con .prog b { position: absolute; left: 0; right: 0; text-align: center; font-size: 11px; color: #ddd;
+                 line-height: 20px; font-weight: 400; }
+  .con pre { margin: 0; padding: 8px 12px 16px; font-size: 12.5px; line-height: 1.55; color: #cccccc; white-space: pre-wrap; }
+  .con .dim { color: #8a8a8a; }
+
+  /* ---------- этап 3: менеджер, 580×480 ---------- */
+  .win { position: relative; width: 580px; height: 480px; background: #1e1e2e; overflow: hidden; flex: 0 0 auto; }
+  .panel { position: absolute; left: 2px; top: 2px; width: 576px; height: 476px; background: #181825; }
+  .title { position: absolute; left: 20px; top: 20px; font-size: 14pt; font-weight: 700; color: #89b4fa; }
+  .titleline { position: absolute; left: 20px; top: 56px; width: 540px; height: 2px; background: #89b4fa; }
+  .closeframe { position: absolute; left: 528px; top: 18px; width: 32px; height: 32px; background: #89b4fa; }
+  .closebtn { position: absolute; left: 2px; top: 2px; width: 28px; height: 28px; background: #181825; color: #a6adc8;
+              font-size: 11pt; font-weight: 700; text-align: center; line-height: 28px; }
+  .tasks { position: absolute; left: 20px; top: 75px; width: 540px; height: 220px; background: #1e1e2e; }
+  .tname { position: absolute; left: 20px; width: 320px; height: 25px; font-size: 11pt; color: #cdd6f4; line-height: 25px; }
+  .tstat { position: absolute; left: 350px; width: 180px; height: 25px; font-size: 10pt; font-weight: 600; line-height: 25px; }
+  .action { position: absolute; left: 20px; top: 305px; width: 540px; height: 25px; font-size: 10pt; font-weight: 600;
+            color: #89b4fa; line-height: 25px; }
+  .progtrack { position: absolute; left: 20px; top: 332px; width: 540px; height: 20px; background: #313244; }
+  .progfill { position: absolute; left: 0; top: 0; height: 20px; background: #89b4fa; }
+  .glare { position: absolute; top: 0; height: 20px; width: 150px;
+           background: linear-gradient(90deg, rgba(137,180,250,0), rgba(255,255,255,.8), rgba(137,180,250,0)); }
+  .warn { position: absolute; left: 0; top: 420px; width: 576px; height: 20px; text-align: center; line-height: 20px;
+          font-size: 9.5pt; color: #9399b2; }
+
+  /* ---------- этап 4: итог, 500×300 ---------- */
+  .fin { position: relative; width: 500px; height: 300px; background: #1e1e2e; overflow: hidden; }
+  .finp { position: absolute; left: 2px; top: 2px; width: 496px; height: 296px; background: #181825; }
+  .fin .t { position: absolute; left: 30px; top: 30px; font-size: 14pt; font-weight: 700; color: #89b4fa; }
+  .fin .m { position: absolute; left: 30px; top: 80px; width: 440px; height: 60px; font-size: 10pt; color: #cdd6f4; line-height: 1.45; }
+  .fin .g { position: absolute; left: 30px; top: 160px; width: 440px; height: 45px; background: #89b4fa; color: #181825;
+            font-size: 10pt; font-weight: 700; text-align: center; line-height: 45px; }
+  .fin .o { position: absolute; left: 30px; top: 220px; width: 440px; height: 40px; background: #313244; color: #cdd6f4;
+            font-size: 10pt; font-weight: 700; text-align: center; line-height: 40px; }
+
+  table { border-collapse: collapse; font-size: 12.5px; margin-top: 12px; }
+  th, td { text-align: left; padding: 7px 16px 7px 0; border-bottom: 1px solid #2b2b3b; vertical-align: top; }
+  th { color: #a6adc8; font-weight: 600; }
+  td.who { white-space: nowrap; }
+  .gap { border-left: 3px solid #f38ba8; padding-left: 14px; background: #1e1e2e; max-width: 1120px; margin-top: 14px; }
+  .gap p { margin: 8px 0; font-size: 13px; color: #cdd6f4; line-height: 1.55; }
+  .gap .hd { color: #f38ba8; font-weight: 700; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<h1>WAD — что человек видит на каждом шаге</h1>
+<p class="lead">
+  Четыре экрана, между которыми живёт проект. Три из них наши, один — виндовый.
+  Всё нарисовано 1:1 по коду: <code>loader.ps1</code>, <code>manager.ps1</code>, разметка внутри <code>autounattend.xml</code>.
+</p>
+
+<h2>1 · Загрузчик — путь «уже установленная Windows»</h2>
+<p class="sub">Файл: <code>loader.ps1</code>. Окно WPF 650×340 без рамки, перетаскивается за заголовок.
+  <span class="own yes">НАШ</span> Человек скачивает один файл с GitHub и запускает его.</p>
+<div class="row">
+  <div>
+    <div class="ldr">
+      <div class="head">
+        <div class="title">ЗАГРУЗЧИК АВТОМАТИЧЕСКОЙ НАСТРОЙКИ</div>
+        <div class="x">✕</div>
+      </div>
+      <div class="rule"></div>
+      <div class="msg" style="color:#81c784">✓ Соединение установлено.<br><br>Загрузка всех скриптов (Clean Windows)...<br>Пожалуйста, подождите.</div>
+      <div class="note"></div>
+      <div class="exit">ВЫХОД</div>
+    </div>
+    <div class="cap">Единственное окно, где человеку что-то сообщают словами. Текст меняется дважды: проверка связи
+      и загрузка. <b>Важно:</b> строка примечания (серым, под текстом) в коде объявлена, но никогда не заполняется —
+      пустое место, задуманное под пояснение.</div>
+  </div>
+  <div>
+    <div class="ldr">
+      <div class="head">
+        <div class="title">ЗАГРУЗЧИК АВТОМАТИЧЕСКОЙ НАСТРОЙКИ</div>
+        <div class="x">✕</div>
+      </div>
+      <div class="rule"></div>
+      <div class="msg" style="color:#e57373">Нет интернета. Подключите сеть и запустите Loader.cmd с рабочего стола.</div>
+      <div class="note"></div>
+      <div class="exit">ВЫХОД</div>
+    </div>
+    <div class="cap">Красная ветка. Совет в тексте <b>невыполним</b>: файл <code>Loader.cmd</code> никто не создаёт —
+      это известный дефект. Дизайн здесь честнее кода, и наоборот не бывает.</div>
+  </div>
+</div>
+
+<h2>2 · Установка с нуля — путь «файл ответов»</h2>
+<p class="sub">Пока Windows ставится, наши скрипты ещё спят. Работа начинается при первом входе.
+  <span class="own no">НЕ НАШ</span> Это окно Windows PowerShell: его рисует сама система, потому что наши команды
+  прописаны в файле ответов и выполняются в консоли. Текст английский, о ходе установки он не сообщает ничего —
+  кроме общего «не закрывайте окно».</p>
+<div class="row">
+  <div>
+    <div class="con">
+      <div class="bar">Windows PowerShell</div>
+      <div class="prog"><i></i><b>Running scripts to finalize your Windows installation. Do not close this window.</b></div>
+      <pre>*** Will now execute command «Remove-Item -LiteralPath HKLM\SOFTWARE\Microsoft\Windows NT\…AutoLogonCount…».
+*** Finished executing command after 41 ms.
+
+*** Will now execute command «cmd.exe /c "rmdir C:\Windows.old"».
+*** Finished executing command after 18204 ms.
+
+*** Will now execute command «&amp; 'C:\Windows\Setup\Scripts\unattend-02.ps1'».
+<span class="dim">Загрузка скриптов с GitHub…
+Распаковка архива…
+Запуск менеджера…</span></pre>
+    </div>
+    <div class="cap">Так это выглядит сейчас: единственный этап без своего интерфейса. Person может отойти —
+      и не понять, идёт дело или встало. Ни прогресса по задачам, ни русского текста, ни итога.</div>
+  </div>
+  <div style="max-width:420px">
+    <div class="cap" style="margin-top:0">
+      <b>Что здесь можно сделать</b> (это уже к макету, не к коду):<br><br>
+      1. Своё окно прогресса вместо консоли — в том же стиле, что загрузчик: тёмное окно, синяя полоса, русский текст.<br><br>
+      2. Показывать этапы: <i>скачивание → распаковка → запуск менеджера</i>, а дальше окно гасится и открывается менеджер.<br><br>
+      3. Оставить консоль, но подписать по-русски. Дешевле всего, но «некрасиво» ровно настолько, насколько и сейчас.
+    </div>
+    <div class="cap">
+      Ограничение честности: до запуска менеджера мы не знаем, что установилось. Прогресс на этом этапе может быть только
+      «идёт скачивание», а не «сделано 3 из 5».
+    </div>
+  </div>
+</div>
+
+<h2>3 · Менеджер — он же главный экран</h2>
+<p class="sub">Файл: <code>manager.ps1</code>, окно 580×480. <span class="own yes">НАШ</span>
+  Здесь человек проводит больше всего времени. Разбирается подробно в файле <code>manager-current.html</code>,
+  а варианты нового вида — в <code>directions.html</code>.</p>
+<div class="row">
+  <div>
+    <div class="win">
+      <div class="panel">
+        <div class="title">МЕНЕДЖЕР АВТОМАТИЧЕСКОЙ НАСТРОЙКИ</div>
+        <div class="titleline"></div>
+        <div class="closeframe"><div class="closebtn">✕</div></div>
+        <div class="tasks">
+          <div class="tname" style="top:15px">Первоначальная настройка ОС</div>
+          <div class="tstat" style="top:15px; color:#a6e3a1">✓ Готово [12:41:07]</div>
+          <div class="tname" style="top:55px">Оптимизация и настройка ОС</div>
+          <div class="tstat" style="top:55px; color:#a6e3a1">✓ Готово [12:44:52]</div>
+          <div class="tname" style="top:95px">Установка системных компонентов</div>
+          <div class="tstat" style="top:95px; color:#89dceb">▶ Выполняется...</div>
+          <div class="tname" style="top:135px">Установка софта</div>
+          <div class="tstat" style="top:135px; color:#a6adc8">• Ожидание</div>
+          <div class="tname" style="top:175px">Установка и активация Microsoft Office</div>
+          <div class="tstat" style="top:175px; color:#a6adc8">• Ожидание</div>
+        </div>
+        <div class="action">Запуск: install-sys-components.ps1...</div>
+        <div class="progtrack"><div class="progfill" style="width:400px"></div><div class="glare" style="left:270px"></div></div>
+        <div class="warn">Пожалуйста, не закрывайте это окно до завершения всех процессов.</div>
+      </div>
+    </div>
+    <div class="cap">Пять задач — режим Clean. В режиме Custom задач четыре, и окно на 20 px ниже: дизайн общий.</div>
+  </div>
+</div>
+
+<h2>4 · Итог работы</h2>
+<p class="sub">Второе окно в <code>manager.ps1</code>, 500×300, всплывает поверх. <span class="own yes">НАШ</span></p>
+<div class="row">
+  <div>
+    <div class="fin">
+      <div class="finp">
+        <div class="t">СИСТЕМА НАСТРОЕНА</div>
+        <div class="m">Все операции успешно отработали. Для корректного завершения работы перезагрузите компьютер.</div>
+        <div class="g">GITHUB РАЗРАБОТЧИКА</div>
+        <div class="o">ВЫХОД</div>
+      </div>
+    </div>
+    <div class="cap">Заголовок и текст <b>не зависят от того, что произошло</b>: даже если все задачи упали,
+      человек прочитает «СИСТЕМА НАСТРОЕНА» и «все операции успешно отработали». Это дефект честности — и одна из тех
+      вещей, которые новый дизайн обязан вылечить: итоговое окно должно собираться из статусов задач.</div>
+  </div>
+</div>
+
+<h2>Свод: где что происходит</h2>
+<table>
+  <tr><th>Шаг</th><th>Кто рисует окно</th><th>Что видно человеку</th><th>Чего не хватает</th></tr>
+  <tr>
+    <td class="who">1. Скачал и запустил<br><span style="color:#9399b2">режим Clean</span></td>
+    <td class="who"><span class="own yes">наш</span><br>loader.ps1</td>
+    <td>Тёмное окно, 2 сообщения, кнопка ВЫХОД</td>
+    <td>Строка примечания пустая; в ветке «нет интернета» совет невыполним</td>
+  </tr>
+  <tr>
+    <td class="who">2. Установка Windows<br><span style="color:#9399b2">режим Custom</span></td>
+    <td class="who"><span class="own no">Windows</span><br>консоль</td>
+    <td>Английский текст, общая полоса, лог в файл</td>
+    <td>Русского языка, этапов и вообще какого-либо понятного сообщения</td>
+  </tr>
+  <tr>
+    <td class="who">3. Задачи<br><span style="color:#9399b2">оба режима</span></td>
+    <td class="who"><span class="own yes">наш</span><br>manager.ps1</td>
+    <td>Список задач со статусами, полоса, блик</td>
+    <td>Лога на виду, счётчика «3 из 5», кнопок управления</td>
+  </tr>
+  <tr>
+    <td class="who">4. Итог<br><span style="color:#9399b2">оба режима</span></td>
+    <td class="who"><span class="own yes">наш</span><br>manager.ps1</td>
+    <td>«СИСТЕМА НАСТРОЕНА», кнопки GitHub и ВЫХОД</td>
+    <td>Правды: текст один и тот же при успехе и при провале</td>
+  </tr>
+</table>
+
+<div class="gap">
+  <p class="hd">Главное, что видно на этой карте</p>
+  <p>Человек, который «поставил и ушёл», возвращается к экрану и должен за пять секунд понять: получилось или нет.
+    Сейчас он видит либо английскую консоль, либо «СИСТЕМА НАСТРОЕНА» — независимо от факта. Значит, вся работа над
+    дизайном сводится не к красоте, а к одному вопросу: <b>как быстро человек поймёт, нужен ли он здесь</b>.</p>
+</div>
+
+</body>
+</html>

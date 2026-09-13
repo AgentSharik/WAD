@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Менеджер WAD — как выглядит сейчас</title>
+<style>
+  body { margin: 0; padding: 28px; background: #11111b; color: #cdd6f4;
+         font-family: "Segoe UI", system-ui, -apple-system, sans-serif; }
+  h1 { font-size: 20px; font-weight: 600; color: #89b4fa; margin: 0 0 6px; }
+  .lead { color: #a6adc8; font-size: 13.5px; margin: 0 0 26px; max-width: 1100px; line-height: 1.55; }
+  h2 { font-size: 14px; font-weight: 600; color: #cba6f7; margin: 30px 0 10px; }
+  .row { display: flex; flex-wrap: wrap; gap: 26px; align-items: flex-start; }
+  .shot { }
+  .shot > .cap { font-size: 12.5px; color: #9399b2; margin: 8px 2px 0; max-width: 580px; line-height: 1.5; }
+
+  /* --- окно 1:1 по коду: 580×480 --- */
+  .win { position: relative; width: 580px; height: 480px; background: #1e1e2e;
+         flex: 0 0 auto; overflow: hidden; }
+  .panel { position: absolute; left: 2px; top: 2px; width: 576px; height: 476px; background: #181825; }
+  .title { position: absolute; left: 20px; top: 20px; font-size: 14pt; font-weight: 700; color: #89b4fa; }
+  .titleline { position: absolute; left: 20px; top: 56px; width: 540px; height: 2px; background: #89b4fa; }
+  .closeframe { position: absolute; left: 528px; top: 18px; width: 32px; height: 32px; background: #89b4fa; }
+  .closebtn { position: absolute; left: 2px; top: 2px; width: 28px; height: 28px; background: #181825; color: #a6adc8;
+              font-size: 11pt; font-weight: 700; text-align: center; line-height: 28px; }
+  .tasks { position: absolute; left: 20px; top: 75px; width: 540px; height: 220px; background: #1e1e2e; }
+  .tname { position: absolute; left: 20px; width: 320px; height: 25px; font-size: 11pt; color: #cdd6f4; line-height: 25px; }
+  .tstat { position: absolute; left: 350px; width: 180px; height: 25px; font-size: 10pt; font-weight: 600; line-height: 25px; }
+  .action { position: absolute; left: 20px; top: 305px; width: 540px; height: 25px;
+            font-size: 10pt; font-weight: 600; color: #89b4fa; line-height: 25px; }
+  .progtrack { position: absolute; left: 20px; top: 332px; width: 540px; height: 20px; background: #313244; }
+  .progfill { position: absolute; left: 0; top: 0; height: 20px; background: #89b4fa; }
+  .glare { position: absolute; top: 0; height: 20px; width: 150px;
+           background: linear-gradient(90deg, rgba(137,180,250,0) 0%, rgba(255,255,255,.82) 50%, rgba(137,180,250,0) 100%); }
+  .warn { position: absolute; left: 0; top: 420px; width: 576px; height: 20px; text-align: center; line-height: 20px;
+          font-size: 9.5pt; color: #9399b2; }
+
+  /* окно «СИСТЕМА НАСТРОЕНА» — 500×300 */
+  .win2 { position: relative; width: 500px; height: 300px; background: #1e1e2e; overflow: hidden; }
+  .panel2 { position: absolute; left: 2px; top: 2px; width: 496px; height: 296px; background: #181825; }
+  .t2 { position: absolute; left: 30px; top: 30px; font-size: 14pt; font-weight: 700; color: #89b4fa; }
+  .m2 { position: absolute; left: 30px; top: 80px; width: 440px; height: 60px; font-size: 10pt; color: #cdd6f4; line-height: 1.45; }
+  .b2git { position: absolute; left: 30px; top: 160px; width: 440px; height: 45px; background: #89b4fa; color: #181825;
+           font-size: 10pt; font-weight: 700; text-align: center; line-height: 45px; }
+  .b2ok { position: absolute; left: 30px; top: 220px; width: 440px; height: 40px; background: #313244; color: #cdd6f4;
+          font-size: 10pt; font-weight: 700; text-align: center; line-height: 40px; }
+
+  table { border-collapse: collapse; font-size: 12.5px; margin-top: 10px; }
+  th, td { text-align: left; padding: 6px 14px 6px 0; border-bottom: 1px solid #313244; vertical-align: top; }
+  th { color: #a6adc8; font-weight: 600; }
+  td.num { color: #9399b2; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .sw { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 8px; }
+  .sw div { font-size: 12px; color: #a6adc8; }
+  .sw i { display: block; width: 64px; height: 30px; border: 1px solid #45475a; margin-bottom: 5px; }
+  code { background: #313244; padding: 1px 5px; font-size: 12px; color: #cdd6f4; }
+</style>
+</head>
+<body>
+
+<h1>Менеджер WAD — как он выглядит сейчас</h1>
+<p class="lead">
+  Макет собран 1:1 по коду <code>manager.ps1</code>: те же координаты, размеры, шрифты и цвета.
+  Окно 580×480 без рамки, перетаскивается за заголовок. Пять задач — режим Clean, четыре — режим Custom
+  (отличие только в списке и высоте контейнера). Все три состояния показаны такими, какими их увидит
+  человек: в работе, при сбое и после завершения.
+</p>
+
+<h2>1. Идёт установка</h2>
+<div class="row">
+  <div class="shot">
+    <div class="win">
+      <div class="panel">
+        <div class="title">МЕНЕДЖЕР АВТОМАТИЧЕСКОЙ НАСТРОЙКИ</div>
+        <div class="titleline"></div>
+        <div class="closeframe"><div class="closebtn">✕</div></div>
+
+        <div class="tasks">
+          <div class="tname" style="top:15px">Первоначальная настройка ОС</div>
+          <div class="tstat" style="top:15px; color:#a6e3a1">✓ Готово [12:41:07]</div>
+
+          <div class="tname" style="top:55px">Оптимизация и настройка ОС</div>
+          <div class="tstat" style="top:55px; color:#a6e3a1">✓ Готово [12:44:52]</div>
+
+          <div class="tname" style="top:95px">Установка системных компонентов</div>
+          <div class="tstat" style="top:95px; color:#89dceb">▶ Выполняется...</div>
+
+          <div class="tname" style="top:135px">Установка софта</div>
+          <div class="tstat" style="top:135px; color:#a6adc8">• Ожидание</div>
+
+          <div class="tname" style="top:175px">Установка и активация Microsoft Office</div>
+          <div class="tstat" style="top:175px; color:#a6adc8">• Ожидание</div>
+        </div>
+
+        <div class="action">Запуск: install-sys-components.ps1...</div>
+        <div class="progtrack">
+          <div class="progfill" style="width:400px"></div>
+          <div class="glare" style="left:270px"></div>
+        </div>
+        <div class="warn">Пожалуйста, не закрывайте это окно до завершения всех процессов.</div>
+      </div>
+    </div>
+    <div class="cap">Так выглядит середина работы. Синие тона, полоса прогресса бежит с бликом, статусы справа.</div>
+  </div>
+
+  <div class="shot">
+    <div class="win">
+      <div class="panel">
+        <div class="title">МЕНЕДЖЕР АВТОМАТИЧЕСКОЙ НАСТРОЙКИ</div>
+        <div class="titleline"></div>
+        <div class="closeframe"><div class="closebtn">✕</div></div>
+
+        <div class="tasks" style="height:200px">
+          <div class="tname" style="top:15px">Оптимизация и настройка ОС</div>
+          <div class="tstat" style="top:15px; color:#a6e3a1">✓ Готово [12:52:19]</div>
+
+          <div class="tname" style="top:55px">Установка системных компонентов</div>
+          <div class="tstat" style="top:55px; color:#f9e2af">⚠ Отсутствует [12:55:03]</div>
+
+          <div class="tname" style="top:95px">Установка софта</div>
+          <div class="tstat" style="top:95px; color:#f38ba8">✗ Сбой (Код: 1)</div>
+
+          <div class="tname" style="top:135px">Установка и активация Microsoft Office</div>
+          <div class="tstat" style="top:135px; color:#a6adc8">• Ожидание</div>
+        </div>
+
+        <div class="action">Запуск: apps-install.ps1...</div>
+        <div class="progtrack">
+          <div class="progfill" style="width:300px"></div>
+          <div class="glare" style="left:120px"></div>
+        </div>
+        <div class="warn">Пожалуйста, не закрывайте это окно до завершения всех процессов.</div>
+      </div>
+    </div>
+    <div class="cap">Режим Custom, четыре задачи. Красный статус — то, что появилось в версии 0.4:
+      сбой больше не выглядит как «✓ Готово». Жёлтый — файл не найден.</div>
+  </div>
+</div>
+
+<h2>2. Итоговое окно после завершения</h2>
+<div class="row">
+  <div class="shot">
+    <div class="win2">
+      <div class="panel2">
+        <div class="t2">СИСТЕМА НАСТРОЕНА</div>
+        <div class="m2">Все операции успешно отработали. Для корректного завершения работы перезагрузите компьютер.</div>
+        <div class="b2git">GITHUB РАЗРАБОТЧИКА</div>
+        <div class="b2ok">ВЫХОД</div>
+      </div>
+    </div>
+    <div class="cap">Отдельное окно 500×300, появляется поверх по завершении. Говорит об успехе
+      <b>всегда</b>, даже если задачи падали — надпись не связана со статусами (это дефект, а не задумка).</div>
+  </div>
+
+  <div class="shot" style="max-width:600px">
+    <h2 style="margin-top:0">Где что лежит в коде</h2>
+    <table>
+      <tr><th>Элемент</th><th>Координаты</th><th>Шрифт</th></tr>
+      <tr><td>Заголовок</td><td class="num">20, 20</td><td>Segoe UI Semibold 14, синий</td></tr>
+      <tr><td>Линия под заголовком</td><td class="num">20, 56 · 540×2</td><td>—</td></tr>
+      <tr><td>Кнопка закрытия</td><td class="num">528, 18 · 32×32</td><td>рамка синяя, знак серый</td></tr>
+      <tr><td>Список задач</td><td class="num">20, 75 · 540×220</td><td>название 11, статус 10 полужирный</td></tr>
+      <tr><td>Строка «Запуск: …»</td><td class="num">20, 305</td><td>Segoe UI Semibold 10, синий</td></tr>
+      <tr><td>Полоса прогресса</td><td class="num">20, 332 · 540×20</td><td>заливка синяя, блик 150 px</td></tr>
+      <tr><td>Предупреждение снизу</td><td class="num">0, 420 · 576×20</td><td>Segoe UI 9.5, серый</td></tr>
+    </table>
+    <div class="cap">Всё крупными окнами, списком по 40 px на строку. Ни картинок, ни иконок, ни вкладок —
+      только текст и одна полоса прогресса.</div>
+  </div>
+</div>
+
+<h2>Цвета (они же в коде, менять не обязательно)</h2>
+<div class="sw">
+  <div><i style="background:#181825"></i>фон окна<br>24,24,37</div>
+  <div><i style="background:#1e1e2e"></i>панель задач<br>30,30,46</div>
+  <div><i style="background:#313244"></i>дорожка прогресса<br>49,50,68</div>
+  <div><i style="background:#89b4fa"></i>акцент, заголовок<br>137,180,250</div>
+  <div><i style="background:#cdd6f4"></i>основной текст<br>205,214,244</div>
+  <div><i style="background:#a6adc8"></i>ожидание<br>166,173,200</div>
+  <div><i style="background:#89dceb"></i>выполняется<br>137,220,235</div>
+  <div><i style="background:#a6e3a1"></i>успех<br>166,227,161</div>
+  <div><i style="background:#f9e2af"></i>предупреждение<br>249,226,175</div>
+  <div><i style="background:#f38ba8"></i>сбой<br>243,139,168</div>
+  <div><i style="background:#9399b2"></i>подпись снизу<br>147,153,178</div>
+</div>
+
+</body>
+</html>
