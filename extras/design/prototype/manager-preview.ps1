@@ -68,7 +68,7 @@ $CardH = Sc 700
 $CardX = [int](($Script:W - $CardW) / 2)
 $CardY = [int](($Script:H - $CardH) / 2)
 $Pad   = Sc 48
-$Inner = $CardX + $CardW - $Pad
+$Inner = $CardW - $Pad          # правый край содержимого — в координатах окна, не экрана
 
 # ----------------------------------------------------------------------------- шрифт
 $Script:Family = 'Segoe UI'
@@ -339,6 +339,9 @@ $Form.Add_Paint({
     $glowBrush.Dispose(); $glowPath.Dispose(); $path.Dispose()
 
     # --- содержимое окна -----------------------------------------------------
+    # Сдвигаем начало отсчёта в левый верхний угол окна: вся разметка ниже
+    # задана в координатах окна. Без этого текст рисуется в углу экрана.
+    $g.TranslateTransform($CardX, $CardY)
     $prog = Get-Progress $t
     $textBrush = New-Object System.Drawing.SolidBrush($Script:C.Text)
     $mutedBrush = New-Object System.Drawing.SolidBrush($Script:C.Muted)
@@ -562,8 +565,8 @@ $Form.Add_Paint({
 
     # крестик закрытия
     $closeFont = F 'regular' 16
-    $closeX = $CardX + $CardW - (Sc 34)
-    $closeY = $CardY + (Sc 18)
+    $closeX = $CardW - (Sc 34)
+    $closeY = (Sc 18)
     $closeBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(160, $Script:C.Muted))
     $g.DrawString('✕', $closeFont, $closeBrush, (New-Object System.Drawing.PointF($closeX, $closeY)))
     $closeBrush.Dispose(); $closeFont.Dispose()
@@ -572,10 +575,11 @@ $Form.Add_Paint({
     $previewFont = F 'regular' 13
     $previewBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(140, $Script:C.Dim))
     Draw-Text $g ('Предпросмотр интерфейса · прогресс имитируется · Esc — выход') $previewFont $previewBrush `
-        $Pad ($CardY + $CardH + (Sc 14))
+        $Pad ($CardH + (Sc 14))
     $previewBrush.Dispose(); $previewFont.Dispose()
 
     $textBrush.Dispose(); $mutedBrush.Dispose(); $dimBrush.Dispose(); $darkBrush.Dispose()
+    $g.ResetTransform()
 })
 
 $Script:LoopSeconds = $Seconds

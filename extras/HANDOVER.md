@@ -104,6 +104,8 @@ python3 extras/audit/tools/url_check.py 2>/dev/null | head        # живост
 | `Scripts/.../apps-install.ps1` | Chrome, Steam, WinRAR, qBittorrent, ShareX, K-Lite |
 | `Scripts/.../office-install.ps1` | офисный пакет (тема закрыта, состав не меняется) |
 | `Scripts/.../reset-setup-scripts.ps1` | финальная зачистка и самоудаление папки скриптов |
+| `extras/design/` | Макеты и предпросмотр интерфейса (внутренняя папка): ролики, фоны, живой прототип окна
+`prototype/manager-preview.ps1` и скрипты сборки роликов. Подробности — в `extras/design/README.md` |
 | `.github/workflows/checks.yml` | разбор синтаксиса под Windows PowerShell 5.1, PSScriptAnalyzer (ошибки), проверка BOM |
 | `CHANGELOG.md` | версии 0.1–0.3, формат «✨ Новое / 🐞 Исправлено» |
 
