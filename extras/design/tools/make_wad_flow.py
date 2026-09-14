@@ -58,11 +58,11 @@ PAD = 56                        # внутренние отступы
 INNER = WIN_X + WIN_W - PAD
 
 # сценарий: текст (9 с) → окно (5 с) → установка → GitHub → растворение в фон
-T_TEXT_END = 10.4
-T_START = 10.4                  # появление начального окна
-T_INSTALL = 15.4                # окно висит ровно 5 с, дальше само начинает установку
-T_GITHUB = 40.0
-T_END = 47.5
+T_TEXT_END = 12.8
+T_START = 12.8                  # появление начального окна
+T_INSTALL = 17.8                # окно висит ровно 5 с, дальше само начинает установку
+T_GITHUB = 41.4                 # финал установки держится 1,6 с и окно уходит в проект
+T_END = 49.0
 
 # Семейство шрифта макета. Настоящий Segoe UI взять нельзя: он лицензионный и в песочнице
 # его нет; Selawik (единственный совместимый по метрикам свободный аналог) без кириллицы.
@@ -435,14 +435,15 @@ def draw_flow_line(layer, d, x0, x1, y, prog, t):
 
 # ----------------------------------------------------------------------------- экран 1: приветствие
 WELCOME_SIZE = 84                # один кегль на все строки приветствия — как у «Здравствуйте»
-RISE_IN, RISE_OUT = 26, 22       # насколько строка «доезжает» по вертикали при появлении и уходе
-# (t0, t1, t2, t3, строки, стиль): t0..t1 — проявляется, t1..t2 — держится, t2..t3 — уходит;
-# между строками пауза около 0,45 с, как в первом входе в Windows.
+RISE_IN, RISE_OUT = 34, 24       # насколько строка «доезжает» по вертикали при появлении и уходе
+# (t0, t1, t2, t3, строки, стиль): 0,9 с проявляется, 1,1 с стоит, 1,1 с уходит; между
+# строками пауза 0,2 с. Полностью разнесены по времени: строки не накладываются, а длинные
+# растворения убирают резкость — «плавно ушло, пауза, плавно пришло».
 WELCOME = [
-    (0.35, 0.90, 1.75, 2.30, ['Здравствуйте'], 'ink'),
-    (2.75, 3.30, 4.15, 4.70, ['Вас приветствует WAD'], 'wad'),
-    (5.15, 5.70, 6.75, 7.30, ['WAD настроит Windows для вас,', 'можете отдохнуть'], 'wad'),
-    (7.75, 8.30, 9.65, 10.20, ['Приступаем'], 'go'),
+    (0.40, 1.30, 2.40, 3.50, ['Здравствуйте'], 'ink'),
+    (3.70, 4.60, 5.70, 6.80, ['Вас приветствует WAD'], 'wad'),
+    (7.00, 7.90, 9.00, 10.10, ['WAD настроит Windows для вас,', 'можете отдохнуть'], 'wad'),
+    (10.30, 11.20, 12.00, 12.60, ['Приступаем'], 'go'),
 ]
 BLACK_FULL = 1.5                 # до этой секунды фон чёрный
 BLACK_GONE = 2.9                 # к этой секунде чёрный полностью уступает обоям
@@ -483,12 +484,15 @@ def _text_box(text, kind, size, anchor, pad=18):
     return f, w, h, pad - box[0], pad - box[1]
 
 
-def halo_text(layer, xy, text, kind, size, alpha, anchor='mm', radius=3, blur=2.2):
-    """Белая обводка под цветным текстом: чтобы буквы не растворялись в светлых обоях."""
-    f, w, h, ox, oy = _text_box(text, kind, size, anchor)
+def halo_text(layer, xy, text, kind, size, alpha, anchor='mm', blur=7.0):
+    """Мягкое белое свечение под цветным текстом.
+
+    Белая обводка (stroke_width) давала жёсткий контур вокруг каждой буквы — «белые углы».
+    Здесь то же самое, но размытое: буквы так же выделяются на светлых обоях, а контура не видно.
+    """
+    f, w, h, ox, oy = _text_box(text, kind, size, anchor, pad=int(blur * 3))
     im = Image.new('RGBA', (w, h), (0, 0, 0, 0))
-    ImageDraw.Draw(im).text((ox, oy), text, font=f, fill=(255, 255, 255, int(255 * alpha)), anchor=anchor,
-                            stroke_width=radius, stroke_fill=(255, 255, 255, int(255 * alpha)))
+    ImageDraw.Draw(im).text((ox, oy), text, font=f, fill=(255, 255, 255, int(190 * alpha)), anchor=anchor)
     layer.alpha_composite(im.filter(ImageFilter.GaussianBlur(blur)), (int(xy[0] - ox), int(xy[1] - oy)))
 
 
@@ -804,14 +808,15 @@ def scene_install(wallpaper, mica, shadow, t, base=None):
             d.text((cxx + 32, cyy + 17), sub, font=font('regular', 15.5), fill=tcol + (240,), anchor='lm')
             cxx += wdt + 8
 
-    reboot = t >= INSTALL_LEN + 0.9
-    label = 'Перезагрузить компьютер' if reboot else 'Свернуть в фон'
+    # перезагрузка переехала в окно проекта: здесь только «Свернуть в фон»
+    label = 'Свернуть в фон'
     bw = tw(label, 'semibold', 17) + 52
     content.alpha_composite(rrect((WIN_W, WIN_H), [WIN_W - PAD - bw, WIN_H - PAD - 54, WIN_W - PAD, WIN_H - PAD], 8,
                                   fill=C['accent'] + (255,)))
     d.text((WIN_W - PAD - bw / 2, WIN_H - PAD - 27), label, font=font('semibold', 17),
            fill=(255, 255, 255, 255), anchor='mm')
-    note = 'Всё готово — можно перезагружаться' if reboot else 'Установка продолжится, даже если свернуть окно'
+    note = ('Всё готово — открываю страницу проекта' if t >= INSTALL_LEN
+            else 'Установка продолжится, даже если свернуть окно')
     d.text((x, WIN_H - PAD - 27), note, font=font('regular', 15), fill=C['text2'] + (255,), anchor='lm')
 
     card.alpha_composite(content)
@@ -923,15 +928,22 @@ def scene_github(wallpaper, mica, shadow, t, base=None):
             t2 = t2.rstrip(' ,.—') + '…'
         d.text((x + 62, cy2 + 13), t2, font=font('regular', 15.5), fill=C['text2'] + (255,), anchor='lm')
 
-    # кнопки
+    # кнопки: перезагрузка переехала сюда из окна установки — она главная на этом экране
     by = WIN_H - PAD - 54
-    pw = tw('Открыть в браузере', 'semibold', 17) + 56
-    content.alpha_composite(rrect((WIN_W, WIN_H), [WIN_W - PAD - pw, by, WIN_W - PAD, by + 54], 8,
+    rw = tw('Перезагрузить компьютер', 'semibold', 17) + 56
+    rx = WIN_W - PAD - rw
+    content.alpha_composite(rrect((WIN_W, WIN_H), [rx, by, WIN_W - PAD, by + 54], 8,
                                   fill=C['accent'] + (255,)))
-    d.text((WIN_W - PAD - pw / 2, by + 27), 'Открыть в браузере', font=font('semibold', 17),
+    d.text((rx + rw / 2, by + 27), 'Перезагрузить компьютер', font=font('semibold', 17),
            fill=(255, 255, 255, 255), anchor='mm')
+    pw = tw('Открыть в браузере', 'medium', 17) + 48
+    px = rx - 12 - pw
+    content.alpha_composite(rrect((WIN_W, WIN_H), [px, by, px + pw, by + 54], 8,
+                                  fill=(255, 255, 255, 200), outline=(0, 0, 0, 26)))
+    d.text((px + pw / 2, by + 27), 'Открыть в браузере', font=font('medium', 17),
+           fill=C['text'] + (240,), anchor='mm')
     sw = tw('Проверить обновления', 'medium', 17) + 48
-    sx = WIN_W - PAD - pw - 12 - sw
+    sx = px - 12 - sw
     content.alpha_composite(rrect((WIN_W, WIN_H), [sx, by, sx + sw, by + 54], 8,
                                   fill=(255, 255, 255, 200), outline=(0, 0, 0, 26)))
     d.text((sx + sw / 2, by + 27), 'Проверить обновления', font=font('medium', 17),
@@ -950,8 +962,8 @@ def render_frame(wallpaper, mica, shadow, t):
     if t < T_TEXT_END:
         frame, layer = scene_text(wallpaper, t)
         # окно начинает проступать в самом конце приветствия
-        if t > T_TEXT_END - 1.2:
-            a = ease_io((t - (T_TEXT_END - 1.2)) / 1.2)
+        if t > T_TEXT_END - 1.5:
+            a = ease_io((t - (T_TEXT_END - 1.5)) / 1.5)
             win = scene_start(wallpaper, mica, shadow, T_START).convert('RGBA')
             frame = Image.blend(frame, win, a * 0.85)
         frame.alpha_composite(layer)
@@ -967,25 +979,27 @@ def render_frame(wallpaper, mica, shadow, t):
         return frame.convert('RGB')
 
     if t < T_GITHUB:
-        if t < T_INSTALL + 0.5:
-            a = ease_io((t - T_INSTALL) / 0.5)
-            prev = scene_start(wallpaper, mica, shadow, T_INSTALL - 0.01).convert('RGBA')
-            nxt = scene_install(wallpaper, mica, shadow, 0.0).convert('RGBA')
-            return Image.blend(prev, nxt, a).convert('RGB')
+        if t < T_INSTALL + 0.9:
+            # окно не подменяется, а «перетекает»: старое растворяется в обои,
+            # новое проявляется и подтягивается снизу на 14 px
+            a = ease_io((t - T_INSTALL) / 0.9)
+            prev = scene_start(wallpaper, mica, shadow, t).convert('RGBA')
+            out = Image.blend(prev, wallpaper.convert('RGBA'), a * 0.9)
+            ghost = scene_install(wallpaper, mica, shadow, t - T_INSTALL, base=rgba((W, H)))
+            ghost.putalpha(ghost.getchannel('A').point(lambda v: int(v * a)))
+            out.alpha_composite(ghost, (0, int(14 * (1 - a))))
+            return out.convert('RGB')
         return scene_install(wallpaper, mica, shadow, t - T_INSTALL).convert('RGB')
 
-    if t < T_GITHUB + 0.6:
-        # старое окно гаснет, новое въезжает снизу-справа: разметка у окон разная,
-        # простым растворением на месте переход читался как подмена.
-        # Длительность совпадает с проявлением содержимого GitHub-окна (0.6 с),
-        # поэтому на стыке 39.5 + 0.6 картинки совпадают кадр в кадр.
-        a = ease_io((t - T_GITHUB) / 0.6)          # новое окно въезжает
-        ao = ease_io((t - T_GITHUB) / 0.28)         # старое уходит вдвое быстрее —
+    if t < T_GITHUB + 0.9:
+        # такой же мягкий переход, как из начального окна в установку: старое растворяется,
+        # новое подтягивается снизу-справа на 18 px
+        a = ease_io((t - T_GITHUB) / 0.9)
         prev = scene_install(wallpaper, mica, shadow, T_GITHUB - T_INSTALL).convert('RGBA')
-        out = Image.blend(prev, wallpaper.convert('RGBA'), ao)   # два текста не накладываются
+        out = Image.blend(prev, wallpaper.convert('RGBA'), a * 0.9)
         ghost = scene_github(wallpaper, mica, shadow, t, base=rgba((W, H)))
         ghost.putalpha(ghost.getchannel('A').point(lambda v: int(v * a)))
-        out.alpha_composite(ghost, (int(26 * (1 - a)), int(-16 * (1 - a))))
+        out.alpha_composite(ghost, (int(18 * (1 - a)), int(18 * (1 - a))))
         return out.convert('RGB')
     frame = scene_github(wallpaper, mica, shadow, t).convert('RGB')
     # финал: окно так же растворяется в обои, как и появлялось — без затемнения в чёрное
