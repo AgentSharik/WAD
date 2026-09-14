@@ -867,36 +867,36 @@ def scene_github(wallpaper, mica, shadow, t, base=None):
         desc = desc[:-2]
     if desc != REPO['desc']:
         desc = desc.rstrip(' ,.—') + '…'
-    d.text((x, y + 106), desc, font=font('regular', 18), fill=C['text'] + (240,))
-    d.text((x, y + 134), 'PowerShell + файл ответов, свой интерфейс, без сторонних сборок.',
+    d.text((x, y + 112), desc, font=font('regular', 18), fill=C['text'] + (240,))
+    d.text((x, y + 142), 'PowerShell + файл ответов, свой интерфейс, без сторонних сборок.',
            font=font('regular', 16.5), fill=C['text2'] + (255,))
 
     # характеристики: подписи словами, без символов, которых нет в шрифте
     stats = [('Язык', REPO['lang']), ('Размер', f"{REPO['size_kb']} КБ"),
              ('Обновлён', REPO['updated']), ('Лицензия', REPO['license'])]
-    sy = y + 176
+    sy = y + 194
     bw2 = (text_w - 12) / 2
     for i, (k, v) in enumerate(stats):
         bx = x + (i % 2) * (bw2 + 12)
-        by = sy + (i // 2) * 56
-        content.alpha_composite(rrect((WIN_W, WIN_H), [bx, by, bx + bw2, by + 46], 8,
+        by = sy + (i // 2) * 66
+        content.alpha_composite(rrect((WIN_W, WIN_H), [bx, by, bx + bw2, by + 54], 8,
                                       fill=(255, 255, 255, 170), outline=(0, 0, 0, 16)))
-        d.text((bx + 16, by + 9), k, font=font('regular', 14), fill=C['text3'] + (255,))
-        d.text((bx + 16, by + 26), v, font=font('medium', 16), fill=C['text'] + (255,))
+        d.text((bx + 16, by + 12), k, font=font('regular', 14), fill=C['text3'] + (255,))
+        d.text((bx + 16, by + 31), v, font=font('medium', 16.5), fill=C['text'] + (255,))
 
     # темы
-    ty = sy + 130
+    ty = sy + 186
     d.text((x, ty), 'Темы репозитория', font=font('semibold', 17), fill=C['text'] + (255,))
     tx, twy = x, ty + 28
     for topic in REPO['topics']:
-        wdt = tw(topic, 'medium', 14.5) + 24
+        wdt = tw(topic, 'medium', 15) + 26
         if tx + wdt > x + text_w:
             tx = x
-            twy += 32
-        content.alpha_composite(rrect((WIN_W, WIN_H), [tx, twy, tx + wdt, twy + 28], 14,
+            twy += 40
+        content.alpha_composite(rrect((WIN_W, WIN_H), [tx, twy, tx + wdt, twy + 34], 17,
                                       fill=C['accent'] + (16,), outline=C['accent'] + (48,)))
-        d.text((tx + wdt / 2, twy + 14), topic, font=font('medium', 14.5), fill=C['accent'] + (230,), anchor='mm')
-        tx += wdt + 8
+        d.text((tx + wdt / 2, twy + 17), topic, font=font('medium', 15), fill=C['accent'] + (230,), anchor='mm')
+        tx += wdt + 9
 
     # QR и ссылка
     content.alpha_composite(rrect((WIN_W, WIN_H), [qx - 12, qy - 12, qx + qs + 12, qy + qs + 12], 12,
@@ -917,25 +917,8 @@ def scene_github(wallpaper, mica, shadow, t, base=None):
     d.text((qx + qs / 2, qy + qs + 56), f"данные на {REPO['fetched']}", font=font('regular', 14),
            fill=C['text3'] + (255,), anchor='mm')
 
-    # последние изменения — из настоящего CHANGELOG проекта, без выдумок
-    hy = twy + 58
-    d.text((x, hy), 'Последние изменения', font=font('semibold', 17), fill=C['text'] + (255,))
-    changes = [
-        ('0.4', 'Честные статусы задач и проверки на каждый push'),
-        ('0.3', 'Просмотр фото через DISM и вторая ветка файла подкачки'),
-        ('0.2', 'Два режима установки: Clean и Custom'),
-    ]
-    for i, (ver, text) in enumerate(changes):
-        cy2 = hy + 30 + i * 30
-        content.alpha_composite(rrect((WIN_W, WIN_H), [x, cy2 + 1, x + 46, cy2 + 25], 12,
-                                      fill=C['accent'] + (16,), outline=C['accent'] + (46,)))
-        d.text((x + 23, cy2 + 13), ver, font=font('medium', 13.5), fill=C['accent'] + (255,), anchor='mm')
-        t2 = text
-        while tw(t2, 'regular', 15.5) > WIN_W - PAD - (x + 62) and len(t2) > 10:
-            t2 = t2[:-2]
-        if t2 != text:
-            t2 = t2.rstrip(' ,.—') + '…'
-        d.text((x + 62, cy2 + 13), t2, font=font('regular', 15.5), fill=C['text2'] + (255,), anchor='lm')
+    # Истории изменений здесь намеренно нет: подписи вида «0.2 / 0.3 / 0.4» намекали на
+    # нумерацию версий программы, а последняя строка налезала на подпись внизу окна.
 
     # кнопка одна: данные и так свежие из GitHub, а браузер на перезагружаемой машине не нужен
     by = WIN_H - PAD - 54
