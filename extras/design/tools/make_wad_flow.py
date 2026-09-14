@@ -11,8 +11,12 @@
   * кружки шагов крупные, журнал-консоль снизу убран;
   * системной полосы заголовка нет: знак WAD, название раздела и значки управления
     нарисованы внутри окна, поэтому ничего не «приклеено» сверху;
-  * приветствие — 9,9 с, кегль строк разный (84 / 54 / 34 / 72), «WAD» и «Приступаем»
-    залиты тёмным градиентом с белой обводкой, иначе слова растворялись в светлом фоне;
+  * приветствие — 10 с: сначала чёрный экран, который потом перетекает в обои; все строки
+    одного кегля (84), длинная фраза разбита на две строки; строки проявляются, стоят и уходят
+    вверх с паузой 0,45 с между ними — как в первом входе в Windows;
+  * «WAD» и «Приступаем» залиты тем же системным синим с фиолетовым (чуть глубже) и обведены
+    белым, иначе слова растворялись в светлом фоне;
+  * шрифт макета — Source Sans 3 (Segoe UI лицензионный, Selawik без кириллицы);
   * начальное окно висит 5 с и кнопки «продолжить» не имеет — установка начинается сама;
   * в окне проекта список изменений — по одной записи на версию (0.4 / 0.3 / 0.2).
 
@@ -54,11 +58,17 @@ PAD = 56                        # внутренние отступы
 INNER = WIN_X + WIN_W - PAD
 
 # сценарий: текст (9 с) → окно (5 с) → установка → GitHub → растворение в фон
-T_TEXT_END = 9.9
-T_START = 9.9                   # появление начального окна
-T_INSTALL = 14.9                # окно висит ровно 5 с, дальше само начинает установку
-T_GITHUB = 39.5
-T_END = 47.0
+T_TEXT_END = 10.4
+T_START = 10.4                  # появление начального окна
+T_INSTALL = 15.4                # окно висит ровно 5 с, дальше само начинает установку
+T_GITHUB = 40.0
+T_END = 47.5
+
+# Семейство шрифта макета. Настоящий Segoe UI взять нельзя: он лицензионный и в песочнице
+# его нет; Selawik (единственный совместимый по метрикам свободный аналог) без кириллицы.
+# Поэтому — Source Sans 3: свободная, с полной кириллицей, по пропорциям ближе всего к Segoe UI.
+# Поменять на другое семейство — одна строка: 'sourcesans3' | 'fira' | 'inter'.
+FONT_FAMILY = 'sourcesans3'
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DESIGN_DIR = os.path.normpath(os.path.join(HERE, '..'))
@@ -87,41 +97,93 @@ FONT_SOURCES = {
 }
 
 
-def fetch_fonts():
-    """Шрифты не хранятся в репозитории: качаем в кэш при первом запуске (~2 МБ)."""
-    import io as _io
-    import urllib.request
+def _unzip_to(zip_path, mapping, need=('regular', 'medium', 'semibold', 'bold', 'extrabold')):
+    """Распаковать нужные начертания из архива в FONT_DIR. mapping: как в FAMILIES."""
     import zipfile
-    os.makedirs(FONT_DIR, exist_ok=True)
-    print('  шрифты отсутствуют — скачиваю в', FONT_DIR)
-    for _, url in FONT_SOURCES.items():
+    with zipfile.ZipFile(zip_path) as z:
+        for kind in need:
+            src = mapping[kind]
+            dst = os.path.join(FONT_DIR, FONT_FAMILY + '-' + kind + '.ttf')
+            with z.open(src) as fsrc, open(dst, 'wb') as fdst:
+                fdst.write(fsrc.read())
+            FONTS[kind] = dst
+
+
+FAMILIES = {
+    'sourcesans3': dict(
+        url='https://github.com/adobe-fonts/source-sans/releases/download/3.052R/TTF-source-sans-3.052R.zip',
+        files={'regular': 'TTF/SourceSans3-Regular.ttf', 'medium': 'TTF/SourceSans3-Medium.ttf',
+               'semibold': 'TTF/SourceSans3-Semibold.ttf', 'bold': 'TTF/SourceSans3-Bold.ttf',
+               'extrabold': 'TTF/SourceSans3-Black.ttf'},
+        note='Source Sans 3 (Adobe, свободная, кириллица есть)'),
+    'fira': dict(
+        url='https://github.com/mozilla/Fira/archive/refs/heads/master.zip',
+        files={'regular': 'Fira-master/ttf/FiraSans-Regular.ttf',
+               'medium': 'Fira-master/ttf/FiraSans-Medium.ttf',
+               'semibold': 'Fira-master/ttf/FiraSans-SemiBold.ttf',
+               'bold': 'Fira-master/ttf/FiraSans-Bold.ttf',
+               'extrabold': 'Fira-master/ttf/FiraSans-ExtraBold.ttf'},
+        note='Fira Sans (Mozilla, кириллица есть)'),
+    'inter': dict(url='https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip',
+                  files={'regular': 'extras/ttf/Inter-Regular.ttf', 'medium': 'extras/ttf/Inter-Medium.ttf',
+                         'semibold': 'extras/ttf/Inter-SemiBold.ttf', 'bold': 'extras/ttf/Inter-Bold.ttf',
+                         'extrabold': 'extras/ttf/Inter-ExtraBold.ttf'},
+                  note='Inter (кириллица есть, но формы дальше от Segoe)'),
+}
+
+
+def fetch_fonts():
+    """Скачать выбранное семейство в ~/.cache/fonts. Без интернета — падаем на Inter."""
+    import urllib.request
+    if FONT_FAMILY not in FAMILIES:
+        print('  неизвестное семейство шрифта:', FONT_FAMILY)
+        return
+    fam = FAMILIES[FONT_FAMILY]
+    zip_path = os.path.join(FONT_DIR, FONT_FAMILY + '.zip')
+    if not os.path.exists(zip_path):
+        print('  качаю шрифт:', fam['note'], '…')
         try:
-            with urllib.request.urlopen(url, timeout=90) as r:
-                data = r.read()
-            z = zipfile.ZipFile(_io.BytesIO(data))
-            for n in z.namelist():
-                base = n.split('/')[-1]
-                if base.lower().endswith('.ttf') and base.startswith(('Inter-', 'JetBrainsMono-')):
-                    with open(os.path.join(FONT_DIR, base), 'wb') as f:
-                        f.write(z.read(n))
-        except Exception as e:
-            print(f'    не скачался {url}: {e}')
+            with urllib.request.urlopen(fam['url'], timeout=90) as r, open(zip_path, 'wb') as f:
+                f.write(r.read())
+        except Exception as e:                       # noqa: BLE001 — сообщаем и живём дальше
+            print('  не вышло скачать шрифт:', e)
+            return
+    _unzip_to(zip_path, fam['files'])
+
+
+def fetch_inter():
+    """Запасной путь: Inter (если выбранное семейство не скачалось)."""
+    zip_path = os.path.join(FONT_DIR, 'Inter-4.1.zip')
+    if not os.path.exists(zip_path):
+        import urllib.request
+        print('  качаю запасной шрифт Inter…')
+        with urllib.request.urlopen('https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip',
+                                    timeout=90) as r, open(zip_path, 'wb') as f:
+            f.write(r.read())
+    import zipfile
+    with zipfile.ZipFile(zip_path) as z:
+        for kind, name in (('regular', 'Inter-Regular.ttf'), ('medium', 'Inter-Medium.ttf'),
+                           ('semibold', 'Inter-SemiBold.ttf'), ('bold', 'Inter-Bold.ttf'),
+                           ('extrabold', 'Inter-ExtraBold.ttf')):
+            dst = os.path.join(FONT_DIR, name)
+            if not os.path.exists(dst):
+                with z.open('extras/ttf/' + name) as fsrc, open(dst, 'wb') as fdst:
+                    fdst.write(fsrc.read())
+            FONTS[kind] = dst
 
 
 def ensure_fonts():
-    need = {'regular': 'Inter-Regular.ttf', 'medium': 'Inter-Medium.ttf',
-            'semibold': 'Inter-SemiBold.ttf', 'bold': 'Inter-Bold.ttf',
-            'extrabold': 'Inter-ExtraBold.ttf'}
-    if any(not os.path.exists(os.path.join(FONT_DIR, n)) for n in need.values()):
-        fetch_fonts()
-    for k, name in need.items():
-        p = os.path.join(FONT_DIR, name)
-        if not os.path.exists(p):
-            sys.exit(f'шрифт {name} так и не появился в {FONT_DIR}')
-        FONTS[k] = p
+    os.makedirs(FONT_DIR, exist_ok=True)
+    fetch_fonts()
+    if len(FONTS) < 5:
+        print('  перехожу на Inter — в макете формы букв будут чуть иными, чем в Windows')
+        fetch_inter()
+    if len(FONTS) < 5:
+        raise SystemExit('нет шрифтов: нужен интернет хотя бы на первый запуск')
 
 
 _CACHE = {}
+
 
 def font(kind, size):
     key = (kind, round(size, 1))
@@ -372,16 +434,45 @@ def draw_flow_line(layer, d, x0, x1, y, prog, t):
 
 
 # ----------------------------------------------------------------------------- экран 1: приветствие
+WELCOME_SIZE = 84                # один кегль на все строки приветствия — как у «Здравствуйте»
+RISE_IN, RISE_OUT = 26, 22       # насколько строка «доезжает» по вертикали при появлении и уходе
+# (t0, t1, t2, t3, строки, стиль): t0..t1 — проявляется, t1..t2 — держится, t2..t3 — уходит;
+# между строками пауза около 0,45 с, как в первом входе в Windows.
 WELCOME = [
-    (0.4, 2.5, 'Здравствуйте', 'semibold', 84),
-    (2.5, 5.2, 'Вас приветствует WAD', 'semibold', 54),
-    (5.2, 8.1, 'WAD настроит Windows для вас, можете отдохнуть', 'medium', 34),
-    (8.1, 9.9, 'Приступаем', 'bold', 72),
+    (0.35, 0.90, 1.75, 2.30, ['Здравствуйте'], 'ink'),
+    (2.75, 3.30, 4.15, 4.70, ['Вас приветствует WAD'], 'wad'),
+    (5.15, 5.70, 6.75, 7.30, ['WAD настроит Windows для вас,', 'можете отдохнуть'], 'wad'),
+    (7.75, 8.30, 9.65, 10.20, ['Приступаем'], 'go'),
 ]
+BLACK_FULL = 1.5                 # до этой секунды фон чёрный
+BLACK_GONE = 2.9                 # к этой секунде чёрный полностью уступает обоям
 
-# тёмные концы градиента: светлый акцент на светлых обоях сливался с фоном
-DEEP_A = (6, 44, 96)
-DEEP_B = (74, 36, 150)
+# тот же системный синий и тот же фиолетовый, только чуть глубже: цвет не меняем,
+# а белая обводка вокруг слова делает его заметным на светлом фоне
+ACC_A = (0, 94, 184)
+ACC_B = (104, 78, 222)
+
+
+def black_amount(t):
+    """Сколько чёрного лежит поверх обоев: 1 — сплошной чёрный, 0 — только обои."""
+    if t <= BLACK_FULL:
+        return 1.0
+    if t >= BLACK_GONE:
+        return 0.0
+    return 1.0 - ease_io((t - BLACK_FULL) / (BLACK_GONE - BLACK_FULL))
+
+
+def text_alpha(t, t0, t1, t2, t3):
+    """Прозрачность и вертикальный сдвиг строки: вошла, постояла, ушла выше."""
+    if t <= t0 or t >= t3:
+        return 0.0, 0.0
+    if t < t1:
+        k = ease_io((t - t0) / (t1 - t0))
+        return k, (1 - k) * RISE_IN
+    if t <= t2:
+        return 1.0, 0.0
+    k = ease_io((t - t2) / (t3 - t2))
+    return 1 - k, -k * RISE_OUT
 
 
 def _text_box(text, kind, size, anchor, pad=18):
@@ -418,41 +509,54 @@ def grad_text(layer, xy, text, kind, size, col_a, col_b, alpha, anchor='mm'):
 
 def scene_text(wallpaper, t):
     frame = wallpaper.copy().convert('RGBA')
+    b = black_amount(t)
+    if b > 0.001:                                    # на старте экран чёрный…
+        frame.alpha_composite(rgba((W, H), (0, 0, 0, int(255 * b))))
     layer = rgba((W, H))
     d = ImageDraw.Draw(layer)
-    for (t0, t1, text, kind, size) in WELCOME:
-        if not (t0 - 0.6 <= t <= t1 + 0.5):
-            continue
-        appear = ease_out((t - t0) / 0.7) if t >= t0 else 0.0
-        vanish = 1.0
-        if t > t1 - 0.6:
-            vanish = max(0.0, 1 - (t - (t1 - 0.6)) / 1.1)
-        alpha = appear * vanish
+    for (t0, t1, t2, t3, lines, style) in WELCOME:
+        alpha, rise = text_alpha(t, t0, t1, t2, t3)
         if alpha <= 0.01:
             continue
-        rise = int((1 - ease_out(appear)) * 26)
-        cy = H // 2 - 40 + rise
-        # мягкая тень для читаемости на светлых обоях
-        shadow = rgba((W, H))
-        sd = ImageDraw.Draw(shadow)
-        sd.text((W / 2 + 2, cy + 3), text, font=font(kind, size), fill=(255, 255, 255, int(150 * alpha)), anchor='mm')
-        layer.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(3)))
-        if text == 'Вас приветствует WAD':
-            # «WAD» — градиентом, остальное обычным текстом
-            lead = 'Вас приветствует '
-            lw = tw(lead, kind, size)
-            x0 = W / 2 - (lw + tw('WAD', kind, size)) / 2
-            d.text((x0, cy), lead, font=font(kind, size), fill=C['text'] + (int(255 * alpha),), anchor='lm')
-            grad_text(layer, (x0 + lw, cy), 'WAD', kind, size, DEEP_A, DEEP_B, alpha, anchor='lm')
-        elif text == 'Приступаем':
-            # тёмный градиент + белая обводка: раньше слово сливалось со светлым фоном
-            grad_text(layer, (W / 2, cy), text, kind, size, DEEP_A, DEEP_B, alpha)
-            uw = tw(text, kind, size) * 0.9
-            sweep = ease_io(max(0.0, min(1.0, (t - (8.1 + 0.3)) / 1.0)))
-            d.line([(W / 2 - uw / 2, cy + size * 0.62), (W / 2 - uw / 2 + uw * sweep, cy + size * 0.62)],
-                   fill=C['accent'] + (int(200 * alpha),), width=3)
-        else:
-            d.text((W / 2, cy), text, font=font(kind, size), fill=C['text'] + (int(255 * alpha),), anchor='mm')
+        lh = WELCOME_SIZE * 1.16
+        base = H / 2 - 40 + rise - lh * len(lines) / 2
+        for i, line in enumerate(lines):
+            cy = base + lh * (i + 0.5)
+            if style == 'go':
+                grad_text(layer, (W / 2, cy), line, 'bold', WELCOME_SIZE, ACC_A, ACC_B, alpha)
+                uw = tw(line, 'bold', WELCOME_SIZE) * 0.9
+                sweep = ease_io(max(0.0, min(1.0, (t - (t0 + 0.35)) / 1.0)))
+                d.line([(W / 2 - uw / 2, cy + WELCOME_SIZE * 0.62),
+                        (W / 2 - uw / 2 + uw * sweep, cy + WELCOME_SIZE * 0.62)],
+                       fill=C['accent'] + (int(200 * alpha),), width=3)
+                continue
+            ink = C['text'] + (int(255 * alpha * (1 - b)),)      # тёмный текст на светлых обоях
+            white = (255, 255, 255, int(255 * alpha * b))         # белый текст на чёрном
+            # мягкая подсветка под тёмным текстом — на чёрном фоне не нужна
+            if (1 - b) > 0.05:
+                glow = rgba((W, H))
+                ImageDraw.Draw(glow).text((W / 2 + 2, cy + 3), line, font=font('semibold', WELCOME_SIZE),
+                                          fill=(255, 255, 255, int(150 * alpha * (1 - b))), anchor='mm')
+                layer.alpha_composite(glow.filter(ImageFilter.GaussianBlur(3)))
+            iw = line.find('WAD') if style == 'wad' else -1
+            # ВАЖНО: текст с нулевой прозрачностью PIL не «пропускает», а затирает то, что уже нарисовано
+            if iw < 0:
+                if white[3] > 0:
+                    d.text((W / 2, cy), line, font=font('semibold', WELCOME_SIZE), fill=white, anchor='mm')
+                if ink[3] > 0:
+                    d.text((W / 2, cy), line, font=font('semibold', WELCOME_SIZE), fill=ink, anchor='mm')
+            else:
+                before, word, after = line[:iw], line[iw:iw + 3], line[iw + 3:]
+                wb, ww, wa = (tw(before, 'semibold', WELCOME_SIZE), tw(word, 'semibold', WELCOME_SIZE),
+                              tw(after, 'semibold', WELCOME_SIZE))
+                x0 = W / 2 - (wb + ww + wa) / 2
+                for part, px in ((before, x0), (after, x0 + wb + ww)):
+                    if part:
+                        if white[3] > 0:
+                            d.text((px, cy), part, font=font('semibold', WELCOME_SIZE), fill=white, anchor='lm')
+                        if ink[3] > 0:
+                            d.text((px, cy), part, font=font('semibold', WELCOME_SIZE), fill=ink, anchor='lm')
+                grad_text(layer, (x0 + wb, cy), word, 'semibold', WELCOME_SIZE, ACC_A, ACC_B, alpha, anchor='lm')
     return frame, layer
 
 
