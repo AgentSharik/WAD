@@ -58,13 +58,20 @@ TITLE_H = 52                    # полоса заголовка с кнопк�
 PAD = 56                        # внутренние отступы
 INNER = WIN_X + WIN_W - PAD
 
-# сценарий: текст (9 с) → окно (5 с) → установка → GitHub → растворение в фон
+# сценарий: приветствие → окно (6 с) → проект на GitHub → установка (22 с) →
+#           «Все задачи выполнены» → отсчёт до перезагрузки → растворение → «Перезагрузка»
 T_TEXT_END = 16.95              # приветствие полностью ушло
 T_WIN_APPEAR = 17.70            # 0,75 с на экране только фон, потом окно начинает проступать
 T_START = 19.30                 # окно проступило целиком (проявляется 1,6 с)
-T_INSTALL = 25.30               # окно висит ровно 6 с, дальше само начинает установку
-T_GITHUB = 48.90                # финал установки держится 1,6 с и окно уходит в проект
-T_END = 54.40
+T_GITHUB = 25.30                # окно простояло ровно 6 с и перетекает в проект
+T_INSTALL = 31.20               # окно проекта показывалось ~5 с, дальше начинается установка
+T_DONE = T_INSTALL + 22.0       # 53.20 — установка закончилась, «Все задачи выполнены»
+T_COUNTDOWN = T_DONE + 1.6      # 54.80 — внизу окна проявляется отсчёт до перезагрузки
+COUNTDOWN_LEN = 4.5             # 4,5 с в ролике = 60 с в жизни
+COUNTDOWN_REAL = 60             # сколько секунд отсчёт означает на самом деле
+T_RESTART = T_COUNTDOWN + COUNTDOWN_LEN   # 59.30 — отсчёт досчитал, окно растворяется в фон
+T_FADE = 1.6                    # столько окно растворяется
+T_END = T_RESTART + T_FADE + 4.6          # 65.50 — надпись «Перезагрузка» на фоне
 
 # Семейство шрифта макета. Настоящий Segoe UI взять нельзя: он лицензионный и в песочнице
 # его нет; Selawik (единственный совместимый по метрикам свободный аналог) без кириллицы.
@@ -209,35 +216,41 @@ def ease_out(x):
 
 
 # ----------------------------------------------------------------------------- фон: обои в духе Windows 11
-def build_wallpaper():
-    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
-    nx, ny = xx / W, yy / H
+# ----------------------------------------------------------------------------- обои
+# Обои собраны из отдельных слоёв, а не запекаются одной картинкой: так их можно
+# чуть-чуть двигать по времени. Движение намеренно медленное и мелкое (единицы и
+# десятки пикселей за десятки секунд) — фон «дышит», но не отвлекает от окна.
+MARGIN = 48                     # запас по краям слоя, чтобы при сдвиге не обнажались края
+BW, BH = W + MARGIN * 2, H + MARGIN * 2
+WP_FPS = 10                     # фон пересчитывается 10 раз в секунду: движение плавное, рендер дешевле
 
-    # база: очень светлый холодный градиент
+
+def _wallpaper_base():
+    """Спокойный холодный градиент — не двигается вовсе."""
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    ny = yy / H
     base = np.zeros((H, W, 3), dtype=np.float32)
     for c, (top, bottom) in enumerate([((214, 228, 250), (247, 250, 255)),
                                        ((226, 236, 253), (250, 252, 255)),
                                        ((244, 247, 255), (252, 253, 255))]):
         base[:, :, c] = top[c] * (1 - ny) + bottom[c] * ny
+    return Image.fromarray(np.clip(base, 0, 255).astype(np.uint8), 'RGB').convert('RGBA')
 
-    img = Image.fromarray(np.clip(base, 0, 255).astype(np.uint8), 'RGB').convert('RGBA')
 
-    # мягкие цветные пятна (как подсветка обоев Windows 11)
-    blobs = [
-        (0.22, 0.30, 0.55, 90, (120, 170, 255)),
-        (0.78, 0.22, 0.50, 80, (150, 130, 255)),
-        (0.62, 0.78, 0.60, 70, (130, 210, 245)),
-        (0.12, 0.82, 0.45, 60, (175, 200, 255)),
-    ]
-    for (bx, by, br, alpha, col) in blobs:
-        d = np.sqrt(((nx - bx) / br) ** 2 + ((ny - by) / br) ** 2)
-        a = np.clip(1 - d, 0, 1) ** 2.2 * alpha
-        layer = Image.new('RGBA', (W, H), col + (0,))
-        layer.putalpha(Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), 'L'))
-        img.alpha_composite(layer)
+def _blob_layer(bx, by, br, alpha, col):
+    """Одно мягкое цветное пятно на слое с запасом по краям."""
+    yy, xx = np.mgrid[0:BH, 0:BW].astype(np.float32)
+    nx, ny = (xx - MARGIN) / W, (yy - MARGIN) / H
+    d = np.sqrt(((nx - bx) / br) ** 2 + ((ny - by) / br) ** 2)
+    a = np.clip(1 - d, 0, 1) ** 2.2 * alpha
+    layer = Image.new('RGBA', (BW, BH), col + (0,))
+    layer.putalpha(Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), 'L'))
+    return layer
 
-    # ленты: широкие кривые с размытием — «цветок» Windows, но свой
-    ribbons = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+
+def _ribbons_layer():
+    """Ленты — широкие кривые с сильным размытием. Рисуются один раз."""
+    ribbons = Image.new('RGBA', (BW, BH), (0, 0, 0, 0))
     rd = ImageDraw.Draw(ribbons)
     import random
     rnd = random.Random(11)
@@ -252,15 +265,72 @@ def build_wallpaper():
         for x in range(-100, W + 100, 24):
             t = x / W * 6.28
             y = base_y + amp * math.sin(t * 0.8 + ph) * 0.5 + amp * 0.35 * math.sin(t * 2.1 + ph * 1.7)
-            pts.append((x, y))
+            pts.append((x + MARGIN, y + MARGIN))
         rd.line(pts, fill=col + (alpha,), width=width, joint='curve')
-    ribbons = ribbons.filter(ImageFilter.GaussianBlur(60))
-    img.alpha_composite(ribbons)
+    return ribbons.filter(ImageFilter.GaussianBlur(60))
+
+
+def build_wallpaper_layers():
+    """Разобрать обои на слои и запомнить, как каждый из них будет двигаться."""
+    blobs = []
+    # (x, y, радиус, прозрачность, цвет, амплитуда по X, по Y, период, фаза)
+    for (bx, by, br, alpha, col), (ax, ay, per, ph) in zip(
+            [(0.22, 0.30, 0.55, 90, (120, 170, 255)),
+             (0.78, 0.22, 0.50, 80, (150, 130, 255)),
+             (0.62, 0.78, 0.60, 70, (130, 210, 245)),
+             (0.12, 0.82, 0.45, 60, (175, 200, 255))],
+            [(26, 16, 31.0, 0.0), (20, 22, 24.0, 1.9), (30, 14, 37.0, 3.4), (18, 26, 28.0, 5.1)]):
+        blobs.append({'img': _blob_layer(bx, by, br, alpha, col),
+                      'ax': ax, 'ay': ay, 'per': per, 'ph': ph})
+    noise = (np.random.RandomState(3).rand(H, W, 1) - 0.5) * 5
+    return {'base': _wallpaper_base(), 'blobs': blobs,
+            'ribbons': _ribbons_layer(), 'noise': noise}
+
+
+def compose_wallpaper(wp, t):
+    """Собрать обои на момент времени t: пятна медленно плавают, ленты дышат."""
+    img = wp['base'].copy()
+    for b in wp['blobs']:
+        w = 6.2831853 / b['per'] * t + b['ph']
+        dx = int(round(b['ax'] * math.sin(w)))
+        dy = int(round(b['ay'] * math.sin(w * 0.77 + 1.1)))
+        img.alpha_composite(b['img'], (MARGIN + dx, MARGIN + dy))
+
+    # ленты: сдвиг по обеим осям плюс лёгкое «дыхание» прозрачности
+    rib = wp['ribbons']
+    w = 6.2831853 / 26.0 * t
+    dx = int(round(22 * math.sin(w)))
+    dy = int(round(11 * math.sin(w * 0.63 + 2.0)))
+    k = 0.92 + 0.08 * math.sin(w * 1.31 + 0.5)
+    if k < 0.999:
+        rib = rib.copy()
+        rib.putalpha(rib.getchannel('A').point(lambda v: int(v * k)))
+    img.alpha_composite(rib, (MARGIN + dx, MARGIN + dy))
 
     # лёгкое «зерно» убирает ступеньки на плавных переходах
-    noise = (np.random.RandomState(3).rand(H, W, 1) - 0.5) * 5
-    arr = np.asarray(img.convert('RGB'), dtype=np.float32) + noise
+    arr = np.asarray(img.crop((MARGIN, MARGIN, MARGIN + W, MARGIN + H)).convert('RGB'),
+                     dtype=np.float32) + wp['noise']
     return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8), 'RGB')
+
+
+_WP_CACHE = {}
+
+
+def wallpaper_at(wp, t):
+    """Те же обои, но с кэшем на WP_FPS: движение медленное, чаще считать незачем."""
+    key = int(round(t * WP_FPS))
+    got = _WP_CACHE.get(key)
+    if got is None:
+        if len(_WP_CACHE) > 4:
+            _WP_CACHE.clear()
+        got = compose_wallpaper(wp, key / WP_FPS)
+        _WP_CACHE[key] = got
+    return got
+
+
+def build_wallpaper():
+    """Обои на момент t=0 — нужны, чтобы сохранить картинку и собрать подложку окна."""
+    return compose_wallpaper(build_wallpaper_layers(), 0.0)
 
 
 def build_mica(wallpaper):
@@ -698,6 +768,7 @@ def scene_install(wallpaper, mica, shadow, t, base=None):
     done = sum(1 for x in TASKS if task_state(x, t)[0] in ('ok', 'warn'))
     x = PAD
     y = TITLE_H + 40
+    cd0 = T_COUNTDOWN - T_INSTALL          # локальное время, когда внизу появится отсчёт
 
     # заголовок и состояние
     if t >= INSTALL_LEN:
@@ -771,9 +842,11 @@ def scene_install(wallpaper, mica, shadow, t, base=None):
     d.text((WIN_W - PAD, my + 70), f'{done} из 5 задач', font=font('regular', 17),
            fill=C['text2'] + (255,), anchor='ra')
 
-    # ---- замечания и кнопка
-    if t >= 17.95:
-        ease = ease_io((t - 17.95) / 0.5)
+    # ---- замечания и кнопка (замечания уступают место отсчёту и плавно гаснут)
+    w_in = ease_io((t - 17.95) / 0.5) if t >= 17.95 else 0.0
+    w_out = 1 - ease_io(min(1.0, max(0.0, (t - cd0) / 0.5)))
+    ease = w_in * w_out
+    if ease > 0.01:
         by = WIN_H - PAD - 54 - 96
         content.alpha_composite(rrect((WIN_W, WIN_H), [x, by, WIN_W - PAD, by + 92], 10,
                                       fill=(255, 249, 240, int(255 * ease)),
@@ -828,15 +901,41 @@ def scene_install(wallpaper, mica, shadow, t, base=None):
             d.text((cxx + 32, cyy + 17), sub, font=font('regular', 15.5), fill=tcol + (240,), anchor='lm')
             cxx += wdt + 8
 
-    # перезагрузка переехала в окно проекта: здесь только «Свернуть в фон»
+    # ---- отсчёт до перезагрузки: проявляется внизу того же окна, когда всё сделано.
+    # 4,5 с ролика означают минуту реальной жизни — полоса и число считаются от 60 до 0.
+    if t >= cd0:
+        e = ease_out(min(1.0, (t - cd0) / 0.6))
+        k = min(1.0, max(0.0, (t - cd0) / COUNTDOWN_LEN))
+        left = int(math.ceil(COUNTDOWN_REAL * (1 - k)))
+        by = WIN_H - PAD - 54 - 84
+        content.alpha_composite(rrect((WIN_W, WIN_H), [x, by, WIN_W - PAD, by + 68], 10,
+                                      fill=(255, 255, 255, int(196 * e)),
+                                      outline=(0, 0, 0, int(24 * e))))
+        cap = f'Перезагрузка через {left} с' if left > 0 else 'Перезагрузка…'
+        d.text((x + 22, by + 15), cap, font=font('semibold', 18), fill=C['text'] + (int(255 * e),))
+        d.text((WIN_W - PAD - 22, by + 17), 'можно ничего не нажимать',
+               font=font('regular', 15), fill=C['text3'] + (int(255 * e),), anchor='ra')
+        bx0, bx1, byy = x + 22, WIN_W - PAD - 22, by + 47
+        content.alpha_composite(rrect((WIN_W, WIN_H), [bx0, byy, bx1, byy + 8], 4,
+                                      fill=(0, 0, 0, int(22 * e))))
+        fw = (bx1 - bx0) * k
+        if fw > 2:
+            content.alpha_composite(rrect((WIN_W, WIN_H), [bx0, byy, bx0 + fw, byy + 8], 4,
+                                          fill=C['accent'] + (int(255 * e),)))
+
+    # перезагрузка идёт сама, поэтому кнопка одна — свернуть окно и не мешать
     label = 'Свернуть в фон'
     bw = tw(label, 'semibold', 17) + 52
     content.alpha_composite(rrect((WIN_W, WIN_H), [WIN_W - PAD - bw, WIN_H - PAD - 54, WIN_W - PAD, WIN_H - PAD], 8,
                                   fill=C['accent'] + (255,)))
     d.text((WIN_W - PAD - bw / 2, WIN_H - PAD - 27), label, font=font('semibold', 17),
            fill=(255, 255, 255, 255), anchor='mm')
-    note = ('Всё готово — открываю страницу проекта' if t >= INSTALL_LEN
-            else 'Установка продолжится, даже если свернуть окно')
+    if t >= cd0:
+        note = 'Компьютер перезагрузится сам — сохраните открытые документы'
+    elif t >= INSTALL_LEN:
+        note = 'Все задачи выполнены — готовимся к перезагрузке'
+    else:
+        note = 'Установка продолжится, даже если свернуть окно'
     d.text((x, WIN_H - PAD - 27), note, font=font('regular', 15), fill=C['text2'] + (255,), anchor='lm')
 
     card.alpha_composite(content)
@@ -931,15 +1030,9 @@ def scene_github(wallpaper, mica, shadow, t, base=None):
     # Истории изменений здесь намеренно нет: подписи вида «0.2 / 0.3 / 0.4» намекали на
     # нумерацию версий программы, а последняя строка налезала на подпись внизу окна.
 
-    # кнопка одна: данные и так свежие из GitHub, а браузер на перезагружаемой машине не нужен
-    by = WIN_H - PAD - 54
-    rw = tw('Перезагрузить компьютер', 'semibold', 17) + 56
-    rx = WIN_W - PAD - rw
-    content.alpha_composite(rrect((WIN_W, WIN_H), [rx, by, WIN_W - PAD, by + 54], 8,
-                                  fill=C['accent'] + (255,)))
-    d.text((rx + rw / 2, by + 27), 'Перезагрузить компьютер', font=font('semibold', 17),
-           fill=(255, 255, 255, 255), anchor='mm')
-    d.text((x, WIN_H - PAD - 27), 'Всё готово — перезагрузка завершит настройку',
+    # окно проекта стоит до установки, поэтому никаких действий тут не требуется:
+    # кнопка убрана, а строка внизу объясняет, что будет дальше само.
+    d.text((x, WIN_H - PAD - 27), 'Дальше начнётся установка — ничего нажимать не нужно',
            font=font('regular', 15), fill=C['text2'] + (255,), anchor='lm')
 
 
@@ -950,46 +1043,94 @@ def scene_github(wallpaper, mica, shadow, t, base=None):
     return frame
 
 
+# ----------------------------------------------------------------------------- экран 5: перезагрузка
+RESTART_TEXT = 'Перезагрузка'
+RESTART_SUB = 'WAD завершает настройку — компьютер включится снова сам'
+
+
+def scene_restart(base, t):
+    """Наш экран вместо стандартного окна Windows: те же обои, крупная надпись, кольцо ожидания.
+
+    Подложка уже нарисована (окно к этому моменту растворилось в обои), здесь поверх неё
+    проявляется только надпись. Возвращает готовый RGB-кадр.
+    """
+    t0 = T_RESTART + 0.60
+    a = ease_out(max(0.0, min(1.0, (t - t0) / 0.85)))
+    if a <= 0.01:
+        return base.convert('RGB')
+
+    frame = base.copy().convert('RGBA')
+    layer = rgba((W, H))
+    d = ImageDraw.Draw(layer)
+    rise = -20 * ease_out(max(0.0, min(1.0, (t - t0) / 0.95)))
+    cy = H / 2 - 30 + rise
+
+    # мягкая подсветка под тёмным текстом, как в приветствии
+    glow = rgba((W, H))
+    ImageDraw.Draw(glow).text((W / 2 + 2, cy + 3), RESTART_TEXT, font=font('semibold', 88),
+                              fill=(255, 255, 255, int(165 * a)), anchor='mm')
+    layer.alpha_composite(glow.filter(ImageFilter.GaussianBlur(4)))
+    d.text((W / 2, cy), RESTART_TEXT, font=font('semibold', 88),
+           fill=C['text'] + (int(255 * a),), anchor='mm')
+    d.text((W / 2, cy + 86), RESTART_SUB, font=font('regular', 21),
+           fill=C['text2'] + (int(255 * a),), anchor='mm')
+
+    # кольцо ожидания: медленно крутится, как на системном экране, но в наших цветах
+    spin = 300 + 54 * math.sin(6.2831853 * t / 3.0)
+    for r, col, al, wd in ((34, C['accent'], 255, 5), (34, C['accent2'], 90, 5)):
+        d.arc([W / 2 - r, cy - 150 - r, W / 2 + r, cy - 150 + r],
+              start=spin, end=spin + 250, fill=col + (int(al * a),), width=wd)
+    d.arc([W / 2 - 34, cy - 150 - 34, W / 2 + 34, cy - 150 + 34],
+          start=0, end=360, fill=(0, 0, 0, int(18 * a)), width=1)
+
+    frame.alpha_composite(layer)
+    return frame.convert('RGB')
+
+
 # ----------------------------------------------------------------------------- сборка кадра
-def render_frame(wallpaper, mica, shadow, t):
+def render_frame(wp, mica, shadow, t):
+    wallpaper = wallpaper_at(wp, t)          # фон чуть-чуть двигается всё время
     if t < T_TEXT_END:
         # пока идёт приветствие — на экране только фон и текст, окна ещё нет
         frame, layer = scene_text(wallpaper, t)
         frame.alpha_composite(layer)
         return frame.convert('RGB')
 
-    if t < T_INSTALL:
+    if t < T_GITHUB:
         # окно проявляется постепенно и уже после приветствия (см. T_WIN_APPEAR)
         return scene_start(wallpaper, mica, shadow, t).convert('RGB')
 
-    if t < T_GITHUB:
-        if t < T_INSTALL + 0.9:
+    if t < T_INSTALL:
+        if t < T_GITHUB + 0.9:
             # окно не подменяется, а «перетекает»: старое растворяется в обои,
-            # новое проявляется и подтягивается снизу на 14 px
-            a = ease_io((t - T_INSTALL) / 0.9)
+            # новое проявляется и подтягивается снизу-справа
+            a = ease_io((t - T_GITHUB) / 0.9)
             prev = scene_start(wallpaper, mica, shadow, t).convert('RGBA')
             out = Image.blend(prev, wallpaper.convert('RGBA'), a * 0.9)
-            ghost = scene_install(wallpaper, mica, shadow, t - T_INSTALL, base=rgba((W, H)))
+            ghost = scene_github(wallpaper, mica, shadow, t, base=rgba((W, H)))
             ghost.putalpha(ghost.getchannel('A').point(lambda v: int(v * a)))
-            out.alpha_composite(ghost, (0, int(14 * (1 - a))))
+            out.alpha_composite(ghost, (int(18 * (1 - a)), int(18 * (1 - a))))
             return out.convert('RGB')
-        return scene_install(wallpaper, mica, shadow, t - T_INSTALL).convert('RGB')
+        return scene_github(wallpaper, mica, shadow, t).convert('RGB')
 
-    if t < T_GITHUB + 0.9:
-        # такой же мягкий переход, как из начального окна в установку: старое растворяется,
-        # новое подтягивается снизу-справа на 18 px
-        a = ease_io((t - T_GITHUB) / 0.9)
-        prev = scene_install(wallpaper, mica, shadow, T_GITHUB - T_INSTALL).convert('RGBA')
+    if t < T_INSTALL + 0.9:
+        # такой же мягкий переход в установку: старое растворяется, новое подтягивается снизу
+        a = ease_io((t - T_INSTALL) / 0.9)
+        prev = scene_github(wallpaper, mica, shadow, t).convert('RGBA')
         out = Image.blend(prev, wallpaper.convert('RGBA'), a * 0.9)
-        ghost = scene_github(wallpaper, mica, shadow, t, base=rgba((W, H)))
+        ghost = scene_install(wallpaper, mica, shadow, t - T_INSTALL, base=rgba((W, H)))
         ghost.putalpha(ghost.getchannel('A').point(lambda v: int(v * a)))
-        out.alpha_composite(ghost, (int(18 * (1 - a)), int(18 * (1 - a))))
+        out.alpha_composite(ghost, (0, int(14 * (1 - a))))
         return out.convert('RGB')
-    frame = scene_github(wallpaper, mica, shadow, t).convert('RGB')
-    # финал: окно так же растворяется в обои, как и появлялось — без затемнения в чёрное
-    out = ease_io((t - (T_END - 1.6)) / 1.6)
-    if out > 0.0:
-        frame = Image.blend(frame, wallpaper.convert('RGB'), out)
+
+    frame = scene_install(wallpaper, mica, shadow, t - T_INSTALL).convert('RGB')
+
+    if t >= T_RESTART:
+        # отсчёт досчитал: окно растворяется в обои, а на их месте проступает «Перезагрузка»
+        k = ease_io(min(1.0, (t - T_RESTART) / T_FADE))
+        if k > 0.0:
+            frame = Image.blend(frame, wallpaper.convert('RGB'), k)
+        return scene_restart(frame, t)
     return frame
 
 
@@ -1002,14 +1143,17 @@ def main():
     os.makedirs(OUT_DIR, exist_ok=True)
     ensure_fonts()
     print('рисую обои…')
-    wallpaper = build_wallpaper()
+    wp = build_wallpaper_layers()            # слои: фон будет чуть-чуть двигаться по времени
+    wallpaper = compose_wallpaper(wp, 0.0)
     wallpaper.save(os.path.join(OUT_DIR, 'wallpaper-win11.png'))
+    # подложка окна (Mica) собирается из обоев на t=0: она сильно размыта,
+    # поэтому медленное движение фона сквозь неё всё равно не разобрать
     mica = build_mica(wallpaper)
     shadow = build_shadow()
 
     if args.still is not None:
         p = os.path.join(OUT_DIR, f'flow-{args.still:g}s.png')
-        render_frame(wallpaper, mica, shadow, args.still).save(p)
+        render_frame(wp, mica, shadow, args.still).save(p)
         print(f'  {p}')
         return
 
@@ -1027,7 +1171,7 @@ def main():
     total = int(T_END * args.fps)
     print(f'рендер {total} кадров ({T_END:g} с)…')
     for i in range(total):
-        proc.stdin.write(render_frame(wallpaper, mica, shadow, i / args.fps).tobytes())
+        proc.stdin.write(render_frame(wp, mica, shadow, i / args.fps).tobytes())
         if i % 150 == 0:
             print(f'  {i}/{total}')
     proc.stdin.close()
