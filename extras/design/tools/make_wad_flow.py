@@ -8,7 +8,13 @@
     вытекает из фона, а не висит отдельной карточкой;
   * сначала на фоне проявляются слова приветствия, и только потом выступает окно;
   * строка состояния (шаги) — вместо белой полосы анимированная линия с бегущим светом;
-  * кружки шагов крупные, журнал-консоль снизу убран.
+  * кружки шагов крупные, журнал-консоль снизу убран;
+  * системной полосы заголовка нет: знак WAD, название раздела и значки управления
+    нарисованы внутри окна, поэтому ничего не «приклеено» сверху;
+  * приветствие — 9,9 с, кегль строк разный (84 / 54 / 34 / 72), «WAD» и «Приступаем»
+    залиты тёмным градиентом с белой обводкой, иначе слова растворялись в светлом фоне;
+  * начальное окно висит 5 с и кнопки «продолжить» не имеет — установка начинается сама;
+  * в окне проекта список изменений — по одной записи на версию (0.4 / 0.3 / 0.2).
 
     python3 extras/design/tools/make_wad_flow.py --still 2.0     # кадр на секунде
     python3 extras/design/tools/make_wad_flow.py                 # весь ролик
@@ -47,12 +53,12 @@ TITLE_H = 52                    # полоса заголовка с кнопк�
 PAD = 56                        # внутренние отступы
 INNER = WIN_X + WIN_W - PAD
 
-# сценарий: текст → окно → установка (держится 10 с) → GitHub → затемнение
-T_TEXT_END = 12.4
-T_START = 12.4                  # появление начального окна
-T_INSTALL = 23.0                # через 10 с окно переходит к установке
-T_GITHUB = 47.6
-T_END = 55.0
+# сценарий: текст (9 с) → окно (5 с) → установка → GitHub → растворение в фон
+T_TEXT_END = 9.9
+T_START = 9.9                   # появление начального окна
+T_INSTALL = 14.9                # окно висит ровно 5 с, дальше само начинает установку
+T_GITHUB = 39.5
+T_END = 47.0
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DESIGN_DIR = os.path.normpath(os.path.join(HERE, '..'))
@@ -204,11 +210,6 @@ def build_mica(wallpaper):
                (0, 0), mask_rrect((WIN_W, WIN_H), RADIUS))
     card.alpha_composite(Image.new('RGBA', (WIN_W, WIN_H), (255, 255, 255, 40)))
 
-    # полоса заголовка — в Windows 11 она слегка отличается по тону
-    title = rgba((WIN_W, TITLE_H), (250, 251, 254, 30))
-    title.putalpha(mask_rrect_top((WIN_W, TITLE_H), RADIUS))
-    card.alpha_composite(title, (0, 0))
-
     # рамка окна: тонкая светлая, как в Windows 11
     card.alpha_composite(rrect((WIN_W, WIN_H), [0, 0, WIN_W - 1, WIN_H - 1], RADIUS,
                                outline=(255, 255, 255, 210), width=1))
@@ -274,7 +275,7 @@ TASKS = [
          start='13:07:44', end='13:21:10', result='warn',
          subs=['Google Chrome', 'Steam', 'WinRAR', 'qBittorrent', 'ShareX', 'K-Lite Codec Pack'],
          failed=['ShareX', 'K-Lite Codec Pack']),
-    dict(name='Установка и активация Microsoft Office', short='Microsoft Office', t0=18.6, t1=22.0,
+    dict(name='Установка и активация Microsoft Office', short='Microsoft Office', t0=17.8, t1=22.0,
          start='13:21:40', end='13:34:55', result='ok',
          subs=['Office Deployment Tool', 'Word, Excel, PowerPoint', 'Привязка KMS', 'Активация']),
 ]
@@ -297,34 +298,39 @@ def progress(t):
 
 
 # ----------------------------------------------------------------------------- окно: общая часть
-def draw_window_chrome(layer, d, title, t, phase):
-    """Кнопки окна и заголовок. Значки рисуем линиями — никаких «квадратиков» вместо глифов."""
-    # иконка приложения: маленький градиентный квадрат с W
-    # ВАЖНО: координаты локальные — слой содержимого окна, а не экран
-    ix, iy = 16, 14
-    icon = rgba((24, 24))
-    idr = ImageDraw.Draw(icon)
-    for i in range(24):
-        k = i / 23
-        col = tuple(int(C['accent'][j] * (1 - k) + C['accent2'][j] * k) for j in range(3))
-        idr.line([(i, 0), (i, 24)], fill=col + (255,))
-    icon.putalpha(mask_rrect((24, 24), 6))
-    layer.alpha_composite(icon, (ix, iy))
-    d.text((ix + 12, iy + 12), 'W', font=font('bold', 13), fill=(255, 255, 255, 255), anchor='mm')
-    d.text((ix + 34, TITLE_H // 2), title, font=font('semibold', 14.5),
-           fill=C['text'] + (230,), anchor='lm')
+def draw_window_chrome(layer, d, phase, t, _kind=None):
+    """Шапка окна нарисована внутри окна: системной полосы Windows нет.
 
-    # кнопки окна (справа): свернуть, развернуть, закрыть — тоже локально
-    bx = WIN_W - 46 * 3
-    by = 0
+    Слева — знак WAD и название раздела, справа — тонкие значки управления.
+    Ни полосы, ни разделителя, ни затемнения: ничего «приклеенного» сверху.
+    """
+    ix, iy = PAD, 26
+    size = 28
+    icon = rgba((size, size))
+    idr = ImageDraw.Draw(icon)
+    for i in range(size):
+        k = i / (size - 1)
+        col = tuple(int(C['accent'][j] * (1 - k) + C['accent2'][j] * k) for j in range(3))
+        idr.line([(i, 0), (i, size)], fill=col + (255,))
+    icon.putalpha(mask_rrect((size, size), 7))
+    layer.alpha_composite(icon, (ix, iy))
+    d.text((ix + size / 2, iy + size / 2 + 1), 'W', font=font('bold', 15), fill=(255, 255, 255, 255), anchor='mm')
+
+    cyy = iy + size / 2
+    d.text((ix + size + 12, cyy), 'WAD', font=font('semibold', 19), fill=C['text'] + (240,), anchor='lm')
+    wadw = tw('WAD', 'semibold', 19)
+    d.text((ix + size + 12 + wadw + 10, cyy + 1), '· ' + phase, font=font('regular', 15.5),
+           fill=C['text3'] + (235,), anchor='lm')
+
+    # управление окном — просто значки по краю содержимого, без подложки
+    step = 34
     for i in range(3):
-        cx0 = bx + i * 46
-        hover = (i == 2 and 13.0 < t < 14.0)      # намёк на живой интерфейс
-        if hover:
-            layer.alpha_composite(rgba((46, TITLE_H), (196, 43, 28, 210)),
-                                  (cx0, by))
-        col = (255, 255, 255, 235) if hover else C['text'] + (200,)
-        cxx, cyy = cx0 + 23, by + TITLE_H // 2
+        cxx = WIN_W - PAD - step * (2 - i) - step / 2
+        hover = (i == 2 and T_START + 1.2 < t < T_START + 2.0)
+        if hover:                                   # мягкий красный кружок, как в Windows 11
+            layer.alpha_composite(rgba((30, 30), (196, 43, 28, 225)), (int(cxx - 15), int(cyy - 15)))
+            layer.alpha_composite(rgba((30, 30), (196, 43, 28, 225)), (int(cxx - 15), int(cyy - 15)))
+        col = (255, 255, 255, 245) if hover else C['text'] + (170,)
         if i == 0:                                  # свернуть
             d.line([(cxx - 6, cyy), (cxx + 6, cyy)], fill=col, width=1)
         elif i == 1:                                # развернуть
@@ -332,8 +338,6 @@ def draw_window_chrome(layer, d, title, t, phase):
         else:                                       # закрыть
             d.line([(cxx - 6, cyy - 6), (cxx + 6, cyy + 6)], fill=col, width=1)
             d.line([(cxx - 6, cyy + 6), (cxx + 6, cyy - 6)], fill=col, width=1)
-    # разделитель под заголовком
-    d.line([(0, TITLE_H), (WIN_W, TITLE_H)], fill=(0, 0, 0, 14), width=1)
 
 
 def draw_flow_line(layer, d, x0, x1, y, prog, t):
@@ -369,11 +373,47 @@ def draw_flow_line(layer, d, x0, x1, y, prog, t):
 
 # ----------------------------------------------------------------------------- экран 1: приветствие
 WELCOME = [
-    (0.4, 3.1, 'Здравствуйте', 'semibold', 76),
-    (3.1, 6.4, 'Вас приветствует WAD', 'semibold', 58),
-    (6.4, 10.0, 'WAD настроит Windows для вас, можете отдохнуть', 'medium', 40),
-    (10.0, 12.4, 'Приступаем', 'bold', 66),
+    (0.4, 2.5, 'Здравствуйте', 'semibold', 84),
+    (2.5, 5.2, 'Вас приветствует WAD', 'semibold', 54),
+    (5.2, 8.1, 'WAD настроит Windows для вас, можете отдохнуть', 'medium', 34),
+    (8.1, 9.9, 'Приступаем', 'bold', 72),
 ]
+
+# тёмные концы градиента: светлый акцент на светлых обоях сливался с фоном
+DEEP_A = (6, 44, 96)
+DEEP_B = (74, 36, 150)
+
+
+def _text_box(text, kind, size, anchor, pad=18):
+    """Рамка картинки под текст с нужным anchor и смещение, куда класть её на слой."""
+    f = font(kind, size)
+    box = f.getbbox(text, anchor=anchor)
+    w, h = int(box[2] - box[0]) + pad * 2, int(box[3] - box[1]) + pad * 2
+    return f, w, h, pad - box[0], pad - box[1]
+
+
+def halo_text(layer, xy, text, kind, size, alpha, anchor='mm', radius=3, blur=2.2):
+    """Белая обводка под цветным текстом: чтобы буквы не растворялись в светлых обоях."""
+    f, w, h, ox, oy = _text_box(text, kind, size, anchor)
+    im = Image.new('RGBA', (w, h), (0, 0, 0, 0))
+    ImageDraw.Draw(im).text((ox, oy), text, font=f, fill=(255, 255, 255, int(255 * alpha)), anchor=anchor,
+                            stroke_width=radius, stroke_fill=(255, 255, 255, int(255 * alpha)))
+    layer.alpha_composite(im.filter(ImageFilter.GaussianBlur(blur)), (int(xy[0] - ox), int(xy[1] - oy)))
+
+
+def grad_text(layer, xy, text, kind, size, col_a, col_b, alpha, anchor='mm'):
+    """Текст, залитый градиентом, поверх белой обводки. xy — точка привязки, как у ImageDraw.text."""
+    f, w, h, ox, oy = _text_box(text, kind, size, anchor)
+    mask = Image.new('L', (w, h), 0)
+    ImageDraw.Draw(mask).text((ox, oy), text, font=f, fill=255, anchor=anchor)
+    grad = Image.new('RGBA', (w, h))
+    gd = ImageDraw.Draw(grad)
+    for i in range(w):
+        k = i / max(1, w - 1)
+        gd.line([(i, 0), (i, h)], fill=tuple(int(col_a[j] * (1 - k) + col_b[j] * k) for j in range(3)) + (255,))
+    grad.putalpha(mask.point(lambda v: int(v * alpha)))
+    halo_text(layer, xy, text, kind, size, alpha * 0.95, anchor=anchor)
+    layer.alpha_composite(grad, (int(xy[0] - ox), int(xy[1] - oy)))
 
 
 def scene_text(wallpaper, t):
@@ -401,31 +441,18 @@ def scene_text(wallpaper, t):
             # «WAD» — градиентом, остальное обычным текстом
             lead = 'Вас приветствует '
             lw = tw(lead, kind, size)
-            ww = tw('WAD', kind, size)
-            x0 = W / 2 - (lw + ww) / 2
+            x0 = W / 2 - (lw + tw('WAD', kind, size)) / 2
             d.text((x0, cy), lead, font=font(kind, size), fill=C['text'] + (int(255 * alpha),), anchor='lm')
-            grad = rgba((int(ww) + 4, int(size * 1.4)))
-            gd = ImageDraw.Draw(grad)
-            for i in range(grad.width):
-                k = i / max(1, grad.width - 1)
-                col = tuple(int(C['accent'][j] * (1 - k) + C['accent2'][j] * k) for j in range(3))
-                gd.line([(i, 0), (i, grad.height)], fill=col + (255,))
-            mask = Image.new('L', grad.size, 0)
-            ImageDraw.Draw(mask).text((2, grad.height // 2), 'WAD', font=font(kind, size), fill=255, anchor='lm')
-            grad.putalpha(mask.point(lambda v: int(v * alpha)))
-            layer.alpha_composite(grad, (int(x0 + lw - 2), int(cy - grad.height / 2)))
-            d.text((x0 + lw, cy), '', font=font(kind, size), fill=C['text'] + (0,))
+            grad_text(layer, (x0 + lw, cy), 'WAD', kind, size, DEEP_A, DEEP_B, alpha, anchor='lm')
+        elif text == 'Приступаем':
+            # тёмный градиент + белая обводка: раньше слово сливалось со светлым фоном
+            grad_text(layer, (W / 2, cy), text, kind, size, DEEP_A, DEEP_B, alpha)
+            uw = tw(text, kind, size) * 0.9
+            sweep = ease_io(max(0.0, min(1.0, (t - (8.1 + 0.3)) / 1.0)))
+            d.line([(W / 2 - uw / 2, cy + size * 0.62), (W / 2 - uw / 2 + uw * sweep, cy + size * 0.62)],
+                   fill=C['accent'] + (int(200 * alpha),), width=3)
         else:
-            col = C['text']
-            if text == 'Приступаем':
-                col = C['accent']
-            d.text((W / 2, cy), text, font=font(kind, size), fill=col + (int(255 * alpha),), anchor='mm')
-            if text == 'Приступаем':
-                # подчёркивание «проявляется» слева направо
-                uw = tw(text, kind, size) * 0.9
-                sweep = ease_io(max(0.0, min(1.0, (t - 10.3) / 1.0)))
-                d.line([(W / 2 - uw / 2, cy + size * 0.62), (W / 2 - uw / 2 + uw * sweep, cy + size * 0.62)],
-                       fill=C['accent'] + (int(200 * alpha),), width=3)
+            d.text((W / 2, cy), text, font=font(kind, size), fill=C['text'] + (int(255 * alpha),), anchor='mm')
     return frame, layer
 
 
@@ -445,7 +472,7 @@ def scene_start(wallpaper, mica, shadow, t):
     content = rgba((WIN_W, WIN_H))
     d = ImageDraw.Draw(content)
 
-    draw_window_chrome(content, d, 'WAD — установка Windows', t, 'start')
+    draw_window_chrome(content, d, 'установка Windows', t)
 
     x = PAD
     y = TITLE_H + 46
@@ -455,16 +482,10 @@ def scene_start(wallpaper, mica, shadow, t):
     d.text((x, y + 84), 'Можно закрыть окно и вернуться к готовому компьютеру.',
            font=font('regular', 18), fill=C['text2'] + (255,))
 
-    # акцентная кнопка и ссылка на проект
-    by = WIN_Y + WIN_H - PAD - 54 - WIN_Y + WIN_Y
+    # одна кнопка — ссылка на проект: установку окно начинает само, «продолжить» не нужно
     by = WIN_H - PAD - 54
-    pw = tw('Начать установку', 'semibold', 17.5) + 60
-    content.alpha_composite(rrect((WIN_W, WIN_H), [WIN_W - PAD - pw, by, WIN_W - PAD, by + 54], 8,
-                                  fill=C['accent'] + (255,)))
-    d.text((WIN_W - PAD - pw / 2, by + 27), 'Начать установку', font=font('semibold', 17.5),
-           fill=(255, 255, 255, 255), anchor='mm')
     sw = tw('Проект на GitHub', 'medium', 17) + 52
-    sx = WIN_W - PAD - pw - 12 - sw
+    sx = WIN_W - PAD - sw
     content.alpha_composite(rrect((WIN_W, WIN_H), [sx, by, sx + sw, by + 54], 8,
                                   fill=(255, 255, 255, 200), outline=(0, 0, 0, 26)))
     d.text((sx + sw / 2, by + 27), 'Проект на GitHub', font=font('medium', 17), fill=C['text'] + (240,), anchor='mm')
@@ -533,8 +554,8 @@ def scene_start(wallpaper, mica, shadow, t):
 
 
 # ----------------------------------------------------------------------------- экран 3: установка
-def scene_install(wallpaper, mica, shadow, t):
-    frame = wallpaper.copy().convert('RGBA')
+def scene_install(wallpaper, mica, shadow, t, base=None):
+    frame = (base if base is not None else wallpaper).copy().convert('RGBA')
     frame.alpha_composite(rgba((W, H), (0, 0, 0, 0)))
     sh = rgba((W, H))
     sh.putalpha(shadow)
@@ -543,7 +564,7 @@ def scene_install(wallpaper, mica, shadow, t):
     card = mica.copy()
     content = rgba((WIN_W, WIN_H))
     d = ImageDraw.Draw(content)
-    draw_window_chrome(content, d, 'WAD — установка Windows', t, 'install')
+    draw_window_chrome(content, d, 'установка Windows', t)
 
     prog = progress(t)
     done = sum(1 for x in TASKS if task_state(x, t)[0] in ('ok', 'warn'))
@@ -612,10 +633,10 @@ def scene_install(wallpaper, mica, shadow, t):
                font=font('regular', 17), fill=C['text2'] + (255,))
     elif t >= INSTALL_LEN:
         d.text((x, my), 'Все задачи выполнены', font=font('semibold', 30), fill=C['ok'] + (255,))
-        d.text((x, my + 44), 'замечания по одной задаче записаны в журнал',
-               font=font('regular', 17), fill=C['text2'] + (255,))
     else:
-        d.text((x, my), 'Подготовка…', font=font('semibold', 30), fill=C['text'] + (255,))
+        d.text((x, my), 'Начинаем установку', font=font('semibold', 30), fill=C['text'] + (255,))
+        d.text((x, my + 44), 'проверяем систему и запускаем первый шаг',
+               font=font('regular', 17), fill=C['text2'] + (255,))
 
     d.text((WIN_W - PAD, my - 6), f'{int(prog * 100)}%', font=font('bold', 62),
            fill=C['accent'] + (255,), anchor='ra')
@@ -623,8 +644,8 @@ def scene_install(wallpaper, mica, shadow, t):
            fill=C['text2'] + (255,), anchor='ra')
 
     # ---- замечания и кнопка
-    if t >= 18.4:
-        ease = ease_io((t - 18.4) / 0.5)
+    if t >= 17.95:
+        ease = ease_io((t - 17.95) / 0.5)
         by = WIN_H - PAD - 54 - 96
         content.alpha_composite(rrect((WIN_W, WIN_H), [x, by, WIN_W - PAD, by + 92], 10,
                                       fill=(255, 249, 240, int(255 * ease)),
@@ -695,8 +716,8 @@ def scene_install(wallpaper, mica, shadow, t):
 
 
 # ----------------------------------------------------------------------------- экран 4: проект (переработан)
-def scene_github(wallpaper, mica, shadow, t):
-    frame = wallpaper.copy().convert('RGBA')
+def scene_github(wallpaper, mica, shadow, t, base=None):
+    frame = (base if base is not None else wallpaper).copy().convert('RGBA')
     sh = rgba((W, H))
     sh.putalpha(shadow)
     frame.alpha_composite(sh)
@@ -704,7 +725,7 @@ def scene_github(wallpaper, mica, shadow, t):
     card = mica.copy()
     content = rgba((WIN_W, WIN_H))
     d = ImageDraw.Draw(content)
-    draw_window_chrome(content, d, 'WAD — проект на GitHub', t, 'github')
+    draw_window_chrome(content, d, 'проект на GitHub', t)
 
     appear = ease_out((t - T_GITHUB) / 0.6) if T_GITHUB <= t else 0.0
     x = PAD
@@ -782,9 +803,9 @@ def scene_github(wallpaper, mica, shadow, t):
     hy = twy + 58
     d.text((x, hy), 'Последние изменения', font=font('semibold', 17), fill=C['text'] + (255,))
     changes = [
-        ('0.4', 'Сбой больше не выглядит как успех: задача краснеет, в журнале — причина'),
-        ('0.4', 'Проверки при каждом изменении: разбор под PowerShell 5.1 и сверка копий'),
+        ('0.4', 'Честные статусы задач и проверки на каждый push'),
         ('0.3', 'Просмотр фото через DISM и вторая ветка файла подкачки'),
+        ('0.2', 'Два режима установки: Clean и Custom'),
     ]
     for i, (ver, text) in enumerate(changes):
         cy2 = hy + 30 + i * 30
@@ -849,11 +870,19 @@ def render_frame(wallpaper, mica, shadow, t):
             return Image.blend(prev, nxt, a).convert('RGB')
         return scene_install(wallpaper, mica, shadow, t - T_INSTALL).convert('RGB')
 
-    if t < T_GITHUB + 0.5:
-        a = ease_io((t - T_GITHUB) / 0.5)
+    if t < T_GITHUB + 0.6:
+        # старое окно гаснет, новое въезжает снизу-справа: разметка у окон разная,
+        # простым растворением на месте переход читался как подмена.
+        # Длительность совпадает с проявлением содержимого GitHub-окна (0.6 с),
+        # поэтому на стыке 39.5 + 0.6 картинки совпадают кадр в кадр.
+        a = ease_io((t - T_GITHUB) / 0.6)          # новое окно въезжает
+        ao = ease_io((t - T_GITHUB) / 0.28)         # старое уходит вдвое быстрее —
         prev = scene_install(wallpaper, mica, shadow, T_GITHUB - T_INSTALL).convert('RGBA')
-        nxt = scene_github(wallpaper, mica, shadow, T_GITHUB).convert('RGBA')
-        return Image.blend(prev, nxt, a).convert('RGB')
+        out = Image.blend(prev, wallpaper.convert('RGBA'), ao)   # два текста не накладываются
+        ghost = scene_github(wallpaper, mica, shadow, t, base=rgba((W, H)))
+        ghost.putalpha(ghost.getchannel('A').point(lambda v: int(v * a)))
+        out.alpha_composite(ghost, (int(26 * (1 - a)), int(-16 * (1 - a))))
+        return out.convert('RGB')
     frame = scene_github(wallpaper, mica, shadow, t).convert('RGB')
     # финал: окно так же растворяется в обои, как и появлялось — без затемнения в чёрное
     out = ease_io((t - (T_END - 1.6)) / 1.6)
