@@ -1,0 +1,911 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""Полный путь WAD в стиле Windows 11: приветствие → начальное окно → установка → GitHub.
+
+Особенности:
+  * фон — светлые обои в духе Windows 11 (абстрактные ленты, мягкие пятна);
+  * окно — стиль Mica: полупрозрачное, берёт цвет обоев, без жёсткой тени, поэтому
+    вытекает из фона, а не висит отдельной карточкой;
+  * сначала на фоне проявляются слова приветствия, и только потом выступает окно;
+  * строка состояния (шаги) — вместо белой полосы анимированная линия с бегущим светом;
+  * кружки шагов крупные, журнал-консоль снизу убран.
+
+    python3 extras/design/tools/make_wad_flow.py --still 2.0     # кадр на секунде
+    python3 extras/design/tools/make_wad_flow.py                 # весь ролик
+
+Результат: extras/design/demo/wad-full.mp4
+"""
+import argparse
+import math
+import os
+import subprocess
+import sys
+
+import subprocess as _sp
+
+import numpy as np
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
+
+try:
+    import segno
+except ImportError:                      # библиотека нужна только для QR в окне проекта
+    _sp.run([sys.executable, '-m', 'pip', 'install', '-q', 'segno'], check=False)
+    try:
+        import segno
+    except ImportError:
+        segno = None
+        print('  segno не установилась — на месте QR будет заглушка')
+
+# ----------------------------------------------------------------------------- размеры
+W, H = 1920, 1080
+FPS = 30
+
+WIN_W, WIN_H = 1180, 720
+WIN_X, WIN_Y = (W - WIN_W) // 2, (H - WIN_H) // 2
+RADIUS = 10                     # Windows 11: скругление 8–10 px
+TITLE_H = 52                    # полоса заголовка с кнопками окна
+PAD = 56                        # внутренние отступы
+INNER = WIN_X + WIN_W - PAD
+
+# сценарий: текст → окно → установка (держится 10 с) → GitHub → затемнение
+T_TEXT_END = 12.4
+T_START = 12.4                  # появление начального окна
+T_INSTALL = 23.0                # через 10 с окно переходит к установке
+T_GITHUB = 47.6
+T_END = 55.0
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+DESIGN_DIR = os.path.normpath(os.path.join(HERE, '..'))
+OUT_DIR = os.path.join(DESIGN_DIR, 'demo')
+FONT_DIR = os.path.expanduser('~/.cache/fonts')
+
+# ----------------------------------------------------------------------------- палитра (Windows 11, светлая)
+C = {
+    'text':    (26, 28, 32),
+    'text2':   (96, 104, 116),
+    'text3':   (138, 146, 160),
+    'accent':  (0, 103, 192),      # системный синий Windows 11
+    'accent2': (116, 92, 231),     # для градиента
+    'ok':      (16, 124, 65),      # зелёный Windows
+    'warn':    (157, 93, 0),       # предупреждение Windows
+    'err':     (196, 43, 28),      # ошибка Windows
+    'card':    (255, 255, 255),
+    'line':    (216, 220, 228),
+}
+
+FONTS = {}
+
+FONT_SOURCES = {
+    'Inter': 'https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip',
+    'JetBrainsMono': 'https://github.com/JetBrains/JetBrainsMono/releases/download/v2.304/JetBrainsMono-2.304.zip',
+}
+
+
+def fetch_fonts():
+    """Шрифты не хранятся в репозитории: качаем в кэш при первом запуске (~2 МБ)."""
+    import io as _io
+    import urllib.request
+    import zipfile
+    os.makedirs(FONT_DIR, exist_ok=True)
+    print('  шрифты отсутствуют — скачиваю в', FONT_DIR)
+    for _, url in FONT_SOURCES.items():
+        try:
+            with urllib.request.urlopen(url, timeout=90) as r:
+                data = r.read()
+            z = zipfile.ZipFile(_io.BytesIO(data))
+            for n in z.namelist():
+                base = n.split('/')[-1]
+                if base.lower().endswith('.ttf') and base.startswith(('Inter-', 'JetBrainsMono-')):
+                    with open(os.path.join(FONT_DIR, base), 'wb') as f:
+                        f.write(z.read(n))
+        except Exception as e:
+            print(f'    не скачался {url}: {e}')
+
+
+def ensure_fonts():
+    need = {'regular': 'Inter-Regular.ttf', 'medium': 'Inter-Medium.ttf',
+            'semibold': 'Inter-SemiBold.ttf', 'bold': 'Inter-Bold.ttf',
+            'extrabold': 'Inter-ExtraBold.ttf'}
+    if any(not os.path.exists(os.path.join(FONT_DIR, n)) for n in need.values()):
+        fetch_fonts()
+    for k, name in need.items():
+        p = os.path.join(FONT_DIR, name)
+        if not os.path.exists(p):
+            sys.exit(f'шрифт {name} так и не появился в {FONT_DIR}')
+        FONTS[k] = p
+
+
+_CACHE = {}
+
+def font(kind, size):
+    key = (kind, round(size, 1))
+    if key not in _CACHE:
+        _CACHE[key] = ImageFont.truetype(FONTS[kind], max(6, int(round(size))))
+    return _CACHE[key]
+
+
+def tw(text, kind, size):
+    return font(kind, size).getlength(text)
+
+
+def ease_io(x):
+    x = max(0.0, min(1.0, x))
+    return 3 * x * x - 2 * x * x * x
+
+
+def ease_out(x):
+    x = max(0.0, min(1.0, x))
+    return 1 - (1 - x) ** 3
+
+
+# ----------------------------------------------------------------------------- фон: обои в духе Windows 11
+def build_wallpaper():
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    nx, ny = xx / W, yy / H
+
+    # база: очень светлый холодный градиент
+    base = np.zeros((H, W, 3), dtype=np.float32)
+    for c, (top, bottom) in enumerate([((214, 228, 250), (247, 250, 255)),
+                                       ((226, 236, 253), (250, 252, 255)),
+                                       ((244, 247, 255), (252, 253, 255))]):
+        base[:, :, c] = top[c] * (1 - ny) + bottom[c] * ny
+
+    img = Image.fromarray(np.clip(base, 0, 255).astype(np.uint8), 'RGB').convert('RGBA')
+
+    # мягкие цветные пятна (как подсветка обоев Windows 11)
+    blobs = [
+        (0.22, 0.30, 0.55, 90, (120, 170, 255)),
+        (0.78, 0.22, 0.50, 80, (150, 130, 255)),
+        (0.62, 0.78, 0.60, 70, (130, 210, 245)),
+        (0.12, 0.82, 0.45, 60, (175, 200, 255)),
+    ]
+    for (bx, by, br, alpha, col) in blobs:
+        d = np.sqrt(((nx - bx) / br) ** 2 + ((ny - by) / br) ** 2)
+        a = np.clip(1 - d, 0, 1) ** 2.2 * alpha
+        layer = Image.new('RGBA', (W, H), col + (0,))
+        layer.putalpha(Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), 'L'))
+        img.alpha_composite(layer)
+
+    # ленты: широкие кривые с размытием — «цветок» Windows, но свой
+    ribbons = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+    rd = ImageDraw.Draw(ribbons)
+    import random
+    rnd = random.Random(11)
+    for i, (col, alpha, width) in enumerate([((90, 150, 240), 120, 150),
+                                             ((140, 120, 240), 110, 120),
+                                             ((110, 200, 235), 100, 100),
+                                             ((60, 120, 220), 90, 70)]):
+        pts = []
+        ph = rnd.uniform(0, 6.28)
+        amp = rnd.uniform(120, 260)
+        base_y = H * rnd.uniform(0.2, 0.8)
+        for x in range(-100, W + 100, 24):
+            t = x / W * 6.28
+            y = base_y + amp * math.sin(t * 0.8 + ph) * 0.5 + amp * 0.35 * math.sin(t * 2.1 + ph * 1.7)
+            pts.append((x, y))
+        rd.line(pts, fill=col + (alpha,), width=width, joint='curve')
+    ribbons = ribbons.filter(ImageFilter.GaussianBlur(60))
+    img.alpha_composite(ribbons)
+
+    # лёгкое «зерно» убирает ступеньки на плавных переходах
+    noise = (np.random.RandomState(3).rand(H, W, 1) - 0.5) * 5
+    arr = np.asarray(img.convert('RGB'), dtype=np.float32) + noise
+    return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8), 'RGB')
+
+
+def build_mica(wallpaper):
+    """Mica: под окном — размытые обои с лёгкой белой плёнкой и полосой заголовка чуть темнее."""
+    region = wallpaper.crop((WIN_X, WIN_Y, WIN_X + WIN_W, WIN_Y + WIN_H))
+    small = region.resize((WIN_W // 14, WIN_H // 14), Image.BILINEAR)
+    blurred = small.resize((WIN_W, WIN_H), Image.BICUBIC).filter(ImageFilter.GaussianBlur(6))
+
+    card = Image.new('RGBA', (WIN_W, WIN_H), (0, 0, 0, 0))
+    card.paste(Image.blend(blurred, Image.new('RGB', (WIN_W, WIN_H), (252, 253, 255)), 0.86),
+               (0, 0), mask_rrect((WIN_W, WIN_H), RADIUS))
+    card.alpha_composite(Image.new('RGBA', (WIN_W, WIN_H), (255, 255, 255, 40)))
+
+    # полоса заголовка — в Windows 11 она слегка отличается по тону
+    title = rgba((WIN_W, TITLE_H), (250, 251, 254, 30))
+    title.putalpha(mask_rrect_top((WIN_W, TITLE_H), RADIUS))
+    card.alpha_composite(title, (0, 0))
+
+    # рамка окна: тонкая светлая, как в Windows 11
+    card.alpha_composite(rrect((WIN_W, WIN_H), [0, 0, WIN_W - 1, WIN_H - 1], RADIUS,
+                               outline=(255, 255, 255, 210), width=1))
+    card.alpha_composite(rrect((WIN_W, WIN_H), [1, 1, WIN_W - 2, WIN_H - 2], RADIUS - 1,
+                               outline=(0, 0, 0, 12), width=1))
+    return card
+
+
+def build_shadow():
+    """Очень мягкая тень: окно должно читаться, но не выглядеть наклейкой."""
+    sh = Image.new('L', (W, H), 0)
+    ImageDraw.Draw(sh).rounded_rectangle(
+        [WIN_X - 10, WIN_Y + 14, WIN_X + WIN_W + 10, WIN_Y + WIN_H + 30], RADIUS + 12, fill=46)
+    return sh.filter(ImageFilter.GaussianBlur(34))
+
+
+def rgba(size, color=(0, 0, 0, 0)):
+    return Image.new('RGBA', size, color)
+
+
+def rrect(size, box, radius, fill=None, outline=None, width=1):
+    layer = Image.new('RGBA', size, (0, 0, 0, 0))
+    ImageDraw.Draw(layer).rounded_rectangle(box, radius, fill=fill, outline=outline, width=width)
+    return layer
+
+
+def mask_rrect(size, radius):
+    m = Image.new('L', size, 0)
+    ImageDraw.Draw(m).rounded_rectangle([0, 0, size[0] - 1, size[1] - 1], radius, fill=255)
+    return m
+
+
+def mask_rrect_top(size, radius):
+    """Скругление только сверху — для полосы заголовка."""
+    m = Image.new('L', size, 0)
+    ImageDraw.Draw(m).rounded_rectangle([0, 0, size[0] - 1, size[1] * 2], radius, fill=255)
+    return m
+
+
+# ----------------------------------------------------------------------------- данные
+REPO = {
+    'full': 'AgentSharik/WAD',
+    'url': 'https://github.com/AgentSharik/WAD',
+    'desc': 'Автоматическая установка и пост-установка Windows: один запуск и готовая система.',
+    'lang': 'PowerShell', 'size_kb': 671, 'updated': '10.09.2026',
+    'license': 'не выбрана', 'topics_count': 8,
+    'topics': ['windows', 'powershell', 'automation', 'unattended-install',
+               'post-install', 'windows-deployment', 'sysadmin', 'setup-scripts'],
+    'fetched': '11 сентября 2026',
+}
+
+TASKS = [
+    dict(name='Первоначальная настройка ОС', short='Настройка ОС', t0=0.8, t1=3.4,
+         start='12:41:03', end='12:47:21', result='ok',
+         subs=['Приветствие и фон Edge', 'Панель задач и меню Пуск', 'Телеметрия и Copilot', 'Макет профиля']),
+    dict(name='Оптимизация и настройка ОС', short='Оптимизация ОС', t0=3.4, t1=6.0,
+         start='12:47:21', end='12:55:02', result='ok',
+         subs=['33 встроенных приложения', 'OneDrive', 'Просмотрщик фото', 'Файл подкачки']),
+    dict(name='Установка системных компонентов', short='Компоненты', t0=6.0, t1=11.6,
+         start='12:55:02', end='13:07:44', result='ok',
+         subs=['Visual C++ 2015-2022', 'DirectX', '.NET Framework 3.5', '.NET 8.0', 'OpenAL']),
+    dict(name='Установка софта', short='Софт', t0=11.6, t1=17.8,
+         start='13:07:44', end='13:21:10', result='warn',
+         subs=['Google Chrome', 'Steam', 'WinRAR', 'qBittorrent', 'ShareX', 'K-Lite Codec Pack'],
+         failed=['ShareX', 'K-Lite Codec Pack']),
+    dict(name='Установка и активация Microsoft Office', short='Microsoft Office', t0=18.6, t1=22.0,
+         start='13:21:40', end='13:34:55', result='ok',
+         subs=['Office Deployment Tool', 'Word, Excel, PowerPoint', 'Привязка KMS', 'Активация']),
+]
+INSTALL_LEN = 22.0
+WARN_TITLE = 'Установка софта завершилась с замечаниями: 2 программы не установились'
+WARN_LINES = 'ShareX — установщик вернул код 1603 · K-Lite Codec Pack — ссылка не отвечает'
+
+
+def task_state(task, t):
+    if t < task['t0']:
+        return 'waiting', 0.0
+    if t < task['t1']:
+        return 'run', (t - task['t0']) / (task['t1'] - task['t0'])
+    return task['result'], 1.0
+
+
+def progress(t):
+    parts = [min(1.0, task_state(x, t)[1]) / len(TASKS) for x in TASKS if task_state(x, t)[0] != 'waiting']
+    return max(0.0, min(1.0, sum(parts)))
+
+
+# ----------------------------------------------------------------------------- окно: общая часть
+def draw_window_chrome(layer, d, title, t, phase):
+    """Кнопки окна и заголовок. Значки рисуем линиями — никаких «квадратиков» вместо глифов."""
+    # иконка приложения: маленький градиентный квадрат с W
+    # ВАЖНО: координаты локальные — слой содержимого окна, а не экран
+    ix, iy = 16, 14
+    icon = rgba((24, 24))
+    idr = ImageDraw.Draw(icon)
+    for i in range(24):
+        k = i / 23
+        col = tuple(int(C['accent'][j] * (1 - k) + C['accent2'][j] * k) for j in range(3))
+        idr.line([(i, 0), (i, 24)], fill=col + (255,))
+    icon.putalpha(mask_rrect((24, 24), 6))
+    layer.alpha_composite(icon, (ix, iy))
+    d.text((ix + 12, iy + 12), 'W', font=font('bold', 13), fill=(255, 255, 255, 255), anchor='mm')
+    d.text((ix + 34, TITLE_H // 2), title, font=font('semibold', 14.5),
+           fill=C['text'] + (230,), anchor='lm')
+
+    # кнопки окна (справа): свернуть, развернуть, закрыть — тоже локально
+    bx = WIN_W - 46 * 3
+    by = 0
+    for i in range(3):
+        cx0 = bx + i * 46
+        hover = (i == 2 and 13.0 < t < 14.0)      # намёк на живой интерфейс
+        if hover:
+            layer.alpha_composite(rgba((46, TITLE_H), (196, 43, 28, 210)),
+                                  (cx0, by))
+        col = (255, 255, 255, 235) if hover else C['text'] + (200,)
+        cxx, cyy = cx0 + 23, by + TITLE_H // 2
+        if i == 0:                                  # свернуть
+            d.line([(cxx - 6, cyy), (cxx + 6, cyy)], fill=col, width=1)
+        elif i == 1:                                # развернуть
+            d.rectangle([cxx - 5.5, cyy - 5.5, cxx + 5.5, cyy + 5.5], outline=col, width=1)
+        else:                                       # закрыть
+            d.line([(cxx - 6, cyy - 6), (cxx + 6, cyy + 6)], fill=col, width=1)
+            d.line([(cxx - 6, cyy + 6), (cxx + 6, cyy - 6)], fill=col, width=1)
+    # разделитель под заголовком
+    d.line([(0, TITLE_H), (WIN_W, TITLE_H)], fill=(0, 0, 0, 14), width=1)
+
+
+def draw_flow_line(layer, d, x0, x1, y, prog, t):
+    """Анимированная линия состояния: без белой полосы, с бегущим светом по пройденной части."""
+    span = x1 - x0
+    filled = span * prog
+    if filled > 2:
+        bar = rgba((int(filled), 6))
+        bd = ImageDraw.Draw(bar)
+        # свет бежит слева направо: основание почти прозрачное, блик — ярче
+        for i in range(int(filled)):
+            k = i / max(1, filled - 1)
+            col = tuple(int(C['accent'][j] * (1 - k) + C['accent2'][j] * k) for j in range(3))
+            bd.line([(i, 2), (i, 4)], fill=col + (255,))
+        head = int(((t * 0.45) % 1.0) * (filled + 260)) - 130
+        sh = rgba((int(filled), 6))
+        sd = ImageDraw.Draw(sh)
+        for i in range(260):
+            x = head + i
+            if 0 <= x < filled:
+                a = int(150 * math.sin(math.pi * i / 260))
+                sd.line([(x, 1), (x, 5)], fill=(255, 255, 255, a))
+        bar.alpha_composite(sh)
+        layer.alpha_composite(bar, (int(x0), int(y - 3)))
+    # «хвост» ждёт своей очереди — едва различимые точки, а не серая полоса
+    if prog < 0.999:
+        dots_x = x0 + filled
+        while dots_x < x1:
+            a = int(26 * (1 - (dots_x - (x0 + filled)) / max(1, span)))
+            d.ellipse([dots_x, y - 1.5, dots_x + 3, y + 1.5], fill=C['text3'] + (max(8, a),))
+            dots_x += 9
+
+
+# ----------------------------------------------------------------------------- экран 1: приветствие
+WELCOME = [
+    (0.4, 3.1, 'Здравствуйте', 'semibold', 76),
+    (3.1, 6.4, 'Вас приветствует WAD', 'semibold', 58),
+    (6.4, 10.0, 'WAD настроит Windows для вас, можете отдохнуть', 'medium', 40),
+    (10.0, 12.4, 'Приступаем', 'bold', 66),
+]
+
+
+def scene_text(wallpaper, t):
+    frame = wallpaper.copy().convert('RGBA')
+    layer = rgba((W, H))
+    d = ImageDraw.Draw(layer)
+    for (t0, t1, text, kind, size) in WELCOME:
+        if not (t0 - 0.6 <= t <= t1 + 0.5):
+            continue
+        appear = ease_out((t - t0) / 0.7) if t >= t0 else 0.0
+        vanish = 1.0
+        if t > t1 - 0.6:
+            vanish = max(0.0, 1 - (t - (t1 - 0.6)) / 1.1)
+        alpha = appear * vanish
+        if alpha <= 0.01:
+            continue
+        rise = int((1 - ease_out(appear)) * 26)
+        cy = H // 2 - 40 + rise
+        # мягкая тень для читаемости на светлых обоях
+        shadow = rgba((W, H))
+        sd = ImageDraw.Draw(shadow)
+        sd.text((W / 2 + 2, cy + 3), text, font=font(kind, size), fill=(255, 255, 255, int(150 * alpha)), anchor='mm')
+        layer.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(3)))
+        if text == 'Вас приветствует WAD':
+            # «WAD» — градиентом, остальное обычным текстом
+            lead = 'Вас приветствует '
+            lw = tw(lead, kind, size)
+            ww = tw('WAD', kind, size)
+            x0 = W / 2 - (lw + ww) / 2
+            d.text((x0, cy), lead, font=font(kind, size), fill=C['text'] + (int(255 * alpha),), anchor='lm')
+            grad = rgba((int(ww) + 4, int(size * 1.4)))
+            gd = ImageDraw.Draw(grad)
+            for i in range(grad.width):
+                k = i / max(1, grad.width - 1)
+                col = tuple(int(C['accent'][j] * (1 - k) + C['accent2'][j] * k) for j in range(3))
+                gd.line([(i, 0), (i, grad.height)], fill=col + (255,))
+            mask = Image.new('L', grad.size, 0)
+            ImageDraw.Draw(mask).text((2, grad.height // 2), 'WAD', font=font(kind, size), fill=255, anchor='lm')
+            grad.putalpha(mask.point(lambda v: int(v * alpha)))
+            layer.alpha_composite(grad, (int(x0 + lw - 2), int(cy - grad.height / 2)))
+            d.text((x0 + lw, cy), '', font=font(kind, size), fill=C['text'] + (0,))
+        else:
+            col = C['text']
+            if text == 'Приступаем':
+                col = C['accent']
+            d.text((W / 2, cy), text, font=font(kind, size), fill=col + (int(255 * alpha),), anchor='mm')
+            if text == 'Приступаем':
+                # подчёркивание «проявляется» слева направо
+                uw = tw(text, kind, size) * 0.9
+                sweep = ease_io(max(0.0, min(1.0, (t - 10.3) / 1.0)))
+                d.line([(W / 2 - uw / 2, cy + size * 0.62), (W / 2 - uw / 2 + uw * sweep, cy + size * 0.62)],
+                       fill=C['accent'] + (int(200 * alpha),), width=3)
+    return frame, layer
+
+
+# ----------------------------------------------------------------------------- экран 2: начальное окно
+def scene_start(wallpaper, mica, shadow, t):
+    frame = wallpaper.copy().convert('RGBA')
+    appear = ease_out((t - T_START) / 0.9) if T_START <= t < T_INSTALL else (1.0 if t >= T_INSTALL else 0.0)
+
+    sh = rgba((W, H))
+    sh.putalpha(shadow.point(lambda v: int(v * appear)))
+    frame.alpha_composite(sh)
+
+    card = mica.copy()
+    scale = 1.02 - 0.02 * appear                    # «вытекает»: чуть уменьшается при проявлении
+    if scale < 0.999:
+        card = card.resize((int(WIN_W * scale), int(WIN_H * scale)), Image.LANCZOS)
+    content = rgba((WIN_W, WIN_H))
+    d = ImageDraw.Draw(content)
+
+    draw_window_chrome(content, d, 'WAD — установка Windows', t, 'start')
+
+    x = PAD
+    y = TITLE_H + 46
+    d.text((x, y), 'Один запуск — и система готова', font=font('semibold', 38), fill=C['text'] + (255,))
+    d.text((x, y + 56), 'Программа сама удалит лишнее, поставит нужные программы и настроит систему.',
+           font=font('regular', 18), fill=C['text2'] + (255,))
+    d.text((x, y + 84), 'Можно закрыть окно и вернуться к готовому компьютеру.',
+           font=font('regular', 18), fill=C['text2'] + (255,))
+
+    # акцентная кнопка и ссылка на проект
+    by = WIN_Y + WIN_H - PAD - 54 - WIN_Y + WIN_Y
+    by = WIN_H - PAD - 54
+    pw = tw('Начать установку', 'semibold', 17.5) + 60
+    content.alpha_composite(rrect((WIN_W, WIN_H), [WIN_W - PAD - pw, by, WIN_W - PAD, by + 54], 8,
+                                  fill=C['accent'] + (255,)))
+    d.text((WIN_W - PAD - pw / 2, by + 27), 'Начать установку', font=font('semibold', 17.5),
+           fill=(255, 255, 255, 255), anchor='mm')
+    sw = tw('Проект на GitHub', 'medium', 17) + 52
+    sx = WIN_W - PAD - pw - 12 - sw
+    content.alpha_composite(rrect((WIN_W, WIN_H), [sx, by, sx + sw, by + 54], 8,
+                                  fill=(255, 255, 255, 200), outline=(0, 0, 0, 26)))
+    d.text((sx + sw / 2, by + 27), 'Проект на GitHub', font=font('medium', 17), fill=C['text'] + (240,), anchor='mm')
+
+    # три карточки «что будет сделано» — появляются друг за другом
+    cy = y + 140
+    cw = (WIN_W - PAD * 2 - 24) / 2
+    cards = [
+        ('Что установится', 'Chrome · Steam · WinRAR · qBittorrent · ShareX · K-Lite · Visual C++ · .NET 8 · Office'),
+        ('Что настроится', '33 встроенных приложения и OneDrive удалятся · вернётся просмотрщик фото · '
+                           'файл подкачки по объёму ОЗУ · браузер и меню'),
+    ]
+    for i, (title, body) in enumerate(cards):
+        e = ease_out((t - (T_START + 0.5 + i * 0.45)) / 0.8)
+        if e <= 0:
+            continue
+        bx = x + i * (cw + 24)
+        content.alpha_composite(rrect((WIN_W, WIN_H), [bx, cy, bx + cw, cy + 176], 10,
+                                      fill=(255, 255, 255, 150), outline=(0, 0, 0, 18)))
+        sub = rgba((WIN_W, WIN_H))
+        sub.putalpha(int(255 * e))
+        sub.alpha_composite(content.crop((int(bx), int(cy), int(bx + cw), int(cy + 176))), (int(bx), int(cy)))
+        d.text((bx + 24, cy + 22), title, font=font('semibold', 19), fill=C['text'] + (int(255 * e),))
+        # текст по ширине карточки
+        words, lines, cur = body.split(' '), [], ''
+        for wd in words:
+            probe = (cur + ' ' + wd).strip()
+            if tw(probe, 'regular', 16) > cw - 48:
+                lines.append(cur)
+                cur = wd
+            else:
+                cur = probe
+        if cur:
+            lines.append(cur)
+        for j, line in enumerate(lines[:4]):
+            d.text((bx + 24, cy + 58 + j * 26), line, font=font('regular', 16),
+                   fill=C['text2'] + (int(255 * e),))
+
+    # строка фактов — заполняет пустое место под карточками
+    fy = cy + 210
+    content.alpha_composite(rrect((WIN_W, WIN_H), [x, fy, WIN_W - PAD, fy + 76], 10,
+                                 fill=(255, 255, 255, 120), outline=(0, 0, 0, 14)))
+    facts = [('Задач', '5'), ('Примерно', '45 минут'), ('Системы', 'Windows 10 / 11'),
+             ('Ничего не нужно', 'только интернет')]
+    fw = (WIN_W - PAD * 2 - 48) / 4
+    for i, (k, v) in enumerate(facts):
+        fx = x + 12 + i * fw
+        if i:
+            d.line([(fx - 12, fy + 16), (fx - 12, fy + 60)], fill=(0, 0, 0, 16), width=1)
+        e = ease_out((t - (T_START + 1.1 + i * 0.2)) / 0.6)
+        a = int(255 * max(0.0, e))
+        d.text((fx, fy + 16), k, font=font('regular', 14), fill=C['text3'] + (a,))
+        d.text((fx, fy + 36), v, font=font('semibold', 19), fill=C['text'] + (a,))
+
+    # сноска
+    d.text((x, WIN_H - PAD - 14), 'Нужны права администратора · Логи останутся в Документах',
+           font=font('regular', 14.5), fill=C['text3'] + (255,))
+
+    if appear < 0.999:
+        content.putalpha(content.getchannel('A').point(lambda v: int(v * appear)))
+    if content.size != card.size:
+        content = content.resize(card.size, Image.LANCZOS)
+    card.alpha_composite(content)
+    frame.alpha_composite(card, (WIN_X + (WIN_W - card.width) // 2, WIN_Y + (WIN_H - card.height) // 2))
+    return frame
+
+
+# ----------------------------------------------------------------------------- экран 3: установка
+def scene_install(wallpaper, mica, shadow, t):
+    frame = wallpaper.copy().convert('RGBA')
+    frame.alpha_composite(rgba((W, H), (0, 0, 0, 0)))
+    sh = rgba((W, H))
+    sh.putalpha(shadow)
+    frame.alpha_composite(sh)
+
+    card = mica.copy()
+    content = rgba((WIN_W, WIN_H))
+    d = ImageDraw.Draw(content)
+    draw_window_chrome(content, d, 'WAD — установка Windows', t, 'install')
+
+    prog = progress(t)
+    done = sum(1 for x in TASKS if task_state(x, t)[0] in ('ok', 'warn'))
+    x = PAD
+    y = TITLE_H + 40
+
+    # заголовок и состояние
+    if t >= INSTALL_LEN:
+        state_text, state_col = 'Завершено с замечаниями', C['warn']
+    elif t >= TASKS[3]['t1']:
+        state_text, state_col = 'Нужно внимание', C['warn']
+    else:
+        state_text, state_col = 'Идёт установка', C['accent']
+    d.text((x, y), 'Установка Windows', font=font('semibold', 27), fill=C['text'] + (255,))
+    d.text((x, y + 38), 'Режим Clean · Windows 11', font=font('regular', 16.5), fill=C['text2'] + (255,))
+    pill_w = tw(state_text, 'medium', 15.5) + 56
+    content.alpha_composite(rrect((WIN_W, WIN_H), [WIN_W - PAD - pill_w, y + 6, WIN_W - PAD, y + 42], 18,
+                                  fill=state_col + (22,), outline=state_col + (70,)))
+    dot = 4 + 1.8 * math.sin(t * 4)
+    d.ellipse([WIN_W - PAD - pill_w + 18 - dot, y + 24 - dot, WIN_W - PAD - pill_w + 18 + dot, y + 24 + dot],
+              fill=state_col + (255,))
+    d.text((WIN_W - PAD - pill_w + 34, y + 24), state_text, font=font('medium', 15.5),
+           fill=state_col + (255,), anchor='lm')
+
+    # ---- строка состояния: крупные кружки и анимированная линия вместо белой полосы
+    sy = y + 104
+    step_w = (WIN_W - PAD * 2 - 40) / 5
+    R0 = 30                                     # кружки крупнее
+    centers = [x + 20 + step_w * (i + 0.5) for i in range(5)]
+    draw_flow_line(content, d, centers[0], centers[-1], sy + R0, prog, t)
+    for i, task in enumerate(TASKS):
+        st, frac = task_state(task, t)
+        cxx, cyy = centers[i], sy + R0
+        if st == 'waiting':
+            d.ellipse([cxx - R0, cyy - R0, cxx + R0, cyy + R0], fill=(255, 255, 255, 235),
+                      outline=(200, 208, 220, 235), width=2)
+            d.text((cxx, cyy), str(i + 1), font=font('semibold', 22), fill=C['text3'] + (255,), anchor='mm')
+        elif st == 'run':
+            # пульсирующее кольцо вокруг активного шага
+            pulse = 0.5 + 0.5 * math.sin(t * 3.2)
+            rr = R0 + 7 + 4 * pulse
+            d.ellipse([cxx - rr, cyy - rr, cxx + rr, cyy + rr], outline=C['accent'] + (int(70 + 60 * pulse),), width=3)
+            d.ellipse([cxx - R0, cyy - R0, cxx + R0, cyy + R0], fill=C['accent'] + (255,))
+            d.text((cxx, cyy), str(i + 1), font=font('semibold', 22), fill=(255, 255, 255, 255), anchor='mm')
+        else:
+            col = C['ok'] if st == 'ok' else C['warn']
+            d.ellipse([cxx - R0, cyy - R0, cxx + R0, cyy + R0], fill=col + (255,))
+            if st == 'ok':
+                d.line([(cxx - 12, cyy + 1), (cxx - 3, cyy + 11), (cxx + 13, cyy - 9)],
+                       fill=(255, 255, 255, 255), width=4, joint='curve')
+            else:
+                d.text((cxx, cyy), '!', font=font('bold', 26), fill=(255, 255, 255, 255), anchor='mm')
+        # подписи
+        d.text((cxx, cyy + R0 + 18), task['short'], font=font('medium', 16),
+               fill=(C['text'] if st != 'waiting' else C['text3']) + (255,), anchor='mm')
+        if st in ('ok', 'warn'):
+            d.text((cxx, cyy + R0 + 40), task['end'][:5], font=font('regular', 14.5),
+                   fill=(C['ok'] if st == 'ok' else C['warn']) + (255,), anchor='mm')
+
+    # ---- крупно: текущая задача и проценты
+    my = sy + R0 * 2 + 74
+    cur = next((i for i, x2 in enumerate(TASKS) if task_state(x2, t)[0] == 'run'), None)
+    if cur is not None:
+        d.text((x, my), TASKS[cur]['name'], font=font('semibold', 30), fill=C['text'] + (255,))
+        d.text((x, my + 44), 'выполняется сейчас — самая долгая часть установки',
+               font=font('regular', 17), fill=C['text2'] + (255,))
+    elif t >= INSTALL_LEN:
+        d.text((x, my), 'Все задачи выполнены', font=font('semibold', 30), fill=C['ok'] + (255,))
+        d.text((x, my + 44), 'замечания по одной задаче записаны в журнал',
+               font=font('regular', 17), fill=C['text2'] + (255,))
+    else:
+        d.text((x, my), 'Подготовка…', font=font('semibold', 30), fill=C['text'] + (255,))
+
+    d.text((WIN_W - PAD, my - 6), f'{int(prog * 100)}%', font=font('bold', 62),
+           fill=C['accent'] + (255,), anchor='ra')
+    d.text((WIN_W - PAD, my + 70), f'{done} из 5 задач', font=font('regular', 17),
+           fill=C['text2'] + (255,), anchor='ra')
+
+    # ---- замечания и кнопка
+    if t >= 18.4:
+        ease = ease_io((t - 18.4) / 0.5)
+        by = WIN_H - PAD - 54 - 96
+        content.alpha_composite(rrect((WIN_W, WIN_H), [x, by, WIN_W - PAD, by + 92], 10,
+                                      fill=(255, 249, 240, int(255 * ease)),
+                                      outline=C['warn'] + (int(150 * ease),)))
+        d.rectangle([x, by + 12, x + 3, by + 80], fill=C['warn'] + (int(255 * ease),))
+        d.text((x + 22, by + 16), WARN_TITLE, font=font('semibold', 17.5),
+               fill=C['text'] + (int(255 * ease),))
+        d.text((x + 22, by + 46), WARN_LINES, font=font('regular', 15.5),
+               fill=C['warn'] + (int(235 * ease),))
+        d.text((x + 22, by + 68), 'Подробности — в журнале установки в папке «Документы»',
+               font=font('regular', 14.5), fill=C['text2'] + (int(220 * ease),))
+
+    # ---- состав текущей задачи: что именно делается прямо сейчас
+    dy = my + 96
+    active = cur if cur is not None else (4 if t >= INSTALL_LEN else None)
+    if active is not None:
+        task = TASKS[active]
+        d.text((x, dy), 'Что делает эта задача', font=font('semibold', 16.5), fill=C['text2'] + (255,))
+        cxx, cyy = x, dy + 30
+        for j, sub in enumerate(task['subs']):
+            wdt = tw(sub, 'regular', 15.5) + 46
+            if cxx + wdt > WIN_W - PAD:
+                cxx = x
+                cyy += 42
+            st2, frac2 = task_state(task, t)
+            share = j / max(1, len(task['subs']))
+            if st2 == 'waiting':
+                done_item = False
+            elif st2 == 'run':
+                done_item = frac2 > (j + 0.15) / len(task['subs'])
+            else:
+                done_item = True
+            bad = task.get('failed') and sub in task['failed'] and st2 == 'warn'
+            if bad:
+                fill, outline, tcol = (253, 240, 238), C['err'] + (120,), C['err']
+            elif done_item:
+                fill, outline, tcol = (240, 249, 242), C['ok'] + (90,), C['ok']
+            else:
+                fill, outline, tcol = (255, 255, 255, 150), (0, 0, 0, 16), C['text2']
+            content.alpha_composite(rrect((WIN_W, WIN_H), [cxx, cyy, cxx + wdt, cyy + 34], 17,
+                                          fill=fill + ((255,) if len(fill) == 3 else ()),
+                                          outline=outline))
+            # галочка/точка внутри чипа
+            gx, gy = cxx + 18, cyy + 17
+            if bad:
+                d.line([(gx - 4, gy - 4), (gx + 4, gy + 4)], fill=C['err'] + (255,), width=2)
+                d.line([(gx - 4, gy + 4), (gx + 4, gy - 4)], fill=C['err'] + (255,), width=2)
+            elif done_item:
+                d.line([(gx - 4, gy), (gx - 1, gy + 4), (gx + 5, gy - 4)], fill=C['ok'] + (255,), width=2, joint='curve')
+            else:
+                d.ellipse([gx - 3, gy - 3, gx + 3, gy + 3], outline=tcol + (200,), width=1)
+            d.text((cxx + 32, cyy + 17), sub, font=font('regular', 15.5), fill=tcol + (240,), anchor='lm')
+            cxx += wdt + 8
+
+    reboot = t >= INSTALL_LEN + 0.9
+    label = 'Перезагрузить компьютер' if reboot else 'Свернуть в фон'
+    bw = tw(label, 'semibold', 17) + 52
+    content.alpha_composite(rrect((WIN_W, WIN_H), [WIN_W - PAD - bw, WIN_H - PAD - 54, WIN_W - PAD, WIN_H - PAD], 8,
+                                  fill=C['accent'] + (255,)))
+    d.text((WIN_W - PAD - bw / 2, WIN_H - PAD - 27), label, font=font('semibold', 17),
+           fill=(255, 255, 255, 255), anchor='mm')
+    note = 'Всё готово — можно перезагружаться' if reboot else 'Установка продолжится, даже если свернуть окно'
+    d.text((x, WIN_H - PAD - 27), note, font=font('regular', 15), fill=C['text2'] + (255,), anchor='lm')
+
+    card.alpha_composite(content)
+    frame.alpha_composite(card, (WIN_X, WIN_Y))
+    return frame
+
+
+# ----------------------------------------------------------------------------- экран 4: проект (переработан)
+def scene_github(wallpaper, mica, shadow, t):
+    frame = wallpaper.copy().convert('RGBA')
+    sh = rgba((W, H))
+    sh.putalpha(shadow)
+    frame.alpha_composite(sh)
+
+    card = mica.copy()
+    content = rgba((WIN_W, WIN_H))
+    d = ImageDraw.Draw(content)
+    draw_window_chrome(content, d, 'WAD — проект на GitHub', t, 'github')
+
+    appear = ease_out((t - T_GITHUB) / 0.6) if T_GITHUB <= t else 0.0
+    x = PAD
+    y = TITLE_H + 44
+
+    # имя репозитория и описание
+    d.text((x, y), 'Проект на GitHub', font=font('semibold', 26), fill=C['text'] + (255,))
+    name_w = tw(REPO['full'], 'medium', 19)
+    d.text((x, y + 44), REPO['full'], font=font('medium', 19), fill=C['accent'] + (255,))
+    content.alpha_composite(rrect((WIN_W, WIN_H), [x + name_w + 14, y + 42, x + name_w + 108, y + 74], 16,
+                                  fill=C['accent'] + (20,), outline=C['accent'] + (60,)))
+    d.text((x + name_w + 61, y + 58), 'публичный', font=font('medium', 14.5), fill=C['accent'] + (255,), anchor='mm')
+
+    qs = 226
+    qx = WIN_W - PAD - qs
+    qy = y + 6
+    text_w = qx - x - 36
+
+    desc = REPO['desc']
+    while tw(desc, 'regular', 18) > text_w and len(desc) > 12:
+        desc = desc[:-2]
+    if desc != REPO['desc']:
+        desc = desc.rstrip(' ,.—') + '…'
+    d.text((x, y + 106), desc, font=font('regular', 18), fill=C['text'] + (240,))
+    d.text((x, y + 134), 'PowerShell + файл ответов, свой интерфейс, без сторонних сборок.',
+           font=font('regular', 16.5), fill=C['text2'] + (255,))
+
+    # характеристики: подписи словами, без символов, которых нет в шрифте
+    stats = [('Язык', REPO['lang']), ('Размер', f"{REPO['size_kb']} КБ"),
+             ('Обновлён', REPO['updated']), ('Лицензия', REPO['license'])]
+    sy = y + 176
+    bw2 = (text_w - 12) / 2
+    for i, (k, v) in enumerate(stats):
+        bx = x + (i % 2) * (bw2 + 12)
+        by = sy + (i // 2) * 56
+        content.alpha_composite(rrect((WIN_W, WIN_H), [bx, by, bx + bw2, by + 46], 8,
+                                      fill=(255, 255, 255, 170), outline=(0, 0, 0, 16)))
+        d.text((bx + 16, by + 9), k, font=font('regular', 14), fill=C['text3'] + (255,))
+        d.text((bx + 16, by + 26), v, font=font('medium', 16), fill=C['text'] + (255,))
+
+    # темы
+    ty = sy + 130
+    d.text((x, ty), 'Темы репозитория', font=font('semibold', 17), fill=C['text'] + (255,))
+    tx, twy = x, ty + 28
+    for topic in REPO['topics']:
+        wdt = tw(topic, 'medium', 14.5) + 24
+        if tx + wdt > x + text_w:
+            tx = x
+            twy += 32
+        content.alpha_composite(rrect((WIN_W, WIN_H), [tx, twy, tx + wdt, twy + 28], 14,
+                                      fill=C['accent'] + (16,), outline=C['accent'] + (48,)))
+        d.text((tx + wdt / 2, twy + 14), topic, font=font('medium', 14.5), fill=C['accent'] + (230,), anchor='mm')
+        tx += wdt + 8
+
+    # QR и ссылка
+    content.alpha_composite(rrect((WIN_W, WIN_H), [qx - 12, qy - 12, qx + qs + 12, qy + qs + 12], 12,
+                                  fill=(255, 255, 255, 255), outline=(0, 0, 0, 20)))
+    try:
+        m = segno.make(REPO['url'], error='m').matrix
+        n = len(m)
+        cell = qs / n
+        for r in range(n):
+            for c in range(n):
+                if m[r][c]:
+                    px0, py0 = qx + c * cell, qy + r * cell
+                    d.rectangle([px0, py0, px0 + cell + 0.5, py0 + cell + 0.5], fill=(26, 28, 32, 255))
+    except Exception:
+        d.text((qx + qs / 2, qy + qs / 2), 'QR', font=font('bold', 36), fill=(26, 28, 32, 255), anchor='mm')
+    d.text((qx + qs / 2, qy + qs + 30), 'Наведите камеру телефона', font=font('regular', 15),
+           fill=C['text2'] + (255,), anchor='mm')
+    d.text((qx + qs / 2, qy + qs + 56), f"данные на {REPO['fetched']}", font=font('regular', 14),
+           fill=C['text3'] + (255,), anchor='mm')
+
+    # последние изменения — из настоящего CHANGELOG проекта, без выдумок
+    hy = twy + 58
+    d.text((x, hy), 'Последние изменения', font=font('semibold', 17), fill=C['text'] + (255,))
+    changes = [
+        ('0.4', 'Сбой больше не выглядит как успех: задача краснеет, в журнале — причина'),
+        ('0.4', 'Проверки при каждом изменении: разбор под PowerShell 5.1 и сверка копий'),
+        ('0.3', 'Просмотр фото через DISM и вторая ветка файла подкачки'),
+    ]
+    for i, (ver, text) in enumerate(changes):
+        cy2 = hy + 30 + i * 30
+        content.alpha_composite(rrect((WIN_W, WIN_H), [x, cy2 + 1, x + 46, cy2 + 25], 12,
+                                      fill=C['accent'] + (16,), outline=C['accent'] + (46,)))
+        d.text((x + 23, cy2 + 13), ver, font=font('medium', 13.5), fill=C['accent'] + (255,), anchor='mm')
+        t2 = text
+        while tw(t2, 'regular', 15.5) > WIN_W - PAD - (x + 62) and len(t2) > 10:
+            t2 = t2[:-2]
+        if t2 != text:
+            t2 = t2.rstrip(' ,.—') + '…'
+        d.text((x + 62, cy2 + 13), t2, font=font('regular', 15.5), fill=C['text2'] + (255,), anchor='lm')
+
+    # кнопки
+    by = WIN_H - PAD - 54
+    pw = tw('Открыть в браузере', 'semibold', 17) + 56
+    content.alpha_composite(rrect((WIN_W, WIN_H), [WIN_W - PAD - pw, by, WIN_W - PAD, by + 54], 8,
+                                  fill=C['accent'] + (255,)))
+    d.text((WIN_W - PAD - pw / 2, by + 27), 'Открыть в браузере', font=font('semibold', 17),
+           fill=(255, 255, 255, 255), anchor='mm')
+    sw = tw('Проверить обновления', 'medium', 17) + 48
+    sx = WIN_W - PAD - pw - 12 - sw
+    content.alpha_composite(rrect((WIN_W, WIN_H), [sx, by, sx + sw, by + 54], 8,
+                                  fill=(255, 255, 255, 200), outline=(0, 0, 0, 26)))
+    d.text((sx + sw / 2, by + 27), 'Проверить обновления', font=font('medium', 17),
+           fill=C['text'] + (240,), anchor='mm')
+
+
+    if appear < 0.999:
+        content.putalpha(content.getchannel('A').point(lambda v: int(v * appear)))
+    card.alpha_composite(content)
+    frame.alpha_composite(card, (WIN_X, WIN_Y))
+    return frame
+
+
+# ----------------------------------------------------------------------------- сборка кадра
+def render_frame(wallpaper, mica, shadow, t):
+    if t < T_TEXT_END:
+        frame, layer = scene_text(wallpaper, t)
+        # окно начинает проступать в самом конце приветствия
+        if t > T_TEXT_END - 1.2:
+            a = ease_io((t - (T_TEXT_END - 1.2)) / 1.2)
+            win = scene_start(wallpaper, mica, shadow, T_START).convert('RGBA')
+            frame = Image.blend(frame, win, a * 0.85)
+        frame.alpha_composite(layer)
+        return frame.convert('RGB')
+
+    if t < T_INSTALL:
+        frame = scene_start(wallpaper, mica, shadow, t)
+        # добираем последние 15 % непрозрачности окна уже после приветствия —
+        # иначе на стыке 12.4 с виден скачок яркости
+        if t < T_TEXT_END + 0.3:
+            k = 0.85 + 0.15 * ease_io((t - T_TEXT_END) / 0.3)
+            frame = Image.blend(wallpaper.convert('RGBA'), frame, k)
+        return frame.convert('RGB')
+
+    if t < T_GITHUB:
+        if t < T_INSTALL + 0.5:
+            a = ease_io((t - T_INSTALL) / 0.5)
+            prev = scene_start(wallpaper, mica, shadow, T_INSTALL - 0.01).convert('RGBA')
+            nxt = scene_install(wallpaper, mica, shadow, 0.0).convert('RGBA')
+            return Image.blend(prev, nxt, a).convert('RGB')
+        return scene_install(wallpaper, mica, shadow, t - T_INSTALL).convert('RGB')
+
+    if t < T_GITHUB + 0.5:
+        a = ease_io((t - T_GITHUB) / 0.5)
+        prev = scene_install(wallpaper, mica, shadow, T_GITHUB - T_INSTALL).convert('RGBA')
+        nxt = scene_github(wallpaper, mica, shadow, T_GITHUB).convert('RGBA')
+        return Image.blend(prev, nxt, a).convert('RGB')
+    frame = scene_github(wallpaper, mica, shadow, t).convert('RGB')
+    # финал: окно так же растворяется в обои, как и появлялось — без затемнения в чёрное
+    out = ease_io((t - (T_END - 1.6)) / 1.6)
+    if out > 0.0:
+        frame = Image.blend(frame, wallpaper.convert('RGB'), out)
+    return frame
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--still', type=float)
+    ap.add_argument('--fps', type=int, default=FPS)
+    args = ap.parse_args()
+
+    os.makedirs(OUT_DIR, exist_ok=True)
+    ensure_fonts()
+    print('рисую обои…')
+    wallpaper = build_wallpaper()
+    wallpaper.save(os.path.join(OUT_DIR, 'wallpaper-win11.png'))
+    mica = build_mica(wallpaper)
+    shadow = build_shadow()
+
+    if args.still is not None:
+        p = os.path.join(OUT_DIR, f'flow-{args.still:g}s.png')
+        render_frame(wallpaper, mica, shadow, args.still).save(p)
+        print(f'  {p}')
+        return
+
+    try:
+        import imageio_ffmpeg
+        ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
+    except Exception:
+        sys.exit('нет ffmpeg: pip install imageio-ffmpeg')
+
+    out = os.path.join(OUT_DIR, 'wad-full.mp4')
+    cmd = [ffmpeg, '-y', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{W}x{H}', '-r', str(args.fps), '-i', '-',
+           '-c:v', 'libx264', '-preset', 'medium', '-crf', '18', '-pix_fmt', 'yuv420p',
+           '-movflags', '+faststart', out]
+    proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+    total = int(T_END * args.fps)
+    print(f'рендер {total} кадров ({T_END:g} с)…')
+    for i in range(total):
+        proc.stdin.write(render_frame(wallpaper, mica, shadow, i / args.fps).tobytes())
+        if i % 150 == 0:
+            print(f'  {i}/{total}')
+    proc.stdin.close()
+    err = proc.stderr.read().decode('utf-8', 'ignore')
+    if proc.wait() != 0:
+        print(err[-1500:])
+        sys.exit('ffmpeg упал')
+    print(f'  {out} — {os.path.getsize(out)//1024} КБ')
+
+
+if __name__ == '__main__':
+    main()
