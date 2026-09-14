@@ -227,9 +227,9 @@ WP_FPS = 10                     # фон пересчитывается 10 ра�
 
 def _wallpaper_base():
     """Спокойный холодный градиент — не двигается вовсе."""
-    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
-    ny = yy / H
-    base = np.zeros((H, W, 3), dtype=np.float32)
+    yy, xx = np.mgrid[0:BH, 0:BW].astype(np.float32)
+    ny = yy / BH
+    base = np.zeros((BH, BW, 3), dtype=np.float32)
     for c, (top, bottom) in enumerate([((214, 228, 250), (247, 250, 255)),
                                        ((226, 236, 253), (250, 252, 255)),
                                        ((244, 247, 255), (252, 253, 255))]):
@@ -279,7 +279,7 @@ def build_wallpaper_layers():
              (0.78, 0.22, 0.50, 80, (150, 130, 255)),
              (0.62, 0.78, 0.60, 70, (130, 210, 245)),
              (0.12, 0.82, 0.45, 60, (175, 200, 255))],
-            [(26, 16, 31.0, 0.0), (20, 22, 24.0, 1.9), (30, 14, 37.0, 3.4), (18, 26, 28.0, 5.1)]):
+            [(44, 30, 21.0, 0.0), (36, 44, 17.0, 1.9), (44, 26, 25.0, 3.4), (30, 44, 19.0, 5.1)]):
         blobs.append({'img': _blob_layer(bx, by, br, alpha, col),
                       'ax': ax, 'ay': ay, 'per': per, 'ph': ph})
     noise = (np.random.RandomState(3).rand(H, W, 1) - 0.5) * 5
@@ -294,7 +294,7 @@ def compose_wallpaper(wp, t):
         w = 6.2831853 / b['per'] * t + b['ph']
         dx = int(round(b['ax'] * math.sin(w)))
         dy = int(round(b['ay'] * math.sin(w * 0.77 + 1.1)))
-        img.alpha_composite(b['img'], (MARGIN + dx, MARGIN + dy))
+        img.paste(b['img'], (dx, dy), b['img'])
 
     # ленты: сдвиг по обеим осям плюс лёгкое «дыхание» прозрачности
     rib = wp['ribbons']
@@ -305,7 +305,7 @@ def compose_wallpaper(wp, t):
     if k < 0.999:
         rib = rib.copy()
         rib.putalpha(rib.getchannel('A').point(lambda v: int(v * k)))
-    img.alpha_composite(rib, (MARGIN + dx, MARGIN + dy))
+    img.paste(rib, (dx, dy), rib)
 
     # лёгкое «зерно» убирает ступеньки на плавных переходах
     arr = np.asarray(img.crop((MARGIN, MARGIN, MARGIN + W, MARGIN + H)).convert('RGB'),
@@ -665,14 +665,6 @@ def scene_start(wallpaper, mica, shadow, t, appear=None):
            font=font('regular', 18), fill=C['text2'] + (255,))
     d.text((x, y + 84), 'Можно закрыть окно и вернуться к готовому компьютеру.',
            font=font('regular', 18), fill=C['text2'] + (255,))
-
-    # одна кнопка — ссылка на проект: установку окно начинает само, «продолжить» не нужно
-    by = WIN_H - PAD - 54
-    sw = tw('Проект на GitHub', 'medium', 17) + 52
-    sx = WIN_W - PAD - sw
-    content.alpha_composite(rrect((WIN_W, WIN_H), [sx, by, sx + sw, by + 54], 8,
-                                  fill=(255, 255, 255, 200), outline=(0, 0, 0, 26)))
-    d.text((sx + sw / 2, by + 27), 'Проект на GitHub', font=font('medium', 17), fill=C['text'] + (240,), anchor='mm')
 
     # Содержимое окна живёт по одной кривой с самим окном: пока окно проступает,
     # вместе с ним проявляются и карточки, и строка фактов. Иначе получались рамки
