@@ -36,3 +36,7 @@ extras/audit/tmp/
 .cache/
 .config/
 .local/
+
+# Python: кэш байткода от инструментов сборки макетов
+__pycache__/
+*.pyc
