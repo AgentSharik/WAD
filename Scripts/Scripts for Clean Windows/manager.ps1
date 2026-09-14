@@ -63,7 +63,7 @@ $ScriptsToRun = @(
 # --- 2. ФУНКЦИЯ ДИАЛОГА ВЫХОДА ---
 function Show-ExitDialog {
     $Script:Diag = New-Object System.Windows.Forms.Form
-    $Script:Diag.Size = New-Object System.Drawing.Size(500, 300)
+    $Script:Diag.Size = New-Object System.Drawing.Size(500, 356)
     $Script:Diag.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::None
     $Script:Diag.StartPosition = [System.Windows.Forms.FormStartPosition]::CenterScreen
     $Script:Diag.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 46)
@@ -78,7 +78,7 @@ function Show-ExitDialog {
     $Script:Diag.Add_MouseDown($DragAction)
 
     $Border = New-Object System.Windows.Forms.Panel
-    $Border.Size = New-Object System.Drawing.Size(496, 296)
+    $Border.Size = New-Object System.Drawing.Size(496, 352)
     $Border.Location = New-Object System.Drawing.Point(2, 2)
     $Border.BackColor = [System.Drawing.Color]::FromArgb(24, 24, 37)
     $Border.Add_MouseDown($DragAction)
@@ -115,9 +115,29 @@ function Show-ExitDialog {
     $BtnGit.Add_Click({ [System.Diagnostics.Process]::Start("https://github.com/AgentSharik/WAD/tree/main") })
     $Border.Controls.Add($BtnGit)
 
+    $BtnRestart = New-Object System.Windows.Forms.Button
+    $BtnRestart.Text = "ПЕРЕЗАГРУЗИТЬ — ЭКРАН WAD"
+    $BtnRestart.Location = New-Object System.Drawing.Point(30, 215)
+    $BtnRestart.Size = New-Object System.Drawing.Size(440, 40)
+    $BtnRestart.BackColor = [System.Drawing.Color]::FromArgb(137, 180, 250)
+    $BtnRestart.ForeColor = [System.Drawing.Color]::FromArgb(24, 24, 37)
+    $BtnRestart.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+    $BtnRestart.FlatAppearance.BorderSize = 0
+    $BtnRestart.Cursor = [System.Windows.Forms.Cursors]::Hand
+    $BtnRestart.Font = New-Object System.Drawing.Font("Segoe UI Semibold", 10, [System.Drawing.FontStyle]::Bold)
+    $BtnRestart.Add_Click({ 
+        $Global:AnimTimer.Stop()
+        $Form.Hide()
+        $Script:Diag.Close()
+        $Form.Close()
+        $Overlay = Join-Path $ScriptsDir "restart-overlay.ps1"
+        Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$Overlay`""
+    })
+    $Border.Controls.Add($BtnRestart)
+
     $BtnOk = New-Object System.Windows.Forms.Button
     $BtnOk.Text = "ВЫХОД"
-    $BtnOk.Location = New-Object System.Drawing.Point(30, 220)
+    $BtnOk.Location = New-Object System.Drawing.Point(30, 265)
     $BtnOk.Size = New-Object System.Drawing.Size(440, 40)
     $BtnOk.BackColor = [System.Drawing.Color]::FromArgb(49, 50, 68)
     $BtnOk.ForeColor = [System.Drawing.Color]::FromArgb(205, 214, 244)
