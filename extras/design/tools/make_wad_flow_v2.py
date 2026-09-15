@@ -131,11 +131,12 @@ def draw_popup(layer, t):
     pop.alpha_composite(rrect((pw, ph), [24, yb, 24 + bw1, yb + 40], 8, fill=C['accent'] + (255,)))
     pd.text((24 + bw1 / 2, yb + 20), 'Сохранить ярлык', font=font('semibold', 15),
             fill=(255, 255, 255, 255), anchor='mm')
-    pd.text((24 + bw1 + 18, yb + 20), 'Открыть в браузере', font=font('medium', 15),
-            fill=C['accent'] + (255,), anchor='lm')
     if pressed:
         pd.text((24, yb + 62), 'Ярлык сохранён на рабочий стол', font=font('regular', 14),
                 fill=C['ok'] + (255,))
+    else:
+        pd.text((24, yb + 62), 'Сохранит ярлык на рабочий стол', font=font('regular', 13.5),
+                fill=C['text3'] + (255,))
     pop.putalpha(pop.getchannel('A').point(lambda v: int(v * a)))
     layer.alpha_composite(pop, (px, py + int(10 * (1 - ain))))
 
@@ -290,14 +291,48 @@ def scene_report(wallpaper, mica, shadow, t):
         d.text((bx + 20, cy + 62), short, font=font('semibold', 16), fill=C['text'] + (255,))
         d.text((bx + 20, cy + 88), ('пропущено' if st == 'warn' else 'готово'), font=font('regular', 14), fill=col + (255,))
 
-    # детализация замечаний
+    # карточка замечания (компактная)
     ey = cy + 160
-    content.alpha_composite(rrect((RW, RH), [x, ey, RW - 40, ey + 92], 10,
-                                  fill=(255, 249, 240, 235), outline=C['warn'] + (120,)))
-    d.rectangle([x, ey + 12, x + 3, ey + 80], fill=C['warn'] + (255,))
+    content.alpha_composite(rrect((RW, RH), [x, ey, RW - 40, ey + 76], 10,
+                                  fill=(255, 249, 240, 235), outline=C['err'] + (110,)))
+    d.rectangle([x, ey + 12, x + 3, ey + 64], fill=C['err'] + (255,))
     d.text((x + 24, ey + 16), 'Установилось не всё: 2 программы', font=font('semibold', 16), fill=C['text'] + (255,))
-    d.text((x + 24, ey + 44), WARN_APPS, font=font('regular', 15), fill=C['warn'] + (255,))
-    d.text((x + 24, ey + 66), 'Подробности — в журнале установки в папке «Документы»', font=font('regular', 13.5), fill=C['text2'] + (255,))
+    d.text((x + 24, ey + 44), WARN_APPS, font=font('regular', 15), fill=C['err'] + (255,))
+
+    # раскрывающийся «Подробный отчёт»: логи по этапам, а не полотно текста
+    ey2 = ey + 100
+    open_k = ease_io(max(0.0, min(1.0, (t - (T_REPORT + 1.4)) / 0.6)))
+    d.text((x, ey2 + 8), 'Подробный отчёт', font=font('semibold', 16), fill=C['text'] + (255,))
+    hx = x + tw('Подробный отчёт', 'semibold', 16) + 14
+    if open_k > 0.5:
+        d.line([(hx - 5, ey2 + 5), (hx, ey2 + 11), (hx + 5, ey2 + 5)], fill=C['text2'] + (255,), width=2, joint='curve')
+    else:
+        d.line([(hx - 3, ey2 + 2), (hx + 3, ey2 + 8), (hx - 3, ey2 + 14)], fill=C['text2'] + (255,), width=2, joint='curve')
+    logs = [
+        ('12:30', 'Оптимизация и настройка ОС', 'готово', 'ok'),
+        ('19:39', 'Установка системных компонентов', 'готово', 'ok'),
+        ('02:48', 'Установка софта', 'пропущено', 'err'),
+        ('', 'ShareX — код 1603 · K-Lite — ссылка не отвечает', '', 'sub'),
+        ('09:57', 'Установка и активация Microsoft Office', 'готово', 'ok'),
+    ]
+    lh = 32
+    box_h = int(open_k * (len(logs) * lh + 22))
+    if box_h > 2:
+        by0 = ey2 + 28
+        content.alpha_composite(rrect((RW, RH), [x, by0, RW - 40, by0 + box_h], 10,
+                                      fill=(255, 255, 255, int(210 * open_k)), outline=(0, 0, 0, int(14 * open_k))))
+        for j, (tm, nm, st, kind) in enumerate(logs):
+            ly = by0 + 14 + j * lh
+            if ly > by0 + box_h - 10:
+                break
+            al = int(255 * open_k)
+            if kind == 'sub':
+                d.text((x + 96, ly), nm, font=font('regular', 13.5), fill=C['err'] + (int(235 * open_k),))
+                continue
+            d.text((x + 22, ly), f'[{tm}]', font=font('regular', 13.5), fill=C['text3'] + (al,))
+            d.text((x + 84, ly), nm, font=font('regular', 13.5), fill=C['text'] + (al,))
+            col = C['ok'] if kind == 'ok' else C['err']
+            d.text((RW - 62, ly), st, font=font('medium', 13.5), fill=col + (al,), anchor='ra')
 
     content.putalpha(content.getchannel('A').point(lambda v: int(v * a)))
     card.alpha_composite(content)

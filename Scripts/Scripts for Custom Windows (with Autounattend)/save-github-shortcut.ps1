@@ -2,7 +2,7 @@
 # save-github-shortcut.ps1 — модальное окно кнопки «Сайт разработчика».
 #
 # Кнопка «Сохранить ярлык» кладёт на рабочий стол интернет-ярлык, ведущий на
-# GitHub проекта. «Открыть в браузере» — просто открывает страницу.
+# GitHub проекта; подсказка поясняет, куда он сохранится.
 # Поведение на Windows здесь не проверяется (песочница Linux) — см. VM-PROTOCOL.
 # =============================================================================
 
@@ -56,23 +56,12 @@ $BtnSave.Add_Click({
     }
 })
 
-$BtnOpen = New-Object System.Windows.Forms.Button
-$BtnOpen.Text = 'Открыть в браузере'
-$BtnOpen.Location = New-Object System.Drawing.Point(210, 110)
-$BtnOpen.Size = New-Object System.Drawing.Size(170, 40)
-$BtnOpen.FlatStyle = 'Flat'
-$BtnOpen.FlatAppearance.BorderSize = 0
-$BtnOpen.BackColor = [System.Drawing.Color]::FromArgb(252, 253, 255)
-$BtnOpen.ForeColor = [System.Drawing.Color]::FromArgb(0, 103, 192)
-$BtnOpen.Font = New-Object System.Drawing.Font('Segoe UI Semibold', 10)
-$BtnOpen.Add_Click({ [System.Diagnostics.Process]::Start($Url) | Out-Null })
-
 $Status = New-Object System.Windows.Forms.Label
 $Status.Location = New-Object System.Drawing.Point(24, 165)
 $Status.Size = New-Object System.Drawing.Size(420, 30)
 $Status.Font = New-Object System.Drawing.Font('Segoe UI', 9.5)
 $Status.ForeColor = [System.Drawing.Color]::FromArgb(138, 146, 160)
-$Status.Text = 'Ярлык откроет GitHub проекта в один клик'
+$Status.Text = 'Сохранит ярлык на рабочий стол'
 
-$Form.Controls.AddRange(@($Title, $Sub, $BtnSave, $BtnOpen, $Status))
+$Form.Controls.AddRange(@($Title, $Sub, $BtnSave, $Status))
 [System.Windows.Forms.Application]::Run($Form)
