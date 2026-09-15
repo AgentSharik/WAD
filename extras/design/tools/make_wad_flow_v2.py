@@ -315,24 +315,26 @@ def scene_report(wallpaper, mica, shadow, t):
         ('', 'ShareX — код 1603 · K-Lite — ссылка не отвечает', '', 'sub'),
         ('09:57', 'Установка и активация Microsoft Office', 'готово', 'ok'),
     ]
-    lh = 32
-    box_h = int(open_k * (len(logs) * lh + 22))
+    lh = 46                      # просторные строки — читается даже на телефоне
+    box_h = int(open_k * (len(logs) * lh + 26))
     if box_h > 2:
         by0 = ey2 + 28
         content.alpha_composite(rrect((RW, RH), [x, by0, RW - 40, by0 + box_h], 10,
-                                      fill=(255, 255, 255, int(210 * open_k)), outline=(0, 0, 0, int(14 * open_k))))
+                                      fill=(255, 255, 255, int(220 * open_k)), outline=(0, 0, 0, int(16 * open_k))))
         for j, (tm, nm, st, kind) in enumerate(logs):
-            ly = by0 + 14 + j * lh
-            if ly > by0 + box_h - 10:
+            ly = by0 + 20 + j * lh
+            if ly > by0 + box_h - 12:
                 break
             al = int(255 * open_k)
+            if j:
+                d.line([(x + 22, ly - 14), (RW - 62, ly - 14)], fill=(0, 0, 0, int(10 * open_k)), width=1)
             if kind == 'sub':
-                d.text((x + 96, ly), nm, font=font('regular', 13.5), fill=C['err'] + (int(235 * open_k),))
+                d.text((x + 112, ly), nm, font=font('regular', 14.5), fill=C['err'] + (int(240 * open_k),))
                 continue
-            d.text((x + 22, ly), f'[{tm}]', font=font('regular', 13.5), fill=C['text3'] + (al,))
-            d.text((x + 84, ly), nm, font=font('regular', 13.5), fill=C['text'] + (al,))
+            d.text((x + 24, ly), tm, font=font('medium', 14), fill=C['text3'] + (al,))
+            d.text((x + 112, ly), nm, font=font('medium', 15.5), fill=C['text'] + (al,))
             col = C['ok'] if kind == 'ok' else C['err']
-            d.text((RW - 62, ly), st, font=font('medium', 13.5), fill=col + (al,), anchor='ra')
+            d.text((RW - 64, ly), st, font=font('semibold', 14.5), fill=col + (al,), anchor='ra')
 
     content.putalpha(content.getchannel('A').point(lambda v: int(v * a)))
     card.alpha_composite(content)
