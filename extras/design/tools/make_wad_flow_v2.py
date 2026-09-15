@@ -105,26 +105,39 @@ def draw_site_button(layer, d, t, pressed):
 
 
 def draw_popup(layer, t):
-    """Микро-попап у кнопки сайта: пара слов + ссылка, без простыней."""
+    """Модальное окно кнопки «Сайт разработчика»: текст + кнопка «Сохранить ярлык».
+
+    После нажатия показывает отметку: ярлык положен на рабочий стол.
+    """
     if not (POP_T0 <= t <= POP_T1):
         return
-    a = ease_out(min(1.0, (t - POP_T0) / 0.35)) * (1 - ease_io(max(0.0, min(1.0, (t - (POP_T1 - 0.4)) / 0.4))))
+    ain = ease_out(min(1.0, (t - POP_T0) / 0.3))
+    a = ain * (1 - ease_io(max(0.0, min(1.0, (t - (POP_T1 - 0.35)) / 0.35))))
     if a <= 0.01:
         return
-    pw, ph = 360, 132
-    px, py = WIN_W - PAD - 100 - pw + 60, 60
+    pressed = t > POP_T0 + 2.2
+    layer.alpha_composite(rgba((WIN_W, WIN_H), (0, 0, 0, int(90 * a))))
+    pw, ph = 470, 250
+    px, py = (WIN_W - pw) // 2, (WIN_H - ph) // 2 - 20
     pop = rgba((pw, ph))
     pd = ImageDraw.Draw(pop)
-    pop.alpha_composite(rrect((pw, ph), [0, 0, pw - 1, ph - 1], 12, fill=(255, 255, 255, 250),
-                              outline=(0, 0, 0, 30)))
-    pd.text((20, 24), 'Репозиторий проекта на GitHub', font=font('semibold', 17), fill=C['text'] + (255,))
-    pd.text((20, 50), 'Исходный код и обновления', font=font('regular', 14), fill=C['text3'] + (255,))
-    pop.alpha_composite(rrect((pw, ph), [20, ph - 52, 20 + tw('Открыть в браузере', 'semibold', 15) + 40, ph - 18], 8,
-                              fill=C['accent'] + (255,)), (0, 0))
-    pd.text((20 + 14, ph - 35), 'Открыть в браузере', font=font('semibold', 15),
-            fill=(255, 255, 255, 255), anchor='lm')
+    pop.alpha_composite(rrect((pw, ph), [0, 0, pw - 1, ph - 1], 14,
+                              fill=(255, 255, 255, 250), outline=(0, 0, 0, 40)))
+    pd.text((24, 28), 'Сайт разработчика', font=font('semibold', 20), fill=C['text'] + (255,))
+    pd.text((24, 62), 'Репозиторий проекта на GitHub', font=font('regular', 15), fill=C['text2'] + (255,))
+    pd.text((24, 86), 'Исходный код и обновления', font=font('regular', 13.5), fill=C['text3'] + (255,))
+    yb = ph - 96
+    bw1 = tw('Сохранить ярлык', 'semibold', 15) + 40
+    pop.alpha_composite(rrect((pw, ph), [24, yb, 24 + bw1, yb + 40], 8, fill=C['accent'] + (255,)))
+    pd.text((24 + bw1 / 2, yb + 20), 'Сохранить ярлык', font=font('semibold', 15),
+            fill=(255, 255, 255, 255), anchor='mm')
+    pd.text((24 + bw1 + 18, yb + 20), 'Открыть в браузере', font=font('medium', 15),
+            fill=C['accent'] + (255,), anchor='lm')
+    if pressed:
+        pd.text((24, yb + 62), 'Ярлык сохранён на рабочий стол', font=font('regular', 14),
+                fill=C['ok'] + (255,))
     pop.putalpha(pop.getchannel('A').point(lambda v: int(v * a)))
-    layer.alpha_composite(pop, (int(px), int(py + 8 * (1 - a))))
+    layer.alpha_composite(pop, (px, py + int(10 * (1 - ain))))
 
 
 # ---------------------------------------------------------------- главное окно
@@ -173,16 +186,17 @@ def scene_main(wallpaper, mica, shadow, t):
         elif st == 'ok':
             d.ellipse([ix - 11, iy - 11, ix + 11, iy + 11], fill=C['ok'] + (int(255 * e),))
             d.line([(ix - 5, iy), (ix - 1, iy + 5), (ix + 6, iy - 5)], fill=(255, 255, 255, int(255 * e)), width=2, joint='curve')
-        else:  # warn
-            d.ellipse([ix - 11, iy - 11, ix + 11, iy + 11], fill=C['warn'] + (int(255 * e),))
-            d.text((ix, iy + 1), '!', font=font('bold', 15), fill=(255, 255, 255, int(255 * e)), anchor='mm')
+        else:  # ошибка / пропуск — красный крест
+            d.ellipse([ix - 11, iy - 11, ix + 11, iy + 11], fill=C['err'] + (int(255 * e),))
+            d.line([(ix - 5, iy - 5), (ix + 5, iy + 5)], fill=(255, 255, 255, int(255 * e)), width=2)
+            d.line([(ix - 5, iy + 5), (ix + 5, iy - 5)], fill=(255, 255, 255, int(255 * e)), width=2)
         d.text((x + 66, yy + rh / 2 - 11), name, font=font('semibold', 18), fill=C['text'] + (int(255 * e),))
         if st == 'run':
             d.text((x + 66, yy + rh / 2 + 14), 'выполняется…', font=font('regular', 14), fill=C['text3'] + (int(235 * e),))
         elif st == 'ok':
             d.text((x + 66, yy + rh / 2 + 14), 'готово', font=font('regular', 14), fill=C['ok'] + (int(235 * e),))
         elif st == 'warn':
-            d.text((x + 66, yy + rh / 2 + 14), 'готово с замечаниями', font=font('regular', 14), fill=C['warn'] + (int(235 * e),))
+            d.text((x + 66, yy + rh / 2 + 14), 'пропущено / ошибка', font=font('regular', 14), fill=C['err'] + (int(235 * e),))
         else:
             d.text((x + 66, yy + rh / 2 + 14), 'ожидание', font=font('regular', 14), fill=C['text3'] + (int(200 * e),))
         # время справа
@@ -192,6 +206,7 @@ def scene_main(wallpaper, mica, shadow, t):
 
     # ---- двухрежимный нижний бар
     by = WIN_H - PAD - 46
+    barw = WIN_W - PAD - 190 - x
     cd0 = T_COUNTDOWN - T_START
     if tl >= cd0:
         k = min(1.0, (tl - cd0) / COUNTDOWN_LEN)
@@ -200,18 +215,12 @@ def scene_main(wallpaper, mica, shadow, t):
         d.text((x, by - 26), cap, font=font('semibold', 17), fill=C['text'] + (255,))
         d.text((WIN_W - PAD - 200, by - 26), 'можно ничего не нажимать', font=font('regular', 13.5),
                fill=C['text3'] + (220,), anchor='ra')
-        content.alpha_composite(rrect((WIN_W, WIN_H), [x, by, WIN_W - PAD - 190, by + 10], 5, fill=(0, 0, 0, 22)))
-        fw = (WIN_W - PAD - 190 - x) * k
-        if fw > 2:
-            content.alpha_composite(rrect((WIN_W, WIN_H), [x, by, x + fw, by + 10], 5, fill=C['accent'] + (255,)))
+        B.draw_flow_line(content, d, x, x + barw, by + 5, k, t)     # плывущий блик
     else:
         pr = overall(tl)
         d.text((x, by - 26), 'Установка…', font=font('semibold', 17), fill=C['text'] + (255,))
         d.text((WIN_W - PAD - 200, by - 30), f'{int(pr * 100)}%', font=font('bold', 30), fill=C['accent'] + (255,), anchor='ra')
-        content.alpha_composite(rrect((WIN_W, WIN_H), [x, by, WIN_W - PAD - 190, by + 10], 5, fill=(0, 0, 0, 22)))
-        fw = (WIN_W - PAD - 190 - x) * pr
-        if fw > 2:
-            content.alpha_composite(rrect((WIN_W, WIN_H), [x, by, x + fw, by + 10], 5, fill=C['accent'] + (255,)))
+        B.draw_flow_line(content, d, x, x + barw, by + 5, pr, t)     # плывущий блик
 
     # кнопка «Свернуть в фон»
     label = 'Свернуть в фон'
@@ -270,15 +279,16 @@ def scene_report(wallpaper, mica, shadow, t):
         bx = x + i * (cw + 20)
         content.alpha_composite(rrect((RW, RH), [bx, cy, bx + cw, cy + 130], 10,
                                       fill=(255, 255, 255, 200), outline=(0, 0, 0, 16)))
-        col = C['warn'] if st == 'warn' else C['ok']
+        col = C['err'] if st == 'warn' else C['ok']
         d.ellipse([bx + 20, cy + 20, bx + 44, cy + 44], fill=col + (255,))
         if st == 'ok':
             d.line([(bx + 26, cy + 32), (bx + 31, cy + 38), (bx + 39, cy + 26)], fill=(255, 255, 255, 255), width=2, joint='curve')
         else:
-            d.text((bx + 32, cy + 33), '!', font=font('bold', 15), fill=(255, 255, 255, 255), anchor='mm')
+            d.line([(bx + 27, cy + 27), (bx + 37, cy + 37)], fill=(255, 255, 255, 255), width=2)
+            d.line([(bx + 27, cy + 37), (bx + 37, cy + 27)], fill=(255, 255, 255, 255), width=2)
         short = ['Оптимизация ОС', 'Системные компоненты', 'Софт', 'Microsoft Office'][i]
         d.text((bx + 20, cy + 62), short, font=font('semibold', 16), fill=C['text'] + (255,))
-        d.text((bx + 20, cy + 88), ('замечания' if st == 'warn' else 'готово'), font=font('regular', 14), fill=col + (255,))
+        d.text((bx + 20, cy + 88), ('пропущено' if st == 'warn' else 'готово'), font=font('regular', 14), fill=col + (255,))
 
     # детализация замечаний
     ey = cy + 160
