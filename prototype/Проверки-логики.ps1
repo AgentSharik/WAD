@@ -131,6 +131,26 @@ $missing = @()
 foreach ($n in $need) { if (-not $src.Contains($n)) { $missing += $n } }
 Assert-That 'все экраны и надписи на месте' ($missing.Count -eq 0) ("нет: " + ($missing -join ', '))
 
+
+# --- 9. Кривые титров возвращают числа, а не строки (баг 5.1) -----------------
+$ra = @(Get-TitleAlpha 0.8 0.4 1.3 4.1 5.0)
+Assert-That 'фаза входа: пара чисел' ($ra.Count -eq 2 -and $ra[0] -is [double] -and $ra[1] -is [double]) ("типы: " + (($ra | ForEach-Object { $_.GetType().Name }) -join ','))
+$mid = @(Get-TitleAlpha 2.5 0.4 1.3 4.1 5.0)
+Assert-That 'фаза выдержки: альфа 1, сдвиг 0' ($mid[0] -eq 1.0 -and $mid[1] -eq 0.0)
+$outp = @(Get-TitleAlpha 4.5 0.4 1.3 4.1 5.0)
+Assert-That 'фаза выхода: альфа < 1 и уход вверх' ($outp[0] -lt 1.0 -and $outp[1] -lt 0.0)
+Assert-That 'ease_io на краях: 0 и 1' ((ease_io -1) -eq 0.0 -and (ease_io 2) -eq 1.0)
+
+# --- 10. [math]::Min/Max — всегда ровно два аргумента (по дереву разбора) ----
+$tok2 = $null; $err2 = $null
+$astP = [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $PSScriptRoot 'WAD-Prototype.ps1'), [ref]$tok2, [ref]$err2)
+$badMath = @($astP.FindAll({ param($n) $n -is [System.Management.Automation.Language.InvokeMemberExpressionAst] }, $true) | Where-Object {
+        $isMath = $_.Expression -is [System.Management.Automation.Language.TypeExpressionAst] -and $_.Expression.TypeName.Name -match 'math'
+        $isMM = $_.Member.Value -in @('Min', 'Max')
+        $isMath -and $isMM -and (@($_.Arguments).Count -ne 2)
+    })
+Assert-That '[math]::Min/Max только с 2 аргументами' ($badMath.Count -eq 0) ("найдено: " + @($badMath | ForEach-Object { $_.Extent.StartLineNumber }) -join ', ')
+
 # --- 8. Кодировка: без BOM Windows PowerShell 5.1 прочитает кириллицу как ANSI ---
 foreach ($f in @('WAD-Prototype.ps1', 'Проверки-логики.ps1')) {
     $fp = Join-Path $PSScriptRoot $f

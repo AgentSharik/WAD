@@ -59,7 +59,7 @@ $CFG = [pscustomobject]@{
     DesktopPause = 2.5      # сколько показывать настоящий рабочий стол
     PostHold     = 2.8      # титр после входа стоит (в ролике 2.1)
 
-    TickMs       = 50       # шаг анимации
+    TickMs       = 33       # шаг анимации (~30 к/с)
     WinW         = 1100
     WinH         = 760
 }
@@ -326,6 +326,33 @@ function Save-WadShortcut {
     return $result
 }
 
+function ease_io([double]$x) {
+    if ($x -lt 0) { $x = 0.0 }
+    if ($x -gt 1) { $x = 1.0 }
+    return [double](3 * $x * $x - 2 * $x * $x * $x)
+}
+function ease_out([double]$x) {
+    if ($x -lt 0) { $x = 0.0 }
+    if ($x -gt 1) { $x = 1.0 }
+    $q = [double](1 - $x)
+    return [double](1 - $q * $q * $q)
+}
+function Get-TitleAlpha {
+    # прозрачность и вертикальный «доезд» строки: вошла снизу, постояла, ушла выше
+    param([double]$t, [double]$t0, [double]$t1, [double]$t2, [double]$t3)
+    [double]$k = 0.0
+    if ($t -le $t0 -or $t -ge $t3) { return @([double]0.0, [double]0.0) }
+    if ($t -lt $t1) {
+        $k = [double](($t - $t0) / ($t1 - $t0))
+        $k = [double](3 * $k * $k - 2 * $k * $k * $k)
+        return @([double]$k, [double]((1 - $k) * 34))
+    }
+    if ($t -le $t2) { return @([double]1.0, [double]0.0) }
+    $k = [double](($t - $t2) / ($t3 - $t2))
+    $k = [double](3 * $k * $k - 2 * $k * $k * $k)
+    return @([double](1 - $k), [double](-1 * $k * 24))
+}
+
 # Точка в начале = подгрузили только функции (проверки, тесты) — окна не показываем.
 if ($MyInvocation.InvocationName -eq '.') { return }
 # =============================================================================
@@ -464,16 +491,6 @@ function Draw-StatusIcon {
     }
 }
 
-function ease_io($x) { $x = [math]::Max(0.0, [math]::Min(1.0, $x)); return 3 * $x * $x - 2 * $x * $x * $x }
-function ease_out($x) { $x = [math]::Max(0.0, [math]::Min(1.0, $x)); return 1 - (1 - $x) * (1 - $x) * (1 - $x) }
-function Get-TitleAlpha {
-    # прозрачность и вертикальный «доезд» строки: вошла снизу, постояла, ушла выше
-    param([double]$t, [double]$t0, [double]$t1, [double]$t2, [double]$t3)
-    if ($t -le $t0 -or $t -ge $t3) { return @(0.0, 0.0) }
-    if ($t -lt $t1) { $k = ease_io (($t - $t0) / ($t1 - $t0)); return @($k, (1 - $k) * 34) }
-    if ($t -le $t2) { return @(1.0, 0.0) }
-    $k = ease_io (($t - $t2) / ($t3 - $t2)); return @(1 - $k, -$k * 24)
-}
 function ColA($col, [double]$a) {
     [System.Drawing.Color]::FromArgb([int][math]::Max(0, [math]::Min(255, 255 * $a)), $col)
 }
@@ -564,8 +581,8 @@ function Show-WadTitles {
 
         for ($k = 0; $k -lt $Lines.Count; $k++) {
             $t0 = $starts[$k]
-            $ar = Get-TitleAlpha $t $t0 ($t0 + $fade) ($t0 + $fade + $Hold) ($t0 + $seg)
-            $a = $ar[0]; $rise = $ar[1]
+            $ar = @(Get-TitleAlpha $t $t0 ($t0 + $fade) ($t0 + $fade + $Hold) ($t0 + $seg))
+            $a = [double]$ar[0]; $rise = [double]$ar[1]
             if ($a -le 0.01) { continue }
 
             $isGo = ($Lines[$k] -eq 'Приступаем')
@@ -735,7 +752,7 @@ function Draw-MainWindow {
 }
 
 function Show-WadMainWindow {
-    $k = [math]::Min(($Screen.Width - 24) / $script:DW, ($Screen.Height - 24) / $script:DH, 1.0)
+    $k = [math]::Min([math]::Min(($Screen.Width - 24) / $script:DW, ($Screen.Height - 24) / $script:DH), 1.0)
     if ($k -le 0.2) { $k = 0.2 }
     $script:K = $k
     $cw = [int]($script:DW * $k); $ch = [int]($script:DH * $k)
