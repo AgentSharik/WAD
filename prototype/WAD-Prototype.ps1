@@ -328,12 +328,14 @@ function Save-WadShortcut {
 
 # Точка в начале = подгрузили только функции (проверки, тесты) — окна не показываем.
 if ($MyInvocation.InvocationName -eq '.') { return }
-
 # =============================================================================
-#  Дальше — только Windows/WinForms: окна и анимация
+#  Дальше — только Windows/WinForms. Все окна рисуются попиксельно (GDI+),
+#  геометрия 1:1 с роликом (окно 1180x720, скругление 10, отступы 56) и
+#  автоматически масштабируется под экран — DPI и автомасштаб WinForms
+#  не могут сломать раскладку, потому что дочерних контролов с вёрсткой нет.
 # =============================================================================
 if (-not $IsWindows -and $PSVersionTable.PSEdition -eq 'Core') {
-    Write-Warning 'Прототип показывает окна и работает только в Windows. Запустите WAD-Запуск.bat на Windows-машине.'
+    Write-Warning 'Прототип показывает окна и работает только в Windows. Запустите WAD-Zapusk.bat на Windows-машине.'
     return
 }
 
@@ -345,7 +347,14 @@ try {
     [WadDpi]::SetProcessDPIAware() | Out-Null
 } catch { Write-Verbose 'DPI-режим не выставлен — не критично' }
 
-# --- палитра как в ролике -----------------------------------------------------
+# --- дизайн-пространство ролика ------------------------------------------------
+$script:DW = 1180; $script:DH = 720        # как в ролике
+$script:K  = 1.0; $script:OX = 0; $script:OY = 0
+$script:Hits = @()                          # кликабельные зоны текущего окна
+$script:WadExit = $false
+$script:WadUserChoice = $null
+$script:WadTray = $null
+
 $C = @{
     Text   = [System.Drawing.Color]::FromArgb(26, 28, 32)
     Text2  = [System.Drawing.Color]::FromArgb(96, 104, 116)
@@ -354,15 +363,105 @@ $C = @{
     Accent2= [System.Drawing.Color]::FromArgb(116, 92, 231)
     Ok     = [System.Drawing.Color]::FromArgb(16, 124, 65)
     Err    = [System.Drawing.Color]::FromArgb(196, 43, 28)
+    Warn   = [System.Drawing.Color]::FromArgb(157, 93, 0)
     Line   = [System.Drawing.Color]::FromArgb(216, 220, 228)
     Card   = [System.Drawing.Color]::FromArgb(252, 253, 255)
-    Warn   = [System.Drawing.Color]::FromArgb(157, 93, 0)
+    Track  = [System.Drawing.Color]::FromArgb(230, 233, 239)
+    White  = [System.Drawing.Color]::White
 }
 
 $Screen = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
 
+function SX($v) { [int]($script:OX + $v * $script:K) }
+function SY($v) { [int]($script:OY + $v * $script:K) }
+function SS($v) { [math]::Max(1, [int]($v * $script:K)) }
+
+function New-WadFont([single]$size, [string]$style) {
+    New-Object System.Drawing.Font('Segoe UI', [single]($size * $script:K), [System.Drawing.FontStyle]::Parse($style))
+}
+
+function Draw-RR {
+    param($g, $x, $y, $w, $h, $r, $fill, $outline, [single]$ow = 1)
+    $p = New-Object System.Drawing.Drawing2D.GraphicsPath
+    $p.AddArc($x, $y, $r * 2, $r * 2, 180, 90)
+    $p.AddArc($x + $w - $r * 2, $y, $r * 2, $r * 2, 270, 90)
+    $p.AddArc($x + $w - $r * 2, $y + $h - $r * 2, $r * 2, $r * 2, 0, 90)
+    $p.AddArc($x, $y + $h - $r * 2, $r * 2, $r * 2, 90, 90)
+    $p.CloseFigure()
+    if ($fill)    { $b = New-Object System.Drawing.SolidBrush($fill); $g.FillPath($b, $p); $b.Dispose() }
+    if ($outline) { $pen = New-Object System.Drawing.Pen($outline, $ow); $g.DrawPath($pen, $p); $pen.Dispose() }
+    $p.Dispose()
+}
+
+function Draw-Text {
+    param($g, $text, $x, $y, $w, $h, [single]$size, [string]$style, $color, [string]$halign = 'left', [string]$valign = 'top')
+    $f = New-WadFont $size $style
+    $b = New-Object System.Drawing.SolidBrush($color)
+    $sf = New-Object System.Drawing.StringFormat
+    $sf.Alignment = switch ($halign) { 'center' { 'Center' } 'right' { 'Far' } default { 'Near' } }
+    $sf.LineAlignment = switch ($valign) { 'center' { 'Center' } default { 'Near' } }
+    $rect = [System.Drawing.RectangleF]::new([single]$x, [single]$y, [single]$w, [single]$h)
+    $g.DrawString($text, $f, $b, $rect, $sf)
+    $f.Dispose(); $b.Dispose(); $sf.Dispose()
+}
+
+function Measure-W($g, $text, [single]$size, [string]$style) {
+    $f = New-WadFont $size $style
+    $w = $g.MeasureString($text, $f).Width
+    $f.Dispose()
+    return $w
+}
+
+function Add-Hit($id, $x, $y, $w, $h) {
+    $script:Hits += [pscustomobject]@{ Id = $id; Rect = [System.Drawing.Rectangle]::new([int]$x, [int]$y, [int]$w, [int]$h) }
+}
+
+function Get-Hit($pt) {
+    for ($i = $script:Hits.Count - 1; $i -ge 0; $i--) {
+        if ($script:Hits[$i].Rect.Contains($pt)) { return $script:Hits[$i].Id }
+    }
+    return $null
+}
+
+function Draw-StatusIcon {
+    param($g, $cx, $cy, [string]$kind, [int]$spin)
+    $r = $(SS (11))
+    switch ($kind) {
+        'wait' {
+            $pen = New-Object System.Drawing.Pen([System.Drawing.Color]::FromArgb(120, 138, 146, 160), [single]($(SS (2))))
+            $g.DrawEllipse($pen, $cx - $r, $cy - $r, $r * 2, $r * 2); $pen.Dispose()
+        }
+        'run' {
+            for ($j = 0; $j -lt 8; $j++) {
+                $ang = ($spin * 0.35) + $j * ([math]::PI / 4)
+                $al = [int](50 + 200 * ($j / 8))
+                $pen = New-Object System.Drawing.Pen([System.Drawing.Color]::FromArgb($al, $C.Accent), [single]($(SS (2))))
+                $x1 = $cx + ($(SS (6))) * [math]::Cos($ang); $y1 = $cy + ($(SS (6))) * [math]::Sin($ang)
+                $x2 = $cx + ($(SS (11))) * [math]::Cos($ang); $y2 = $cy + ($(SS (11))) * [math]::Sin($ang)
+                $g.DrawLine($pen, [single]$x1, [single]$y1, [single]$x2, [single]$y2)
+                $pen.Dispose()
+            }
+        }
+        'ok' {
+            $b = New-Object System.Drawing.SolidBrush($C.Ok); $g.FillEllipse($b, $cx - $r, $cy - $r, $r * 2, $r * 2); $b.Dispose()
+            $pen = New-Object System.Drawing.Pen($C.White, [single]($(SS (2))))
+            $g.DrawLines($pen, @(
+                [System.Drawing.Point]::new($cx - $(SS (5)), $cy),
+                [System.Drawing.Point]::new($cx - $(SS (1)), $cy + $(SS (4))),
+                [System.Drawing.Point]::new($cx + $(SS (6)), $cy - $(SS (5)))))
+            $pen.Dispose()
+        }
+        'warn' {
+            $b = New-Object System.Drawing.SolidBrush($C.Err); $g.FillEllipse($b, $cx - $r, $cy - $r, $r * 2, $r * 2); $b.Dispose()
+            $pen = New-Object System.Drawing.Pen($C.White, [single]($(SS (2))))
+            $g.DrawLine($pen, $cx - $(SS (4)), $cy - $(SS (4)), $cx + $(SS (4)), $cy + $(SS (4)))
+            $g.DrawLine($pen, $cx + $(SS (4)), $cy - $(SS (4)), $cx - $(SS (4)), $cy + $(SS (4)))
+            $pen.Dispose()
+        }
+    }
+}
+
 function Get-WadWallpaper {
-    <# Берёт обои из репозитория (не копируем файл — не раздуваем git); нет — градиент. #>
     $cands = @(
         (Join-Path $PSScriptRoot 'wallpaper-win11.png'),
         (Join-Path $PSScriptRoot '..\..\extras\design\demo\wallpaper-win11.png'),
@@ -378,122 +477,84 @@ function Get-WadWallpaper {
     return $null
 }
 
-function Set-WadDoubleBuffer($form) {
-    try {
-        $p = $form.GetType().GetProperty('DoubleBuffered', [System.Reflection.BindingFlags]'Instance,NonPublic')
-        if ($p) { $p.SetValue($form, $true, $null) }
-    } catch { Write-Verbose 'DoubleBuffered недоступен — не критично' }
-}
-
-function Add-WadRoundRegion($ctrl, [int]$r) {
-    $p = New-Object System.Drawing.Drawing2D.GraphicsPath
-    $w = $ctrl.Width; $h = $ctrl.Height
-    if ($w -lt $r * 2) { $w = $r * 2 }
-    if ($h -lt $r * 2) { $h = $r * 2 }
-    $p.AddArc(0, 0, $r * 2, $r * 2, 180, 90)
-    $p.AddArc($w - $r * 2, 0, $r * 2, $r * 2, 270, 90)
-    $p.AddArc($w - $r * 2, $h - $r * 2, $r * 2, $r * 2, 0, 90)
-    $p.AddArc(0, $h - $r * 2, $r * 2, $r * 2, 90, 90)
-    $p.CloseFigure()
-    $ctrl.Region = New-Object System.Drawing.Region($p)
-}
-
-function New-WadLabel {
-    param($Text, [int]$X, [int]$Y, [int]$Size = 12, [string]$Style = 'Regular', $Color, [bool]$Auto = $true)
-    $l = New-Object System.Windows.Forms.Label
-    $l.Text = $Text
-    $l.Location = New-Object System.Drawing.Point($X, $Y)
-    $l.AutoSize = $Auto
-    $l.BackColor = [System.Drawing.Color]::Transparent
-    $l.Font = New-Object System.Drawing.Font('Segoe UI', $Size, [System.Drawing.FontStyle]::Parse($Style))
-    if ($Color) { $l.ForeColor = $Color } else { $l.ForeColor = $C.Text }
-    return $l
-}
-
-function New-WadFullscreen {
-    <# Фуллскрин-основа: без рамки, поверх всех окон. #>
-    param([bool]$TopMost = $true)
+function New-WadForm {
+    param([bool]$Fullscreen = $false, [int]$W = 0, [int]$H = 0)
     $f = New-Object System.Windows.Forms.Form
     $f.FormBorderStyle = 'None'
-    $f.StartPosition = 'Manual'
-    $f.Bounds = $Screen
-    $f.TopMost = $TopMost
     $f.ShowInTaskbar = $false
+    $f.TopMost = $true
     $f.KeyPreview = $true
-    $f.BackColor = [System.Drawing.Color]::FromArgb(240, 245, 252)
-    Set-WadDoubleBuffer $f
-    $wall = Get-WadWallpaper
-    if ($wall) { $f.BackgroundImage = $wall; $f.BackgroundImageLayout = 'Stretch' }
+    $f.BackColor = $C.Card
+    if ($Fullscreen) {
+        $f.StartPosition = 'Manual'
+        $f.Bounds = $Screen
+    } else {
+        $f.StartPosition = 'CenterScreen'
+        $f.ClientSize = New-Object System.Drawing.Size($W, $H)
+    }
+    $p = $f.GetType().GetProperty('DoubleBuffered', [System.Reflection.BindingFlags]'Instance,NonPublic')
+    if ($p) { $p.SetValue($f, $true, $null) }
     $f.Add_KeyDown({ if ($_.KeyCode -eq 'Escape') { $script:WadExit = $true; $f.Close() } })
     return $f
 }
 
 function Show-WadTitles {
-    <# Титры на фуллскрине: проявление → пауза → растворение. Возвращает $true, если досмотрели. #>
-    param([Parameter(Mandatory)][string[]]$Lines, [double]$Hold, [bool]$Dark = $false)
+    param([Parameter(Mandatory)][string[]]$Lines, [double]$Hold, [bool]$OverWallpaper = $false)
 
-    $form = New-WadFullscreen -TopMost $true
-    $ink = if ($Dark) { [System.Drawing.Color]::White } else { $C.Text }
-    $lbl = New-Object System.Windows.Forms.Label
-    $lbl.AutoSize = $true
-    $lbl.TextAlign = 'MiddleCenter'
-    $lbl.Font = New-Object System.Drawing.Font('Segoe UI Semibold', $CFG.IntroSize, [System.Drawing.FontStyle]::Bold)
-    $lbl.ForeColor = [System.Drawing.Color]::FromArgb(0, $ink)
-    $form.Controls.Add($lbl)
+    $form = New-WadForm -Fullscreen $true
+    $wall = $null
+    if ($OverWallpaper) { $wall = Get-WadWallpaper }
+    if ($wall) { $form.BackgroundImage = $wall; $form.BackgroundImageLayout = 'Stretch' }
+    else { $form.BackColor = [System.Drawing.Color]::FromArgb(240, 245, 252) }
 
-    $st = @{ i = 0; done = $false; aborted = $false }
+    $script:K = [math]::Min($Screen.Width / 1920.0, $Screen.Height / 1080.0)
+    if ($script:K -le 0) { $script:K = 1 }
+
+    $st = @{ done = $false }
+    $sw = [System.Diagnostics.Stopwatch]::StartNew()
+    $fade = $CFG.IntroFade
+    $seg = $fade * 2 + $Hold
+    $total = $Lines.Count * $seg + ($Lines.Count - 1) * $CFG.IntroGap
+
     $timer = New-Object System.Windows.Forms.Timer
     $timer.Interval = $CFG.TickMs
+    $timer.Add_Tick({ $form.Invalidate(); if ($sw.Elapsed.TotalSeconds -gt $total) { $timer.Stop(); $st.done = $true; $form.Close() } })
 
-    $fade = $CFG.IntroFade
-    $total = $Lines.Count * ($fade * 2 + $Hold) + ($Lines.Count - 1) * $CFG.IntroGap
-    $sw = [System.Diagnostics.Stopwatch]::StartNew()
-
-    $timer.Add_Tick({
+    $form.Add_Paint({
+        $g = $_.Graphics
+        $g.SmoothingMode = 'AntiAlias'; $g.TextRenderingHint = 'AntiAliasGridFit'
         $t = $sw.Elapsed.TotalSeconds
-        $seg = $fade * 2 + $Hold
         $k = [math]::Floor($t / ($seg + $CFG.IntroGap))
+        if ($k -ge $Lines.Count) { return }
         $lt = $t - $k * ($seg + $CFG.IntroGap)
-
-        if ($k -ge $Lines.Count -or $t -gt $total) {
-            $timer.Stop(); $sw.Stop(); $st.done = $true; $form.Close(); return
-        }
-        if ($k -ne $st.i -or $lbl.Text -ne $Lines[$k]) {
-            $st.i = $k
-            $lbl.Text = $Lines[$k]
-            $lbl.Location = New-Object System.Drawing.Point(
-                [int](($form.Width - $lbl.Width) / 2), [int]($form.Height / 2 - $lbl.Height / 2))
-        }
         $a = 0.0
-        if     ($lt -lt $fade)              { $a = $lt / $fade }
-        elseif ($lt -lt $fade + $Hold)      { $a = 1.0 }
-        else                                { $a = 1.0 - (($lt - $fade - $Hold) / $fade) }
+        if     ($lt -lt $fade)         { $a = $lt / $fade }
+        elseif ($lt -lt $fade + $Hold) { $a = 1.0 }
+        else                           { $a = 1.0 - (($lt - $fade - $Hold) / $fade) }
         $a = [math]::Max(0.0, [math]::Min(1.0, $a))
-        $lbl.ForeColor = [System.Drawing.Color]::FromArgb([int](255 * $a), $ink)
+        $ink = [System.Drawing.Color]::FromArgb([int](255 * $a), $C.Text)
+        $f = New-WadFont 54 'Bold'
+        $sz = $g.MeasureString($Lines[$k], $f)
+        $w = [int]$sz.Width + 20; $h = [int]$sz.Height + 10
+        $x = [int](($form.Width - $w) / 2); $y = [int](($form.Height - $h) / 2)
+        Draw-Text $g $Lines[$k] $x $y $w $h 54 'Bold' $ink 'center' 'center'
     })
 
-    $form.Add_FormClosed({ $st.aborted = $script:WadExit -eq $true })
     $timer.Start()
     [System.Windows.Forms.Application]::Run($form)
-    $timer.Dispose()
-    $form.Dispose()
-    return (-not $st.aborted)
+    $timer.Dispose(); $form.Dispose()
+    return (-not $script:WadExit)
 }
 
-function Show-WadRebootScreen {
-    <# Чёрный экран «Перезагрузка…» — имитация ухода системы в рестарт. #>
-    param([double]$Seconds)
-    $form = New-Object System.Windows.Forms.Form
-    $form.FormBorderStyle = 'None'
-    $form.StartPosition = 'Manual'
-    $form.Bounds = $Screen
-    $form.TopMost = $true
-    $form.ShowInTaskbar = $false
+function Show-WadRebootScreen([double]$Seconds) {
+    $form = New-WadForm -Fullscreen $true
     $form.BackColor = [System.Drawing.Color]::Black
-    $lbl = New-WadLabel 'Перезагрузка…' ([int]($Screen.Width / 2 - 140)) ([int]($Screen.Height / 2 - 20)) 20 'Regular' ([System.Drawing.Color]::White)
-    $form.Controls.Add($lbl)
-    $hint = New-WadLabel 'это имитация — компьютер не перезагружается' ([int]($Screen.Width / 2 - 200)) ([int]($Screen.Height / 2 + 30)) 11 'Regular' ([System.Drawing.Color]::FromArgb(140, 140, 150))
-    $form.Controls.Add($hint)
+    $form.Add_Paint({
+        $g = $_.Graphics
+        $g.TextRenderingHint = 'AntiAliasGridFit'
+        Draw-Text $g 'Перезагрузка…' 0 ([int]($form.Height / 2 - 40)) $form.Width 60 22 'Regular' $C.White 'center' 'center'
+        Draw-Text $g 'это имитация — компьютер не перезагружается' 0 ([int]($form.Height / 2 + 30)) $form.Width 30 11 'Regular' ([System.Drawing.Color]::FromArgb(140, 140, 150)) 'center' 'center'
+    })
     $t = New-Object System.Windows.Forms.Timer
     $t.Interval = [int]($Seconds * 1000)
     $t.Add_Tick({ $t.Stop(); $form.Close() })
@@ -502,260 +563,150 @@ function Show-WadRebootScreen {
     $t.Dispose(); $form.Dispose()
 }
 
-# =============================================================================
-#  Главное окно установки
-# =============================================================================
-function Show-WadMainWindow {
-    <# Окно установки: 4 категории, нижний бар, кнопка сайта. Возвращает $true, если дошло до «перезагрузки». #>
+function Draw-MainWindow {
+    param($g, $S)
+    $script:Hits = @()
+    $g.SmoothingMode = 'AntiAlias'; $g.TextRenderingHint = 'AntiAliasGridFit'
+    $DW = $script:DW; $DH = $script:DH
+    $PAD = 56
 
-    $form = New-Object System.Windows.Forms.Form
-    $form.FormBorderStyle = 'None'
-    $form.StartPosition = 'CenterScreen'
-    $form.Size = New-Object System.Drawing.Size($CFG.WinW, $CFG.WinH)
-    $form.BackColor = $C.Card
-    $form.KeyPreview = $true
-    $form.TopMost = $true
-    Set-WadDoubleBuffer $form
-    $form.Add_Resize({ Add-WadRoundRegion $form 14 })
-    $form.Add_Shown({ Add-WadRoundRegion $form 14 })
+    Draw-RR $g 0 0 $DW $DH 10 $C.Card $null
+    Draw-RR $g 0.5 0.5 ($DW - 1) ($DH - 1) 10 $null ([System.Drawing.Color]::FromArgb(40, 0, 0, 0)) 1
+
+    # шапка: знак WAD + раздел
+    $ix = $PAD; $iy = 14; $isz = 26
+    $rect = [System.Drawing.Rectangle]::new($(SX $ix), $(SY $iy), $(SS $isz), $(SS $isz))
+    $gb = New-Object System.Drawing.Drawing2D.LinearGradientBrush($rect, $C.Accent, $C.Accent2, 45.0)
+    $pp = New-Object System.Drawing.Drawing2D.GraphicsPath
+    $rr = $(SS 7)
+    $pp.AddArc($rect.X, $rect.Y, $rr * 2, $rr * 2, 180, 90)
+    $pp.AddArc($rect.Right - $rr * 2, $rect.Y, $rr * 2, $rr * 2, 270, 90)
+    $pp.AddArc($rect.Right - $rr * 2, $rect.Bottom - $rr * 2, $rr * 2, $rr * 2, 0, 90)
+    $pp.AddArc($rect.X, $rect.Bottom - $rr * 2, $rr * 2, $rr * 2, 90, 90)
+    $pp.CloseFigure()
+    $g.FillPath($gb, $pp)
+    $gb.Dispose(); $pp.Dispose()
+    Draw-Text $g 'W' $ix $iy $isz $isz 14 'Bold' $C.White 'center' 'center'
+    Draw-Text $g 'WAD' ($ix + $isz + 12) ($iy + 2) 60 24 16 'Bold' $C.Text 'left' 'center'
+    Draw-Text $g '· установка Windows' ($ix + $isz + 12 + 44) ($iy + 3) 220 24 13 'Regular' $C.Text3 'left' 'center'
+
+    # управление: свернуть и закрыть (справа), сайт разработчика
+    $cx = $DW - $PAD
+    Add-Hit 'close' ($(SX ($cx - 30))) ($(SY (8))) ($(SS (30))) ($(SS (34)))
+    Add-Hit 'min'   ($(SX ($cx - 68))) ($(SY (8))) ($(SS (30))) ($(SS (34)))
+    Draw-Text $g '✕' ($cx - 30) 8 30 34 13 'Regular' $C.Text2 'center' 'center'
+    Draw-Text $g '—' ($cx - 68) 8 30 34 13 'Regular' $C.Text2 'center' 'center'
+
+    $sbw = (Measure-W $g 'Сайт разработчика' 13 'Bold') + 46
+    $sbx = $cx - 100 - $sbw
+    Draw-RR $g $sbx 10 $sbw 32 16 ([System.Drawing.Color]::FromArgb(26, 0, 103, 192)) ([System.Drawing.Color]::FromArgb(90, 0, 103, 192)) 1
+    $gx = $sbx + 17
+    $gb2 = New-Object System.Drawing.SolidBrush($C.Accent)
+    $g.FillEllipse($gb2, $(SX $gx) - $(SS 6), $(SY 26) - $(SS 6), $(SS 12), $(SS 12)); $gb2.Dispose()
+    Draw-Text $g 'Сайт разработчика' ($sbx + 32) 10 $sbw 32 13 'Bold' $C.Accent 'left' 'center'
+    Add-Hit 'site' ($(SX ($sbx))) ($(SY (10))) ($(SS ($sbw))) ($(SS (32)))
+
+    # заголовок и бейдж
+    Draw-Text $g 'Менеджер автоматической настройки' $PAD 62 ($DW - 2 * $PAD) 40 24 'Bold' $C.Text
+    Draw-Text $g $CFG.Badge $PAD 104 ($DW - 2 * $PAD) 22 11 'Bold' $C.Warn
+
+    # 4 категории
+    $ry = 148; $rh = 74
+    $states = Get-WadRowStatus -Elapsed $S.Elapsed -Total $CFG.InstallSec
+    for ($i = 0; $i -lt $states.Count; $i++) {
+        $s = $states[$i]
+        $yy = $ry + $i * ($rh + 12)
+        Draw-RR $g $PAD $yy ($DW - 2 * $PAD) $rh 10 ([System.Drawing.Color]::FromArgb(150, 255, 255, 255)) ([System.Drawing.Color]::FromArgb(16, 0, 0, 0)) 1
+        $icx = $PAD + 34; $icy = $yy + $rh / 2
+        Draw-StatusIcon $g ($(SX ($icx))) ($(SY ($icy))) $s.State $S.Spin
+        Draw-Text $g $WadRows[$i].Name ($PAD + 66) ($yy + 14) ($DW - 2 * $PAD - 160) 26 15 'Bold' $C.Text
+        $subc = switch ($s.State) { 'ok' { $C.Ok } 'warn' { $C.Err } 'run' { $C.Text3 } default { $C.Text3 } }
+        $subt = switch ($s.State) { 'ok' { 'готово' } 'warn' { 'пропущено / ошибка' } 'run' { 'выполняется…' } default { 'ожидание' } }
+        Draw-Text $g $subt ($PAD + 66) ($yy + 42) ($DW - 2 * $PAD - 160) 20 12 'Regular' $subc
+        if ($s.State -in @('ok', 'warn')) {
+            $dur = $s.End - $s.Start
+            $tm = if ($s.State -eq 'warn') { '—' } else { '[{0:00}:{1:00}]' -f [math]::Floor($dur / 60), [math]::Floor($dur % 60) }
+            Draw-Text $g $tm ($DW - $PAD - 90) ($yy + $rh / 2 - 10) 90 20 12 'Regular' $C.Text3 'right' 'center'
+        }
+    }
+
+    # нижний бар
+    $by = $DH - $PAD - 46
+    $barw = $DW - $PAD - 190 - $PAD
+    if ($S.Phase -eq 'countdown') {
+        $left = $S.CountLeft
+        $cap = if ($left -gt 0) { 'Перезагрузка через {0} сек' -f $left } else { 'Перезагрузка…' }
+        Draw-Text $g $cap $PAD ($by - 34) 400 26 15 'Bold' $C.Text
+        Draw-Text $g 'можно ничего не нажимать' ($DW - $PAD - 200) ($by - 30) 190 22 11.5 'Regular' $C.Text3 'right' 'center'
+        $k = 1.0 - ($S.CountLeft / $CFG.CountdownSec)
+    } else {
+        Draw-Text $g 'Установка…' $PAD ($by - 34) 300 26 15 'Bold' $C.Text
+        Draw-Text $g ('{0}%' -f [int]($S.Progress * 100)) ($DW - $PAD - 200) ($by - 46) 190 40 26 'Bold' $C.Accent 'right' 'center'
+        $k = $S.Progress
+    }
+    Draw-RR $g $PAD $by $barw 8 4 $C.Track $null
+    $fill = [math]::Max($(SS (6)), [int]($barw * $k))
+    if ($fill -gt 2) {
+        $gb = New-Object System.Drawing.Drawing2D.LinearGradientBrush(
+            [System.Drawing.Rectangle]::new($(SX ($PAD)), $(SY ($by)), [int]($fill * $script:K), $(SS (8))), $C.Accent, $C.Accent2, 0.0)
+        Draw-RR $g $PAD $by ($fill / $script:K) 8 4 $null $null
+        $g.FillRectangle($gb, $(SX ($PAD)), $(SY ($by)), [int]($fill * $script:K), $(SS (8))); $gb.Dispose()
+        $sx = [int](($S.Spin * 7) % ($barw + 120)) - 60
+        $shine = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(70, 255, 255, 255))
+        $g.FillRectangle($shine, $(SX ($PAD + $sx)), $(SY ($by)), $(SS (60)), $(SS (8))); $shine.Dispose()
+    }
+
+    # кнопка «Свернуть в фон»
+    $lb = 'Свернуть в фон'
+    $bw = (Measure-W $g $lb 13 'Bold') + 44
+    $bx = $DW - $PAD - $bw
+    Draw-RR $g $bx ($by - 8) $bw 42 8 $C.Accent $null
+    Draw-Text $g $lb $bx ($by - 8) $bw 42 13 'Bold' $C.White 'center' 'center'
+    Add-Hit 'collapse' ($(SX ($bx))) ($(SY ($by - 8))) ($(SS ($bw))) ($(SS (42)))
+}
+
+function Show-WadMainWindow {
+    $k = [math]::Min(($Screen.Width - 24) / $script:DW, ($Screen.Height - 24) / $script:DH, 1.0)
+    if ($k -le 0.2) { $k = 0.2 }
+    $script:K = $k
+    $cw = [int]($script:DW * $k); $ch = [int]($script:DH * $k)
+
+    $form = New-WadForm -W $cw -H $ch
+    $form.Add_Shown({ $p = New-Object System.Drawing.Drawing2D.GraphicsPath; $r = $(SS (10))
+        $w = $form.Width; $h = $form.Height
+        $p.AddArc(0, 0, $r * 2, $r * 2, 180, 90); $p.AddArc($w - $r * 2, 0, $r * 2, $r * 2, 270, 90)
+        $p.AddArc($w - $r * 2, $h - $r * 2, $r * 2, $r * 2, 0, 90); $p.AddArc(0, $h - $r * 2, $r * 2, $r * 2, 90, 90)
+        $p.CloseFigure(); $form.Region = New-Object System.Drawing.Region($p) })
 
     $st = @{
-        Started = Get-Date
-        Elapsed = 0.0
-        Progress = 0.0
-        Phase = 'install'          # install → countdown
-        CountLeft = [int]$CFG.CountdownSec
-        Spin = 0
-        Minimized = $false
-        Finished = $false
-        Aborted = $false
-        Report = $null
+        Started = Get-Date; Elapsed = 0.0; Progress = 0.0
+        Phase = 'install'; CountLeft = [int]$CFG.CountdownSec
+        Spin = 0; Finished = $false; Aborted = $false
     }
 
-    # --- шапка окна
-    $title = New-WadLabel 'установка Windows' 20 13 10.5 'Regular' $C.Text2
-    $form.Controls.Add($title)
+    $form.Add_Paint({ Draw-MainWindow $_.Graphics $st })
 
-    $btnClose = New-Object System.Windows.Forms.Button
-    $btnClose.Text = '✕'; $btnClose.Size = New-Object System.Drawing.Size(38, 30)
-    $btnClose.Location = New-Object System.Drawing.Point($CFG.WinW - 52, 6)
-    $btnClose.FlatStyle = 'Flat'; $btnClose.FlatAppearance.BorderSize = 0
-    $btnClose.BackColor = [System.Drawing.Color]::Transparent; $btnClose.ForeColor = $C.Text2
-    $btnClose.TabStop = $false
-    $btnClose.Add_Click({
-        $r = [System.Windows.Forms.MessageBox]::Show('Прервать прототип WAD?', 'WAD',
-            [System.Windows.Forms.MessageBoxButtons]::YesNo, [System.Windows.Forms.MessageBoxIcon]::Question)
-        if ($r -eq [System.Windows.Forms.DialogResult]::Yes) { $st.Aborted = $true; $form.Close() }
-    })
-    $form.Controls.Add($btnClose)
-
-    $btnMin = New-Object System.Windows.Forms.Button
-    $btnMin.Text = '—'; $btnMin.Size = New-Object System.Drawing.Size(38, 30)
-    $btnMin.Location = New-Object System.Drawing.Point($CFG.WinW - 92, 6)
-    $btnMin.FlatStyle = 'Flat'; $btnMin.FlatAppearance.BorderSize = 0
-    $btnMin.BackColor = [System.Drawing.Color]::Transparent; $btnMin.ForeColor = $C.Text2
-    $btnMin.TabStop = $false
-    $btnMin.Add_Click({ $st.Minimized = $true; $form.WindowState = 'Minimized' })
-    $form.Controls.Add($btnMin)
-
-    $btnSite = New-Object System.Windows.Forms.Button
-    $btnSite.Text = '  Сайт разработчика'
-    $btnSite.Size = New-Object System.Drawing.Size(180, 32)
-    $btnSite.Location = New-Object System.Drawing.Point($CFG.WinW - 300, 5)
-    $btnSite.FlatStyle = 'Flat'
-    $btnSite.FlatAppearance.BorderColor = $C.Accent
-    $btnSite.BackColor = [System.Drawing.Color]::FromArgb(232, 242, 252)
-    $btnSite.ForeColor = $C.Accent
-    $btnSite.Font = New-Object System.Drawing.Font('Segoe UI', 10, [System.Drawing.FontStyle]::Bold)
-    $btnSite.TabStop = $false
-    $btnSite.Add_Click({ Show-WadSiteDialog -Owner $form })
-    $form.Controls.Add($btnSite)
-
-    # --- заголовок и бейдж прототипа
-    $h = New-WadLabel 'Менеджер автоматической настройки' 40 66 22 'Bold'
-    $form.Controls.Add($h)
-    $badge = New-WadLabel $CFG.Badge 40 108 10.5 'Bold' $C.Warn
-    $form.Controls.Add($badge)
-
-    # --- 4 категории
-    $rowPanels = @(); $rowIcons = @(); $rowSubs = @(); $rowTimes = @()
-    $ry = 150; $rh = 74
-    for ($i = 0; $i -lt $WadRows.Count; $i++) {
-        $p = New-Object System.Windows.Forms.Panel
-        $p.Size = New-Object System.Drawing.Size($CFG.WinW - 80, $rh)
-        $p.Location = New-Object System.Drawing.Point(40, ($ry + $i * ($rh + 12)))
-        $p.BackColor = [System.Drawing.Color]::White
-        $p.BorderStyle = 'FixedSingle'
-        $form.Controls.Add($p)
-
-        $icon = New-Object System.Windows.Forms.PictureBox
-        $icon.Size = New-Object System.Drawing.Size(26, 26)
-        $icon.Location = New-Object System.Drawing.Point(16, [int](($rh - 26) / 2))
-        $icon.SizeMode = 'AutoSize'
-        $p.Controls.Add($icon)
-
-        $nm = New-WadLabel $WadRows[$i].Name 60 14 13 'Bold'
-        $p.Controls.Add($nm)
-        $sub = New-WadLabel 'ожидание' 60 40 11 'Regular' $C.Text3
-        $p.Controls.Add($sub)
-        $tm = New-WadLabel '' ($CFG.WinW - 80 - 90) 28 11 'Regular' $C.Text3
-        $p.Controls.Add($tm)
-
-        $rowPanels += $p; $rowIcons += $icon; $rowSubs += $sub; $rowTimes += $tm
-    }
-
-    # --- нижний бар
-    $barY = $CFG.WinH - 110
-    $cap = New-WadLabel 'Установка…' 40 ($barY - 30) 13 'Bold'
-    $form.Controls.Add($cap)
-    $pct = New-WadLabel '0%' ($CFG.WinW - 160) ($barY - 42) 22 'Bold' $C.Accent
-    $form.Controls.Add($pct)
-    $hint = New-WadLabel '' ($CFG.WinW - 340) ($barY - 24) 10.5 'Regular' $C.Text3
-    $form.Controls.Add($hint)
-
-    $bar = New-Object System.Windows.Forms.Panel
-    $bar.Size = New-Object System.Drawing.Size($CFG.WinW - 80 - 200, 8)
-    $bar.Location = New-Object System.Drawing.Point(40, $barY)
-    $bar.BackColor = [System.Drawing.Color]::FromArgb(230, 233, 239)
-    $bar.Add_Paint({
-        $g = $_.Graphics
-        $g.SmoothingMode = 'AntiAlias'
-        $w = $bar.Width; $hh = $bar.Height
-        $k = $st.Progress
-        if ($st.Phase -eq 'countdown') { $k = 1.0 - ($st.CountLeft / $CFG.CountdownSec) }
-        $fill = [math]::Max(6, [int]($w * $k))
-        $brush = New-Object System.Drawing.Drawing2D.LinearGradientBrush(
-            (New-Object System.Drawing.Rectangle(0, 0, $fill, $hh)), $C.Accent, $C.Accent2, 0.0)
-        $g.FillRectangle($brush, 0, 0, $fill, $hh)
-        # плывущий блик
-        $sx = [int](($st.Spin * 7) % ($w + 120)) - 60
-        $shine = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(70, 255, 255, 255))
-        $g.FillRectangle($shine, $sx, 0, 60, $hh)
-        $brush.Dispose(); $shine.Dispose()
-    })
-    $form.Controls.Add($bar)
-
-    $btnBg = New-Object System.Windows.Forms.Button
-    $btnBg.Text = 'Свернуть в фон'
-    $btnBg.Size = New-Object System.Drawing.Size(170, 38)
-    $btnBg.Location = New-Object System.Drawing.Point($CFG.WinW - 210, ($barY - 16))
-    $btnBg.FlatStyle = 'Flat'; $btnBg.FlatAppearance.BorderSize = 0
-    $btnBg.BackColor = $C.Accent; $btnBg.ForeColor = [System.Drawing.Color]::White
-    $btnBg.Font = New-Object System.Drawing.Font('Segoe UI', 10, [System.Drawing.FontStyle]::Bold)
-    $btnBg.TabStop = $false
-    $btnBg.Add_Click({ $st.Minimized = $true; $form.WindowState = 'Minimized' })
-    $form.Controls.Add($btnBg)
-
-    # значок в трее, когда свёрнули (в $script: — иначе обработчик пишет в свою копию)
-    $script:WadTray = $null
-
-    # --- иконки статусов
-    function Set-RowIcon($pb, [string]$kind, [int]$spin) {
-        $bmp = New-Object System.Drawing.Bitmap(26, 26)
-        $g = [System.Drawing.Graphics]::FromImage($bmp)
-        $g.SmoothingMode = 'AntiAlias'
-        $cx = 13; $cy = 13
-        switch ($kind) {
-            'wait' {
-                $pen = New-Object System.Drawing.Pen([System.Drawing.Color]::FromArgb(120, 138, 146, 160), 2)
-                $g.DrawEllipse($pen, 4, 4, 18, 18); $pen.Dispose()
-            }
-            'run' {
-                for ($j = 0; $j -lt 8; $j++) {
-                    $ang = ($spin * 0.35) + $j * ([math]::PI / 4)
-                    $al = [int](50 + 200 * ($j / 8))
-                    $pen = New-Object System.Drawing.Pen([System.Drawing.Color]::FromArgb($al, $C.Accent), 2)
-                    $x1 = $cx + 6 * [math]::Cos($ang); $y1 = $cy + 6 * [math]::Sin($ang)
-                    $x2 = $cx + 11 * [math]::Cos($ang); $y2 = $cy + 11 * [math]::Sin($ang)
-                    $g.DrawLine($pen, [single]$x1, [single]$y1, [single]$x2, [single]$y2)
-                    $pen.Dispose()
-                }
-            }
-            'ok' {
-                $b = New-Object System.Drawing.SolidBrush($C.Ok)
-                $g.FillEllipse($b, 2, 2, 22, 22); $b.Dispose()
-                $pen = New-Object System.Drawing.Pen([System.Drawing.Color]::White, 2)
-                $g.DrawLines($pen, @(
-                    (New-Object System.Drawing.Point(7, 13)),
-                    (New-Object System.Drawing.Point(11, 17)),
-                    (New-Object System.Drawing.Point(19, 8))))
-                $pen.Dispose()
-            }
-            'warn' {
-                $b = New-Object System.Drawing.SolidBrush($C.Err)
-                $g.FillEllipse($b, 2, 2, 22, 22); $b.Dispose()
-                $pen = New-Object System.Drawing.Pen([System.Drawing.Color]::White, 2)
-                $g.DrawLine($pen, 8, 8, 18, 18); $g.DrawLine($pen, 18, 8, 8, 18); $pen.Dispose()
-            }
-        }
-        $g.Dispose()
-        $old = $pb.Image
-        $pb.Image = $bmp
-        if ($old) { $old.Dispose() }
-    }
-
-    function Update-Rows {
-        $states = Get-WadRowStatus -Elapsed $st.Elapsed -Total $CFG.InstallSec
-        for ($i = 0; $i -lt $states.Count; $i++) {
-            $s = $states[$i]
-            Set-RowIcon $rowIcons[$i] $s.State $st.Spin
-            switch ($s.State) {
-                'run'  { $rowSubs[$i].Text = 'выполняется…';                $rowSubs[$i].ForeColor = $C.Text3 }
-                'ok'   { $rowSubs[$i].Text = 'готово';                      $rowSubs[$i].ForeColor = $C.Ok;
-                         $rowTimes[$i].Text = ('[{0:00}:{1:00}]' -f [math]::Floor(($s.End - $s.Start) / 60), [math]::Floor(($s.End - $s.Start) % 60)) }
-                'warn' { $rowSubs[$i].Text = 'пропущено / ошибка';          $rowSubs[$i].ForeColor = $C.Err;
-                         $rowTimes[$i].Text = '—' }
-                default{ $rowSubs[$i].Text = 'ожидание';                    $rowSubs[$i].ForeColor = $C.Text3 }
-            }
-        }
-    }
-
-    # --- главный таймер
-    $timer = New-Object System.Windows.Forms.Timer
-    $timer.Interval = $CFG.TickMs
-    $lastCd = [int]$CFG.CountdownSec
-
-    $timer.Add_Tick({
-        $st.Elapsed += ($CFG.TickMs / 1000.0)
-        $st.Spin++
-
-        if ($st.Phase -eq 'install') {
-            $st.Progress = (Get-WadProgress -Elapsed $st.Elapsed -Total $CFG.InstallSec) / 100.0
-            $pct.Text = '{0}%' -f [int]($st.Progress * 100)
-            Update-Rows
-            $bar.Invalidate()
-            if ($st.Elapsed -ge $CFG.InstallSec) {
-                $st.Phase = 'countdown'
-                $st.CountLeft = [int]$CFG.CountdownSec
-                $cap.Text = 'Перезагрузка через {0} сек' -f $st.CountLeft
-                $pct.Text = '100%'
-                $hint.Text = 'можно ничего не нажимать'
-                Write-Host '[WAD] установка (имитация) завершена — пошёл отсчёт до перезагрузки' -ForegroundColor Cyan
-                # если свёрнули — возвращаем окно, чтобы отсчёт было видно
-                if ($form.WindowState -eq 'Minimized') { $form.WindowState = 'Normal'; $form.Activate() }
-                if ($script:WadTray) { $script:WadTray.Visible = $false; $script:WadTray.Dispose(); $script:WadTray = $null }
-            }
-        }
-        else {
-            $left = [int][math]::Ceiling($CFG.CountdownSec - ($st.Elapsed - $CFG.InstallSec))
-            if ($left -lt 0) { $left = 0 }
-            if ($left -ne $lastCd) {
-                $lastCd = $left
-                $st.CountLeft = $left
-                $cap.Text = if ($left -gt 0) { 'Перезагрузка через {0} сек' -f $left } else { 'Перезагрузка…' }
-                $bar.Invalidate()
-            }
-            if ($left -le 0) {
-                $timer.Stop()
-                $st.Finished = $true
-                $form.Close()
+    $form.Add_MouseClick({
+        $id = Get-Hit $_.Location
+        if (-not $id) { return }
+        switch ($id) {
+            'site' { Show-WadSiteDialog }
+            'min'  { $form.WindowState = 'Minimized' }
+            'collapse' { $form.WindowState = 'Minimized' }
+            'close' {
+                $r = [System.Windows.Forms.MessageBox]::Show('Прервать прототип WAD?', 'WAD',
+                    [System.Windows.Forms.MessageBoxButtons]::YesNo, [System.Windows.Forms.MessageBoxIcon]::Question)
+                if ($r -eq [System.Windows.Forms.DialogResult]::Yes) { $st.Aborted = $true; $form.Close() }
             }
         }
     })
 
-    # трей-значок при сворачивании
+    $form.Add_MouseMove({
+        $id = Get-Hit $_.Location
+        $form.Cursor = if ($id) { [System.Windows.Forms.Cursors]::Hand } else { [System.Windows.Forms.Cursors]::Default }
+    })
+
     $form.Add_Resize({
-        Add-WadRoundRegion $form 14
         if ($form.WindowState -eq 'Minimized' -and -not $script:WadTray) {
             try {
                 $script:WadTray = New-Object System.Windows.Forms.NotifyIcon
@@ -765,211 +716,183 @@ function Show-WadMainWindow {
                 $script:WadTray.Add_Click({ $form.WindowState = 'Normal'; $form.Activate() })
             } catch { Write-Verbose 'значок в трее не создан — не критично' }
         }
+        if ($form.WindowState -eq 'Normal' -and $script:WadTray) { $script:WadTray.Visible = $false; $script:WadTray.Dispose(); $script:WadTray = $null }
     })
 
-    $form.Add_FormClosed({
-        $timer.Stop(); $timer.Dispose()
-        if ($script:WadTray) { $script:WadTray.Visible = $false; $script:WadTray.Dispose(); $script:WadTray = $null }
+    $timer = New-Object System.Windows.Forms.Timer
+    $timer.Interval = $CFG.TickMs
+    $lastCd = [int]$CFG.CountdownSec
+    $timer.Add_Tick({
+        $st.Elapsed += ($CFG.TickMs / 1000.0)
+        $st.Spin++
+        if ($st.Phase -eq 'install') {
+            $st.Progress = (Get-WadProgress -Elapsed $st.Elapsed -Total $CFG.InstallSec) / 100.0
+            if ($st.Elapsed -ge $CFG.InstallSec) {
+                $st.Phase = 'countdown'; $st.CountLeft = [int]$CFG.CountdownSec
+                Write-Host '[WAD] установка (имитация) завершена — пошёл отсчёт до перезагрузки' -ForegroundColor Cyan
+                if ($form.WindowState -eq 'Minimized') { $form.WindowState = 'Normal'; $form.Activate() }
+            }
+        } else {
+            $left = [int][math]::Ceiling($CFG.CountdownSec - ($st.Elapsed - $CFG.InstallSec))
+            if ($left -lt 0) { $left = 0 }
+            if ($left -ne $lastCd) { $lastCd = $left; $st.CountLeft = $left }
+            if ($left -le 0) { $timer.Stop(); $st.Finished = $true; $form.Close() }
+        }
+        $form.Invalidate()
     })
 
-    $form.Add_KeyDown({ if ($_.KeyCode -eq 'Escape') { $st.Aborted = $true; $form.Close() } })
+    $form.Add_FormClosed({ $timer.Stop(); $timer.Dispose(); if ($script:WadTray) { $script:WadTray.Visible = $false; $script:WadTray.Dispose(); $script:WadTray = $null } })
 
     Write-Host '[WAD] окно установки — пошёл имитационный прогон (ничего не качается)' -ForegroundColor Cyan
-    $st.Progress = 0.0
-    Update-Rows
     $timer.Start()
     [System.Windows.Forms.Application]::Run($form)
-
-    if ($script:WadTray) { $script:WadTray.Visible = $false; $script:WadTray.Dispose(); $script:WadTray = $null }
     $form.Dispose()
-
     if ($st.Aborted) { return $null }
     return $st
 }
 
 function Show-WadSiteDialog {
-    <# Модалка «Сайт разработчика»: «Сохранить ярлык» реально кладёт .lnk на рабочий стол. #>
-    param($Owner)
+    $script:K = 1.0
+    $form = New-WadForm -W 480 -H 260
+    $res = @{ Saved = $null }   # $null = ещё не жали
 
-    $d = New-Object System.Windows.Forms.Form
-    $d.FormBorderStyle = 'FixedDialog'
-    $d.StartPosition = if ($Owner) { 'CenterParent' } else { 'CenterScreen' }
-    $d.Size = New-Object System.Drawing.Size(500, 300)
-    $d.MaximizeBox = $false; $d.MinimizeBox = $false
-    $d.Text = 'Сайт разработчика'
-    $d.BackColor = [System.Drawing.Color]::White
-    if ($Owner) { $d.Owner = $Owner }
+    $form.Add_Paint({
+        $g = $_.Graphics
+        $g.SmoothingMode = 'AntiAlias'; $g.TextRenderingHint = 'AntiAliasGridFit'
+        $script:Hits = @()
+        Draw-RR $g 0 0 480 260 14 $C.White $null
+        Draw-Text $g 'Сайт разработчика' 26 22 400 30 17 'Bold' $C.Text
+        Draw-Text $g 'Репозиторий проекта на GitHub' 26 60 400 24 12 'Regular' $C.Text2
+        Draw-Text $g $CFG.RepoUrl 26 84 430 22 11 'Regular' $C.Text3
 
-    $t = New-WadLabel 'Сайт разработчика' 26 22 16 'Bold'
-    $d.Controls.Add($t)
-    $s1 = New-WadLabel 'Репозиторий проекта на GitHub' 26 58 11.5 'Regular' $C.Text2
-    $d.Controls.Add($s1)
-    $s2 = New-WadLabel $CFG.RepoUrl 26 82 10.5 'Regular' $C.Text3
-    $d.Controls.Add($s2)
+        $bw = (Measure-W $g 'Сохранить ярлык' 13 'Bold') + 40
+        Draw-RR $g 26 132 $bw 42 8 $C.Accent $null
+        Draw-Text $g 'Сохранить ярлык' 26 132 $bw 42 13 'Bold' $C.White 'center' 'center'
+        Add-Hit 'save' 26 132 $bw 42
 
-    $btn = New-Object System.Windows.Forms.Button
-    $btn.Text = 'Сохранить ярлык'
-    $btn.Size = New-Object System.Drawing.Size(190, 42)
-    $btn.Location = New-Object System.Drawing.Point(26, 130)
-    $btn.FlatStyle = 'Flat'; $btn.FlatAppearance.BorderSize = 0
-    $btn.BackColor = $C.Accent; $btn.ForeColor = [System.Drawing.Color]::White
-    $btn.Font = New-Object System.Drawing.Font('Segoe UI', 10.5, [System.Drawing.FontStyle]::Bold)
-    $d.Controls.Add($btn)
+        $cw2 = (Measure-W $g 'Закрыть' 12 'Regular') + 34
+        Draw-RR $g (480 - 26 - $cw2) 132 $cw2 42 8 ([System.Drawing.Color]::FromArgb(240, 242, 246)) $null
+        Draw-Text $g 'Закрыть' (480 - 26 - $cw2) 132 $cw2 42 12 'Regular' $C.Text2 'center' 'center'
+        Add-Hit 'close' (480 - 26 - $cw2) 132 $cw2 42
 
-    $note = New-WadLabel 'Сохранит ярлык на рабочий стол' 26 190 10.5 'Regular' $C.Text3
-    $note.AutoSize = $false
-    $note.Size = New-Object System.Drawing.Size(440, 60)
-    $d.Controls.Add($note)
-
-    $btn.Add_Click({
-        $note.Text = 'Сохраняем…'
-        $note.ForeColor = $C.Text2
-        $d.Refresh()
-        $res = Save-WadShortcut
-        if ($res.Success) {
-            $note.ForeColor = $C.Ok
-            $note.Text = "Ярлык сохранён на рабочий стол:`r`n$($res.Path)"
-            Write-Host "[WAD] ярлык сохранён: $($res.Path)" -ForegroundColor Green
+        if ($null -ne $res.Saved) {
+            if ($res.Saved.Success) {
+                Draw-Text $g "Ярлык сохранён на рабочий стол:" 26 188 430 20 11 'Regular' $C.Ok
+                Draw-Text $g $res.Saved.Path 26 208 430 20 10.5 'Regular' $C.Ok
+            } else {
+                Draw-Text $g "Не удалось сохранить ярлык: $($res.Saved.Error)" 26 188 430 40 11 'Regular' $C.Err
+            }
         } else {
-            $note.ForeColor = $C.Err
-            $note.Text = "Не удалось сохранить ярлык: $($res.Error)"
-            Write-Host "[WAD] ярлык НЕ сохранён: $($res.Error)" -ForegroundColor Red
+            Draw-Text $g 'Сохранит ярлык на рабочий стол' 26 188 430 20 11 'Regular' $C.Text3
         }
     })
 
-    $ok = New-Object System.Windows.Forms.Button
-    $ok.Text = 'Закрыть'
-    $ok.Size = New-Object System.Drawing.Size(120, 42)
-    $ok.Location = New-Object System.Drawing.Point(330, 130)
-    $ok.FlatStyle = 'Flat'
-    $ok.BackColor = [System.Drawing.Color]::FromArgb(240, 242, 246)
-    $ok.Add_Click({ $d.Close() })
-    $d.Controls.Add($ok)
+    $form.Add_MouseClick({
+        $id = Get-Hit $_.Location
+        if ($id -eq 'save') {
+            $res.Saved = Save-WadShortcut
+            if ($res.Saved.Success) { Write-Host "[WAD] ярлык сохранён: $($res.Saved.Path)" -ForegroundColor Green }
+            else { Write-Host "[WAD] ярлык НЕ сохранён: $($res.Saved.Error)" -ForegroundColor Red }
+            $form.Invalidate()
+        } elseif ($id -eq 'close') { $form.Close() }
+    })
+    $form.Add_MouseMove({ $form.Cursor = if (Get-Hit $_.Location) { [System.Windows.Forms.Cursors]::Hand } else { [System.Windows.Forms.Cursors]::Default } })
 
-    [System.Windows.Forms.Application]::Run($d)
-    $d.Dispose()
+    [System.Windows.Forms.Application]::Run($form)
+    $form.Dispose()
 }
 
-# =============================================================================
-#  После «перезагрузки»: фуллскрин-фон, приветствие, окно создания пользователя
-# =============================================================================
-function Show-WadPostBoot {
-    <# Фуллскрин-фон + окно создания пользователя. Пользователь НЕ создаётся — только показ. #>
-    param([string]$ReportPath = '')
+function Show-WadUserDialog {
+    $script:K = 1.0
+    $form = New-WadForm -W 620 -H 470
+    $form.BackColor = $C.Card
 
-    $bg = New-WadFullscreen -TopMost $true
-    $stamp = New-WadLabel $CFG.Badge 24 20 10 'Bold' $C.Warn
-    $bg.Controls.Add($stamp)
-    if ($ReportPath) {
-        $rl = New-WadLabel "Отчёт: $ReportPath" 24 44 9.5 'Regular' $C.Text2
-        $bg.Controls.Add($rl)
-    }
+    $login = New-Object System.Windows.Forms.TextBox
+    $login.Location = New-Object System.Drawing.Point(30, 118); $login.Size = New-Object System.Drawing.Size(255, 30)
+    $login.Font = New-Object System.Drawing.Font('Segoe UI', 11); $login.Text = 'User'
+    $form.Controls.Add($login)
+    $pass = New-Object System.Windows.Forms.TextBox
+    $pass.Location = New-Object System.Drawing.Point(315, 118); $pass.Size = New-Object System.Drawing.Size(255, 30)
+    $pass.Font = New-Object System.Drawing.Font('Segoe UI', 11); $pass.UseSystemPasswordChar = $true
+    $form.Controls.Add($pass)
 
-    $bgShown = $false
-    $bg.Add_Shown({
-        if ($bgShown) { return }
-        $bgShown = $true
-        Show-WadUserDialog -Owner $bg
-        $bg.Close()
+    $st = @{ Msg = 'Прототип: пользователь не создаётся — только показ результата.'; Color = $C.Text3; Done = $false }
+
+    $form.Add_Paint({
+        $g = $_.Graphics
+        $g.SmoothingMode = 'AntiAlias'; $g.TextRenderingHint = 'AntiAliasGridFit'
+        $script:Hits = @()
+        Draw-Text $g 'создание пользователя' 20 12 400 22 11 'Regular' $C.Text2
+        Draw-Text $g 'Теперь давайте создадим вам пользователя' 30 42 560 30 16 'Bold' $C.Text
+        Draw-Text $g 'Логин обязателен, пароль — по желанию: пусто значит без пароля' 30 78 560 22 11 'Regular' $C.Text2
+        Draw-Text $g 'Логин' 30 96 200 20 11 'Regular' $C.Text2
+        Draw-Text $g 'Пароль' 315 96 200 20 11 'Regular' $C.Text2
+        Draw-Text $g 'необязательно' 315 150 200 18 10 'Regular' $C.Text3
+        Draw-Text $g 'Дополнительно' 30 186 300 22 12 'Bold' $C.Text
+
+        # чекбокс «админ»
+        $cbx = 30; $cby = 216
+        Draw-RR $g $cbx $cby 20 20 5 $C.Accent $null
+        $pen = New-Object System.Drawing.Pen($C.White, 2)
+        $g.DrawLines($pen, @([System.Drawing.Point]::new($cbx + 5, $cby + 10), [System.Drawing.Point]::new($cbx + 9, $cby + 14), [System.Drawing.Point]::new($cbx + 15, $cby + 6)))
+        $pen.Dispose()
+        Draw-Text $g 'Пользователь создаётся как администратор' ($cbx + 30) ($cby - 1) 400 24 12 'Regular' $C.Text
+        Add-Hit 'admin' $cbx ($cby - 4) 430 28
+        Draw-Text $g 'снимите галочку — будет обычный пользователь с ограниченными правами' 30 246 540 18 10 'Regular' $C.Text3
+
+        Draw-Text $g $st.Msg 30 288 540 70 11 'Regular' $st.Color
+
+        $bl = if ($st.Done) { 'Готово' } else { 'Создать и продолжить' }
+        $bc = if ($st.Done) { $C.Ok } else { $C.Accent }
+        $bw = (Measure-W $g $bl 13 'Bold') + 46
+        $bx = 620 - 30 - $bw
+        Draw-RR $g $bx 366 $bw 46 8 $bc $null
+        Draw-Text $g $bl $bx 366 $bw 46 13 'Bold' $C.White 'center' 'center'
+        Add-Hit 'create' $bx 366 $bw 46
     })
 
+    $form.Add_MouseClick({
+        $id = Get-Hit $_.Location
+        if (-not $id) { return }
+        if ($id -eq 'admin') { $script:WadAdmin = -not $script:WadAdmin; $form.Invalidate(); return }
+        if ($id -eq 'create') {
+            if ($st.Done) { $form.Close(); return }
+            $name = $login.Text.Trim()
+            if (-not $name) { $st.Color = $C.Err; $st.Msg = 'Укажите логин'; $form.Invalidate(); return }
+            $role = if ($script:WadAdmin) { 'администратор' } else { 'обычный пользователь' }
+            $pwdNote = if ($pass.Text) { 'с паролем' } else { 'без пароля' }
+            $st.Color = $C.Ok
+            $st.Msg = "Пользователь $name создан ($role, $pwdNote). ИМИТАЦИЯ: в системе ничего не создавалось."
+            $st.Done = $true
+            $script:WadUserChoice = [pscustomobject]@{ Name = $name; Admin = [bool]$script:WadAdmin; HasPassword = [bool]$pass.Text }
+            Write-Host "[WAD] показан результат создания пользователя: $name ($role, $pwdNote) — без реального создания" -ForegroundColor Cyan
+            $form.Invalidate()
+        }
+    })
+    $form.Add_MouseMove({ $form.Cursor = if (Get-Hit $_.Location) { [System.Windows.Forms.Cursors]::Hand } else { [System.Windows.Forms.Cursors]::Default } })
+
+    $script:WadAdmin = $true
+    [System.Windows.Forms.Application]::Run($form)
+    $form.Dispose()
+}
+
+function Show-WadPostBoot([string]$ReportPath = '') {
+    $bg = New-WadForm -Fullscreen $true
+    $wall = Get-WadWallpaper
+    if ($wall) { $bg.BackgroundImage = $wall; $bg.BackgroundImageLayout = 'Stretch' }
+    $bg.Add_Paint({
+        $g = $_.Graphics
+        $g.TextRenderingHint = 'AntiAliasGridFit'
+        $script:K = [math]::Min($bg.Width / 1920.0, $bg.Height / 1080.0); if ($script:K -le 0) { $script:K = 1 }
+        Draw-Text $g $CFG.Badge 24 20 700 20 11 'Bold' $C.Warn
+        if ($ReportPath) { Draw-Text $g "Отчёт: $ReportPath" 24 44 900 18 10 'Regular' $C.Text2 }
+    })
+    $shown = $false
+    $bg.Add_Shown({ if ($shown) { return }; $shown = $true; Show-WadUserDialog; $bg.Close() })
     [System.Windows.Forms.Application]::Run($bg)
     $bg.Dispose()
 }
 
-function Show-WadUserDialog {
-    <# Окно «создание пользователя». Реального создания нет — интерфейс честно это пишет. #>
-    param($Owner)
-
-    $d = New-Object System.Windows.Forms.Form
-    $d.FormBorderStyle = 'FixedDialog'
-    $d.StartPosition = 'CenterParent'
-    $d.Size = New-Object System.Drawing.Size(620, 470)
-    $d.MaximizeBox = $false
-    $d.Text = 'создание пользователя'
-    $d.BackColor = $C.Card
-    if ($Owner) { $d.Owner = $Owner }
-
-    $h = New-WadLabel 'Теперь давайте создадим вам пользователя' 30 20 15 'Bold'
-    $d.Controls.Add($h)
-    $sub = New-WadLabel 'Логин обязателен, пароль — по желанию: пусто значит без пароля' 30 56 10.5 'Regular' $C.Text2
-    $d.Controls.Add($sub)
-
-    $ll = New-WadLabel 'Логин' 30 96 10.5 'Regular' $C.Text2
-    $d.Controls.Add($ll)
-    $login = New-Object System.Windows.Forms.TextBox
-    $login.Location = New-Object System.Drawing.Point(30, 118); $login.Size = New-Object System.Drawing.Size(255, 30)
-    $login.Font = New-Object System.Drawing.Font('Segoe UI', 11)
-    $login.Text = 'User'
-    $d.Controls.Add($login)
-
-    $pl = New-WadLabel 'Пароль' 315 96 10.5 'Regular' $C.Text2
-    $d.Controls.Add($pl)
-    $pass = New-Object System.Windows.Forms.TextBox
-    $pass.Location = New-Object System.Drawing.Point(315, 118); $pass.Size = New-Object System.Drawing.Size(255, 30)
-    $pass.Font = New-Object System.Drawing.Font('Segoe UI', 11)
-    $pass.UseSystemPasswordChar = $true
-    $d.Controls.Add($pass)
-    $ph = New-WadLabel 'необязательно' 315 150 9.5 'Regular' $C.Text3
-    $d.Controls.Add($ph)
-
-    $adv = New-WadLabel 'Дополнительно' 30 186 11.5 'Bold'
-    $d.Controls.Add($adv)
-    $admin = New-Object System.Windows.Forms.CheckBox
-    $admin.Text = 'Пользователь создаётся как администратор'
-    $admin.Location = New-Object System.Drawing.Point(30, 214)
-    $admin.AutoSize = $true
-    $admin.Checked = $true
-    $admin.Font = New-Object System.Drawing.Font('Segoe UI', 10.5)
-    $d.Controls.Add($admin)
-    $ah = New-WadLabel 'снимите галочку — будет обычный пользователь с ограниченными правами' 30 244 9.5 'Regular' $C.Text3
-    $d.Controls.Add($ah)
-
-    $status = New-Object System.Windows.Forms.Label
-    $status.Location = New-Object System.Drawing.Point(30, 288)
-    $status.Size = New-Object System.Drawing.Size(540, 70)
-    $status.Font = New-Object System.Drawing.Font('Segoe UI', 10.5)
-    $status.ForeColor = $C.Text3
-    $status.Text = 'Прототип: пользователь не создаётся — только показ результата.'
-    $d.Controls.Add($status)
-
-    $btn = New-Object System.Windows.Forms.Button
-    $btn.Text = 'Создать и продолжить'
-    $btn.Size = New-Object System.Drawing.Size(230, 46)
-    $btn.Location = New-Object System.Drawing.Point(340, 366)
-    $btn.FlatStyle = 'Flat'; $btn.FlatAppearance.BorderSize = 0
-    $btn.BackColor = $C.Accent; $btn.ForeColor = [System.Drawing.Color]::White
-    $btn.Font = New-Object System.Drawing.Font('Segoe UI', 11, [System.Drawing.FontStyle]::Bold)
-    $d.Controls.Add($btn)
-
-    $done = @{ Flag = $false }          # второе нажатие кнопки просто закрывает окно
-    $btn.Add_Click({
-        if ($done.Flag) { $d.Close(); return }
-        $name = $login.Text.Trim()
-        if (-not $name) {
-            $status.ForeColor = $C.Err
-            $status.Text = 'Укажите логин'
-            return
-        }
-        $role = if ($admin.Checked) { 'администратор' } else { 'обычный пользователь' }
-        $pwdNote = if ($pass.Text) { 'с паролем' } else { 'без пароля' }
-        $status.ForeColor = $C.Ok
-        $status.Text = "Пользователь $name создан ($role, $pwdNote).`r`nИМИТАЦИЯ: в системе ничего не создавалось."
-        $btn.Text = 'Готово'
-        $btn.BackColor = $C.Ok
-        $done.Flag = $true
-        $script:WadUserChoice = [pscustomobject]@{ Name = $name; Admin = [bool]$admin.Checked; HasPassword = [bool]$pass.Text }
-        Write-Host "[WAD] показан результат создания пользователя: $name ($role, $pwdNote) — без реального создания" -ForegroundColor Cyan
-    })
-
-    $d.Add_KeyDown({ if ($_.KeyCode -eq 'Escape') { $d.Close() } })
-    [System.Windows.Forms.Application]::Run($d)
-    $d.Dispose()
-}
-
-# =============================================================================
-#  Сборка всего сценария
-# =============================================================================
 function Start-WadPrototype {
     param(
         [switch]$SkipIntro,
@@ -987,43 +910,33 @@ function Start-WadPrototype {
 
     $started = Get-Date
 
-    # 1. Заставка с титрами (фуллскрин)
     if (-not $SkipIntro) {
         $ok = Show-WadTitles -Lines @('Здравствуйте', 'Вас приветствует WAD',
-            'WAD настроит Windows для вас,', 'можете отдохнуть', 'Приступаем') -Hold $CFG.IntroHold
+            'WAD настроит Windows для вас, / можете отдохнуть', 'Приступаем') -Hold $CFG.IntroHold
         if (-not $ok -or $script:WadExit) { Write-Host '[WAD] прототип прерван на заставке'; return }
     }
 
-    # 2. Окно установки
     $res = Show-WadMainWindow
     if (-not $res) { Write-Host '[WAD] прототип прерван в окне установки'; return }
 
-    # 3. Настоящий отчёт в «Документы»
     $finished = Get-Date
+    $report = $null
     try {
         $report = Save-WadReport -Started $started -Finished $finished
         Write-Host "[WAD] отчёт создан: $($report.Path) ($($report.Bytes) байт)" -ForegroundColor Green
         Start-Process -FilePath $report.Path
     } catch {
         Write-Host "[WAD] отчёт НЕ создан: $($_.Exception.Message)" -ForegroundColor Red
-        $report = $null
     }
 
-    # 4. Имитация перезагрузки
-    if ($NoRebootSim) {
-        Write-Host '[WAD] -NoRebootSim: пропускаем имитацию перезагрузки'
-        return
-    }
+    if ($NoRebootSim) { Write-Host '[WAD] -NoRebootSim: пропускаем имитацию перезагрузки'; return }
     Show-WadRebootScreen -Seconds $CFG.RebootSec
 
-    # 4a. Ваш настоящий рабочий стол — пару секунд
     Write-Host "[WAD] показываю рабочий стол $($CFG.DesktopPause) с (наши окна скрыты)" -ForegroundColor Cyan
-    [System.Windows.Forms.Application]::DoEvents()
     Start-Sleep -Seconds $CFG.DesktopPause
 
-    # 5. После входа: фуллскрин-фон + титры + окно пользователя
     $ok = Show-WadTitles -Lines @('Здравствуйте', 'Установка системы окончена.',
-        'Теперь давайте создадим вам пользователя') -Hold $CFG.PostHold
+        'Теперь давайте создадим вам пользователя') -Hold $CFG.PostHold -OverWallpaper $true
     if (-not $ok -or $script:WadExit) { Write-Host '[WAD] прототип прерван после перезагрузки'; return }
 
     $reportPath = if ($report) { $report.Path } else { '' }
