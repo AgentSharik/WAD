@@ -52,8 +52,10 @@ COUNTDOWN_LEN = 4.5
 COUNTDOWN_REAL = 60
 T_RESTART = T_COUNTDOWN + COUNTDOWN_LEN   # 47.00
 T_FADE = 1.6
-T_REPORT = T_RESTART + T_FADE + 1.2       # 49.80 — после входа открылся отчёт
-T_END = T_REPORT + 8.2                    # 58.00
+T_REPORT = T_RESTART + T_FADE + 1.2       # отчёт — после создания пользователя (в продукте)
+T_POST0 = T_RESTART + T_FADE + 0.6        # ~49.2 — приветствие после входа
+T_USER_APPEAR = T_POST0 + 13.2            # ~62.4 — окно создания пользователя
+T_END = T_USER_APPEAR + 6.5               # ~68.9
 
 POP_T0, POP_T1 = 24.0, 28.5               # микро-попап «Сайт разработчика»
 
@@ -342,6 +344,94 @@ def scene_report(wallpaper, mica, shadow, t):
     return frame
 
 
+# ---------------------------------------------------------------- после входа
+POST = [
+    (0.40, 1.30, 3.30, 3.75, ['Здравствуйте']),
+    (4.15, 5.05, 7.15, 8.25, ['Установка системы окончена.']),
+    (8.50, 9.40, 11.50, 12.60, ['Теперь давайте создадим вам пользователя']),
+]
+
+
+def scene_post_text(frame, t):
+    """Те же всплывающие строки, что в интро: тайминги и дизайн как у первоначального WAD."""
+    layer = rgba((W, H))
+    d = ImageDraw.Draw(layer)
+    for (t0, t1, t2, t3, lines) in POST:
+        alpha, rise = B.text_alpha(t, t0 + T_POST0, t1 + T_POST0, t2 + T_POST0, t3 + T_POST0)
+        if alpha <= 0.01:
+            continue
+        lh = B.WELCOME_SIZE * 1.16
+        base = H / 2 - 40 + rise - lh * len(lines) / 2
+        for i, line in enumerate(lines):
+            cy = base + lh * (i + 0.5)
+            glow = rgba((W, H))
+            ImageDraw.Draw(glow).text((W / 2 + 2, cy + 3), line, font=font('semibold', B.WELCOME_SIZE),
+                                      fill=(255, 255, 255, int(150 * alpha)), anchor='mm')
+            layer.alpha_composite(glow.filter(ImageFilter.GaussianBlur(3)))
+            d.text((W / 2, cy), line, font=font('semibold', B.WELCOME_SIZE),
+                   fill=C['text'] + (int(255 * alpha),), anchor='mm')
+    frame.alpha_composite(layer)
+    return frame
+
+
+def scene_user(wallpaper, mica, shadow, t):
+    """Окно создания пользователя: логин/пароль + «Дополнительно» (админ по умолчанию)."""
+    appear = ease_out(max(0.0, min(1.0, (t - T_USER_APPEAR) / 0.8)))
+    frame = wallpaper.copy().convert('RGBA')
+    sh = rgba((W, H))
+    sh.putalpha(shadow.point(lambda v: int(v * appear)))
+    frame.alpha_composite(sh)
+
+    card = mica.copy()
+    content = rgba((WIN_W, WIN_H))
+    d = ImageDraw.Draw(content)
+    B.draw_window_chrome(content, d, 'создание пользователя', t)
+
+    x = PAD
+    y = TITLE_H + 46
+    d.text((x, y), 'Теперь давайте создадим вам пользователя', font=font('semibold', 32), fill=C['text'] + (255,))
+    d.text((x, y + 50), 'Логин обязателен, пароль — по желанию: оставьте пустым — будет вход без пароля.',
+           font=font('regular', 17), fill=C['text2'] + (255,))
+
+    fy = y + 100
+    d.text((x, fy), 'Логин', font=font('medium', 15), fill=C['text2'] + (255,))
+    content.alpha_composite(rrect((WIN_W, WIN_H), [x, fy + 24, x + 470, fy + 76], 8,
+                                  fill=(255, 255, 255, 235), outline=C['accent'] + (150,)))
+    d.text((x + 18, fy + 50), 'User', font=font('regular', 17), fill=C['text'] + (255,))
+
+    d.text((x + 510, fy), 'Пароль', font=font('medium', 15), fill=C['text2'] + (255,))
+    content.alpha_composite(rrect((WIN_W, WIN_H), [x + 510, fy + 24, x + 980, fy + 76], 8,
+                                  fill=(255, 255, 255, 235), outline=(0, 0, 0, 40)))
+    d.text((x + 528, fy + 50), 'необязательно', font=font('regular', 17), fill=C['text3'] + (200,))
+
+    ay = fy + 128
+    d.text((x, ay), 'Дополнительно', font=font('semibold', 18), fill=C['text'] + (255,))
+    hx = x + tw('Дополнительно', 'semibold', 18) + 14
+    d.line([(hx - 5, ay + 3), (hx, ay + 9), (hx + 5, ay + 3)], fill=C['text2'] + (255,), width=2, joint='curve')
+
+    cby = ay + 38
+    content.alpha_composite(rrect((WIN_W, WIN_H), [x, cby, x + 24, cby + 24], 6, fill=C['accent'] + (255,)))
+    d.line([(x + 6, cby + 12), (x + 10, cby + 17), (x + 18, cby + 7)], fill=(255, 255, 255, 255), width=2, joint='curve')
+    d.text((x + 38, cby + 12), 'Пользователь создаётся как администратор', font=font('regular', 17),
+           fill=C['text'] + (255,), anchor='lm')
+    d.text((x + 38, cby + 40), 'снимите галочку — будет обычный пользователь с ограниченными правами',
+           font=font('regular', 14), fill=C['text3'] + (255,), anchor='lm')
+
+    by = WIN_H - PAD - 54
+    bw = tw('Создать и продолжить', 'semibold', 17) + 56
+    content.alpha_composite(rrect((WIN_W, WIN_H), [WIN_W - PAD - bw, by, WIN_W - PAD, by + 54], 8,
+                                fill=C['accent'] + (255,)))
+    d.text((WIN_W - PAD - bw / 2, by + 27), 'Создать и продолжить', font=font('semibold', 17),
+           fill=(255, 255, 255, 255), anchor='mm')
+
+    if appear < 0.999:
+        content.putalpha(content.getchannel('A').point(lambda v: int(v * appear)))
+        card.putalpha(card.getchannel('A').point(lambda v: int(v * appear)))
+    card.alpha_composite(content)
+    frame.alpha_composite(card, (WIN_X, WIN_Y))
+    return frame
+
+
 # ---------------------------------------------------------------- сборка кадра
 def render_frame(wp, mica, shadow, t):
     wallpaper = B.wallpaper_at(wp, t)
@@ -359,8 +449,8 @@ def render_frame(wp, mica, shadow, t):
     main = scene_main(wallpaper, mica, shadow, min(t, T_RESTART)).convert('RGBA')
     frame = Image.blend(main, wallpaper.convert('RGBA'), k).convert('RGBA')
 
-    # надпись «Перезагрузка» (видна между растворением и отчётом)
-    ra = ease_out(max(0.0, min(1.0, (t - (T_RESTART + 0.5)) / 0.7))) * (1 - ease_io(max(0.0, min(1.0, (t - (T_REPORT - 0.2)) / 0.5))))
+    # надпись «Перезагрузка» между растворением и приветствием после входа
+    ra = ease_out(max(0.0, min(1.0, (t - (T_RESTART + 0.5)) / 0.7))) * (1 - ease_io(max(0.0, min(1.0, (t - (T_POST0 - 0.1)) / 0.5))))
     if ra > 0.01:
         layer = rgba((W, H))
         d = ImageDraw.Draw(layer)
@@ -369,9 +459,12 @@ def render_frame(wp, mica, shadow, t):
                font=font('regular', 21), fill=C['text2'] + (int(255 * ra),), anchor='mm')
         frame.alpha_composite(layer)
 
-    rep = scene_report(wallpaper, mica, shadow, t)
-    frame = Image.composite(rep, frame, rep)
-    return frame.convert('RGB')
+    if t < T_USER_APPEAR:
+        # после входа — те же всплывающие строки, что в интро
+        frame = scene_post_text(frame, t)
+        return frame.convert('RGB')
+    # и сразу наше окно — создание пользователя
+    return scene_user(wallpaper, mica, shadow, t).convert('RGB')
 
 
 def main():
