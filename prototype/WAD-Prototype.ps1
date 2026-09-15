@@ -377,7 +377,10 @@ function SY($v) { [int]($script:OY + $v * $script:K) }
 function SS($v) { [math]::Max(1, [int]($v * $script:K)) }
 
 function New-WadFont([single]$size, [string]$style) {
-    New-Object System.Drawing.Font('Segoe UI', [single]($size * $script:K), [System.Drawing.FontStyle]::Parse($style))
+    # FontStyle.Parse с одним аргументом не существует — берём статические свойства
+    $fs = [System.Drawing.FontStyle]::Regular
+    if ($style -eq 'Bold') { $fs = [System.Drawing.FontStyle]::Bold }
+    New-Object System.Drawing.Font('Segoe UI', [single]($size * $script:K), $fs)
 }
 
 function Draw-RR {
