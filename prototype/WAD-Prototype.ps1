@@ -586,7 +586,7 @@ function Show-WadTitles {
             if ($a -le 0.01) { continue }
 
             $isGo = ($Lines[$k] -eq 'Приступаем')
-            $f = New-WadFont 84 'Bold'
+            $f = New-WadFont 63 'Bold'
             $sz = $g.MeasureString($Lines[$k], $f)
             $w = [int]$sz.Width + 40; $h = [int]$sz.Height + 20
             $x = [int](($form.Width - $w) / 2)
@@ -613,10 +613,10 @@ function Show-WadTitles {
                 # мягкая белая подсветка под тёмным текстом — как в ролике
                 if ((1 - $bk) -gt 0.05) {
                     $gl = [System.Drawing.Color]::FromArgb([int](150 * $a * (1 - $bk)), 255, 255, 255)
-                    Draw-Text $g $Lines[$k] ($x + $(SS 2)) ($y + $(SS 3)) $w $h 84 'Bold' $gl 'center' 'center'
+                    Draw-Text $g $Lines[$k] ($x + $(SS 2)) ($y + $(SS 3)) $w $h 63 'Bold' $gl 'center' 'center'
                 }
-                if ($bk -gt 0.01) { Draw-Text $g $Lines[$k] $x $y $w $h 84 'Bold' $white 'center' 'center' }
-                if ($inkA -gt 2)  { Draw-Text $g $Lines[$k] $x $y $w $h 84 'Bold' $ink 'center' 'center' }
+                if ($bk -gt 0.01) { Draw-Text $g $Lines[$k] $x $y $w $h 63 'Bold' $white 'center' 'center' }
+                if ($inkA -gt 2)  { Draw-Text $g $Lines[$k] $x $y $w $h 63 'Bold' $ink 'center' 'center' }
             }
             $f.Dispose()
         }
@@ -654,7 +654,7 @@ function Draw-MainWindow {
     $te = $S.T
     $appear = ease_out ([math]::Min(1.0, $te / 0.75))
 
-    Draw-RR $g 0 0 $DW $DH 10 $C.Card $null
+    Draw-RR $g 0 0 $DW $DH 10 ([System.Drawing.Color]::FromArgb(222, 252, 253, 255)) $null
     Draw-RR $g 0.5 0.5 ($DW - 1) ($DH - 1) 10 $null ([System.Drawing.Color]::FromArgb(40, 0, 0, 0)) 1
 
     # шапка: знак WAD + раздел
@@ -670,29 +670,29 @@ function Draw-MainWindow {
     $pp.CloseFigure()
     $g.FillPath($gb, $pp)
     $gb.Dispose(); $pp.Dispose()
-    Draw-Text $g 'W' $ix $iy $isz $isz 14 'Bold' (ColA $C.White $appear) 'center' 'center'
-    Draw-Text $g 'WAD' ($ix + $isz + 12) ($iy + 2) 60 24 16 'Bold' (ColA $C.Text $appear) 'left' 'center'
-    Draw-Text $g '· установка Windows' ($ix + $isz + 12 + 44) ($iy + 3) 220 24 13 'Regular' (ColA $C.Text3 $appear) 'left' 'center'
+    Draw-Text $g 'W' $ix $iy $isz $isz 11 'Bold' (ColA $C.White $appear) 'center' 'center'
+    Draw-Text $g 'WAD' ($ix + $isz + 12) ($iy + 2) 90 24 14 'Bold' (ColA $C.Text $appear) 'left' 'center'
+    Draw-Text $g '· установка Windows' ($ix + $isz + 12 + 44) ($iy + 3) 220 24 11.5 'Regular' (ColA $C.Text3 $appear) 'left' 'center'
 
     # управление: свернуть и закрыть (справа), сайт разработчика
     $cx = $DW - $PAD
     Add-Hit 'close' ($(SX ($cx - 30))) ($(SY (8))) ($(SS (30))) ($(SS (34)))
     Add-Hit 'min'   ($(SX ($cx - 68))) ($(SY (8))) ($(SS (30))) ($(SS (34)))
-    Draw-Text $g '✕' ($cx - 30) 8 30 34 13 'Regular' (ColA $C.Text2 $appear) 'center' 'center'
-    Draw-Text $g '—' ($cx - 68) 8 30 34 13 'Regular' (ColA $C.Text2 $appear) 'center' 'center'
+    Draw-Text $g '✕' ($cx - 30) 8 30 34 11 'Regular' (ColA $C.Text2 $appear) 'center' 'center'
+    Draw-Text $g '—' ($cx - 68) 8 30 34 11 'Regular' (ColA $C.Text2 $appear) 'center' 'center'
 
-    $sbw = (Measure-W $g 'Сайт разработчика' 13 'Bold') + 46
+    $sbw = (Measure-W $g 'Сайт разработчика' 12 'Bold') + 46
     $sbx = $cx - 100 - $sbw
     Draw-RR $g $sbx 10 $sbw 32 16 ([System.Drawing.Color]::FromArgb([int](26 * $appear), 0, 103, 192)) ([System.Drawing.Color]::FromArgb([int](90 * $appear), 0, 103, 192)) 1
     $gx = $sbx + 17
     $gb2 = New-Object System.Drawing.SolidBrush((ColA $C.Accent $appear))
     $g.FillEllipse($gb2, $(SX $gx) - $(SS 6), $(SY 26) - $(SS 6), $(SS 12), $(SS 12)); $gb2.Dispose()
-    Draw-Text $g 'Сайт разработчика' ($sbx + 32) 10 $sbw 32 13 'Bold' (ColA $C.Accent $appear) 'left' 'center'
+    Draw-Text $g 'Сайт разработчика' ($sbx + 32) 10 $sbw 32 12 'Bold' (ColA $C.Accent $appear) 'left' 'center'
     Add-Hit 'site' ($(SX ($sbx))) ($(SY (10))) ($(SS ($sbw))) ($(SS (32)))
 
     # заголовок и бейдж
-    Draw-Text $g 'Менеджер автоматической настройки' $PAD 62 ($DW - 2 * $PAD) 40 24 'Bold' (ColA $C.Text $appear)
-    Draw-Text $g $CFG.Badge $PAD 104 ($DW - 2 * $PAD) 22 11 'Bold' (ColA $C.Warn $appear)
+    Draw-Text $g 'Менеджер автоматической настройки' $PAD 62 ($DW - 2 * $PAD) 40 22 'Bold' (ColA $C.Text $appear)
+    Draw-Text $g $CFG.Badge $PAD 104 ($DW - 2 * $PAD) 22 10 'Bold' (ColA $C.Warn $appear)
 
     # 4 категории
     $ry = 148; $rh = 74
@@ -705,14 +705,14 @@ function Draw-MainWindow {
         Draw-RR $g $PAD $yy ($DW - 2 * $PAD) $rh 10 ([System.Drawing.Color]::FromArgb([int](150 * $e), 255, 255, 255)) ([System.Drawing.Color]::FromArgb([int](16 * $e), 0, 0, 0)) 1
         $icx = $PAD + 34; $icy = $yy + $rh / 2
         Draw-StatusIcon $g ($(SX ($icx))) ($(SY ($icy))) $s.State $S.Spin $e
-        Draw-Text $g $WadRows[$i].Name ($PAD + 66) ($yy + 14) ($DW - 2 * $PAD - 160) 26 15 'Bold' (ColA $C.Text $e)
+        Draw-Text $g $WadRows[$i].Name ($PAD + 66) ($yy + 14) ($DW - 2 * $PAD - 160) 26 13.5 'Bold' (ColA $C.Text $e)
         $subc = switch ($s.State) { 'ok' { $C.Ok } 'warn' { $C.Err } 'run' { $C.Text3 } default { $C.Text3 } }
         $subt = switch ($s.State) { 'ok' { 'готово' } 'warn' { 'пропущено / ошибка' } 'run' { 'выполняется…' } default { 'ожидание' } }
-        Draw-Text $g $subt ($PAD + 66) ($yy + 42) ($DW - 2 * $PAD - 160) 20 12 'Regular' (ColA $subc $e)
+        Draw-Text $g $subt ($PAD + 66) ($yy + 42) ($DW - 2 * $PAD - 160) 20 10.5 'Regular' (ColA $subc $e)
         if ($s.State -in @('ok', 'warn')) {
             $dur = $s.End - $s.Start
             $tm = if ($s.State -eq 'warn') { '—' } else { '[{0:00}:{1:00}]' -f [math]::Floor($dur / 60), [math]::Floor($dur % 60) }
-            Draw-Text $g $tm ($DW - $PAD - 90) ($yy + $rh / 2 - 10) 90 20 12 'Regular' (ColA $C.Text3 $e) 'right' 'center'
+            Draw-Text $g $tm ($DW - $PAD - 90) ($yy + $rh / 2 - 10) 90 20 10.5 'Regular' (ColA $C.Text3 $e) 'right' 'center'
         }
     }
 
@@ -722,12 +722,12 @@ function Draw-MainWindow {
     if ($S.Phase -eq 'countdown') {
         $left = $S.CountLeft
         $cap = if ($left -gt 0) { 'Перезагрузка через {0} сек' -f $left } else { 'Перезагрузка…' }
-        Draw-Text $g $cap $PAD ($by - 34) 400 26 15 'Bold' (ColA $C.Text $appear)
-        Draw-Text $g 'можно ничего не нажимать' ($DW - $PAD - 200) ($by - 30) 190 22 11.5 'Regular' (ColA $C.Text3 $appear) 'right' 'center'
+        Draw-Text $g $cap $PAD ($by - 34) 400 26 13 'Bold' (ColA $C.Text $appear)
+        Draw-Text $g 'можно ничего не нажимать' ($DW - $PAD - 200) ($by - 30) 190 22 10 'Regular' (ColA $C.Text3 $appear) 'right' 'center'
         $k = 1.0 - ($S.CountLeft / $CFG.CountdownSec)
     } else {
-        Draw-Text $g 'Установка…' $PAD ($by - 34) 300 26 15 'Bold' (ColA $C.Text $appear)
-        Draw-Text $g ('{0}%' -f [int]($S.Progress * 100)) ($DW - $PAD - 200) ($by - 46) 190 40 26 'Bold' (ColA $C.Accent $appear) 'right' 'center'
+        Draw-Text $g 'Установка…' $PAD ($by - 34) 300 26 13 'Bold' (ColA $C.Text $appear)
+        Draw-Text $g ('{0}%' -f [int]($S.Progress * 100)) ($DW - $PAD - 200) ($by - 46) 190 40 22 'Bold' (ColA $C.Accent $appear) 'right' 'center'
         $k = $S.Progress
     }
     Draw-RR $g $PAD $by $barw 8 4 (ColA $C.Track $appear) $null
@@ -744,10 +744,10 @@ function Draw-MainWindow {
 
     # кнопка «Свернуть в фон»
     $lb = 'Свернуть в фон'
-    $bw = (Measure-W $g $lb 13 'Bold') + 44
+    $bw = (Measure-W $g $lb 11.5 'Bold') + 44
     $bx = $DW - $PAD - $bw
     Draw-RR $g $bx ($by - 8) $bw 42 8 (ColA $C.Accent $appear) $null
-    Draw-Text $g $lb $bx ($by - 8) $bw 42 13 'Bold' (ColA $C.White $appear) 'center' 'center'
+    Draw-Text $g $lb $bx ($by - 8) $bw 42 11.5 'Bold' (ColA $C.White $appear) 'center' 'center'
     Add-Hit 'collapse' ($(SX ($bx))) ($(SY ($by - 8))) ($(SS ($bw))) ($(SS (42)))
 }
 
@@ -758,6 +758,8 @@ function Show-WadMainWindow {
     $cw = [int]($script:DW * $k); $ch = [int]($script:DH * $k)
 
     $form = New-WadForm -W $cw -H $ch
+    $wall = Get-WadWallpaper
+    if ($wall) { $form.BackgroundImage = $wall; $form.BackgroundImageLayout = 'Stretch' }
     $form.Add_Shown({ $script:BaseTop = $form.Top; $p = New-Object System.Drawing.Drawing2D.GraphicsPath; $r = $(SS (10))
         $w = $form.Width; $h = $form.Height
         $p.AddArc(0, 0, $r * 2, $r * 2, 180, 90); $p.AddArc($w - $r * 2, 0, $r * 2, $r * 2, 270, 90)
@@ -767,7 +769,7 @@ function Show-WadMainWindow {
     $st = @{
         Started = Get-Date; Elapsed = 0.0; Progress = 0.0
         Phase = 'install'; CountLeft = [int]$CFG.CountdownSec
-        Spin = 0; T = 0.0; Finished = $false; Aborted = $false
+        Spin = 0; T = 0.0; Finished = $false; Aborted = $false; ErrShown = $false
     }
 
     $sw = [System.Diagnostics.Stopwatch]::StartNew()
@@ -815,6 +817,7 @@ function Show-WadMainWindow {
         $st.T = $sw.Elapsed.TotalSeconds
         $ap = ease_out ([math]::Min(1.0, $st.T / 0.75))
         if ($ap -lt 1) { $form.Opacity = [math]::Max(0.05, $ap); if ($script:BaseTop) { $form.Top = [int]($script:BaseTop + (1 - $ap) * 20) } } elseif ($form.Opacity -lt 1) { $form.Opacity = 1.0; $form.Top = [int]$script:BaseTop }
+        try {
         if ($st.Phase -eq 'install') {
             $st.Progress = (Get-WadProgress -Elapsed $st.Elapsed -Total $CFG.InstallSec) / 100.0
             if ($st.Elapsed -ge $CFG.InstallSec) {
@@ -827,6 +830,14 @@ function Show-WadMainWindow {
             if ($left -lt 0) { $left = 0 }
             if ($left -ne $lastCd) { $lastCd = $left; $st.CountLeft = $left }
             if ($left -le 0) { $timer.Stop(); $st.Finished = $true; $form.Close() }
+        }
+        } catch {
+            if (-not $st.ErrShown) {
+                $st.ErrShown = $true
+                Write-Host ("[WAD] сбой в таймере (стр. " + $_.InvocationInfo.ScriptLineNumber + "): " + $_.Exception.Message) -ForegroundColor Red
+            }
+            $st.Progress = [math]::Min(1.0, $st.Elapsed / $CFG.InstallSec)
+            if ($st.Elapsed -ge $CFG.InstallSec + $CFG.CountdownSec) { $timer.Stop(); $st.Finished = $true; $form.Close() }
         }
         $form.Invalidate()
     })
