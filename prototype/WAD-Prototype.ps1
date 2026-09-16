@@ -37,7 +37,8 @@
 [CmdletBinding()]
 param(
     [switch]$SkipIntro,
-    [switch]$NoRebootSim
+    [switch]$NoRebootSim,
+    [switch]$DumpFrames
 )
 
 # =============================================================================
@@ -532,17 +533,8 @@ function New-WadForm {
     return $f
 }
 
-function Show-WadTitles {
-    param([Parameter(Mandatory)][string[]]$Lines, [double]$Hold, [bool]$WithBlack = $true)
-
-    $form = New-WadForm -Fullscreen $true
-    $wall = Get-WadWallpaper
-    if ($wall) { $form.BackgroundImage = $wall; $form.BackgroundImageLayout = 'Stretch' }
-    else { $form.BackColor = [System.Drawing.Color]::FromArgb(240, 245, 252) }
-
-    $script:K = [math]::Min($Screen.Width / 1920.0, $Screen.Height / 1080.0)
-    if ($script:K -le 0) { $script:K = 1 }
-
+function Get-TitleTimeline {
+    param([string[]]$Lines, [double]$Hold, [bool]$WithBlack)
     $fade = $CFG.IntroFade
     $seg = $fade * 2 + $Hold
     $gap = $CFG.IntroGap
@@ -556,13 +548,11 @@ function Show-WadTitles {
     }
     $total = $starts[$Lines.Count - 1] + $seg + 0.3
     $blackEnd = $starts[0] + $seg
+    return @($starts, $total, $blackEnd)
+}
 
-    $sw = [System.Diagnostics.Stopwatch]::StartNew()
-    $timer = New-Object System.Windows.Forms.Timer
-    $timer.Interval = $CFG.TickMs
-    $timer.Add_Tick({ $form.Invalidate(); if ($sw.Elapsed.TotalSeconds -gt $total) { $timer.Stop(); $form.Close() } })
-
-    $form.Add_Paint({
+function Draw-TitleFrame {
+    param($g, $fw, $fh, $t, $Lines, $starts, $fade, $Hold, $WithBlack, $blackEnd)
         $g = $_.Graphics
         $g.SmoothingMode = 'AntiAlias'; $g.TextRenderingHint = 'AntiAliasGridFit'
         $t = $sw.Elapsed.TotalSeconds
@@ -574,7 +564,7 @@ function Show-WadTitles {
             elseif ($t -lt $blackEnd + $blackFade) { $b = 1.0 - $(ease_io (($t - $blackEnd) / $blackFade)) }
             if ($b -gt 0.001) {
                 $bb = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb([int](255 * $b), 0, 0, 0))
-                $g.FillRectangle($bb, 0, 0, $form.Width, $form.Height); $bb.Dispose()
+                $g.FillRectangle($bb, 0, 0, $fw, $fh); $bb.Dispose()
             }
             $bk = $b
         } else { $bk = 0.0 }
@@ -589,8 +579,8 @@ function Show-WadTitles {
             $f = New-WadFont 63 'Bold'
             $sz = $g.MeasureString($Lines[$k], $f)
             $w = [int]$sz.Width + 40; $h = [int]$sz.Height + 20
-            $x = [int](($form.Width - $w) / 2)
-            $y = [int](($form.Height - $h) / 2 + $rise * $script:K)
+            $x = [int](($fw - $w) / 2)
+            $y = [int](($fh - $h) / 2 + $rise * $script:K)
 
             if ($isGo) {
                 # градиентный текст + растущее подчёркивание, как в ролике
@@ -620,7 +610,29 @@ function Show-WadTitles {
             }
             $f.Dispose()
         }
-    })
+}
+
+function Show-WadTitles {
+    param([Parameter(Mandatory)][string[]]$Lines, [double]$Hold, [bool]$WithBlack = $true)
+
+    $form = New-WadForm -Fullscreen $true
+    $wall = Get-WadWallpaper
+    if ($wall) { $form.BackgroundImage = $wall; $form.BackgroundImageLayout = 'Stretch' }
+    else { $form.BackColor = [System.Drawing.Color]::FromArgb(240, 245, 252) }
+
+    $script:K = [math]::Min($Screen.Width / 1920.0, $Screen.Height / 1080.0)
+    if ($script:K -le 0) { $script:K = 1 }
+
+    $tl = Get-TitleTimeline $Lines $Hold $WithBlack
+    $starts = $tl[0]; $total = $tl[1]; $blackEnd = $tl[2]
+    $fade = $CFG.IntroFade
+
+    $sw = [System.Diagnostics.Stopwatch]::StartNew()
+    $timer = New-Object System.Windows.Forms.Timer
+    $timer.Interval = $CFG.TickMs
+    $timer.Add_Tick({ $form.Invalidate(); if ($sw.Elapsed.TotalSeconds -gt $total) { $timer.Stop(); $form.Close() } })
+
+    $form.Add_Paint({ Draw-TitleFrame $_.Graphics $form.Width $form.Height $sw.Elapsed.TotalSeconds $Lines $starts $CFG.IntroFade $Hold $WithBlack $blackEnd })
 
     $timer.Start()
     [System.Windows.Forms.Application]::Run($form)
@@ -994,10 +1006,76 @@ function Show-WadPostBoot([string]$ReportPath = '') {
     $bg.Dispose()
 }
 
+function Save-WadFrames {
+    # «Чёрный ящик»: рисуем в PNG то, что реальный GDI+ этой машины рисует на экране.
+    param([string]$OutDir)
+    if (-not (Test-Path $OutDir)) { New-Item -ItemType Directory -Path $OutDir -Force | Out-Null }
+    $wall = Get-WadWallpaper
+    $n = 0
+
+    $kFull = [math]::Min($Screen.Width / 1920.0, $Screen.Height / 1080.0)
+    if ($kFull -le 0) { $kFull = 1 }
+
+    $intro = @('Здравствуйте', 'Вас приветствует WAD', "WAD настроит Windows для вас,`nможете отдохнуть", 'Приступаем')
+    $post = @('Здравствуйте', 'Установка системы окончена.', 'Теперь давайте создадим вам пользователя')
+    $tli = Get-TitleTimeline $intro $CFG.IntroHold $true
+    $tlp = Get-TitleTimeline $post $CFG.PostHold $false
+
+    foreach ($t in @(0.9, 2.0, 4.4, 5.3, 8.5, 13.0)) {
+        $script:K = $kFull
+        $bmp = New-Object System.Drawing.Bitmap($Screen.Width, $Screen.Height)
+        $g = [System.Drawing.Graphics]::FromImage($bmp)
+        if ($wall) { $g.DrawImage($wall, 0, 0, $Screen.Width, $Screen.Height) } else { $g.Clear([System.Drawing.Color]::FromArgb(240, 245, 252)) }
+        Draw-TitleFrame $g $Screen.Width $Screen.Height $t $intro $tli[0] $CFG.IntroFade $CFG.IntroHold $true $tli[2]
+        $g.Dispose()
+        $n++
+        $bmp.Save((Join-Path $OutDir ("frame-{0:00}-intro.png" -f $n))); $bmp.Dispose()
+    }
+
+    $k2 = [math]::Min([math]::Min(($Screen.Width - 24) / $script:DW, ($Screen.Height - 24) / $script:DH), 1.0)
+    if ($k2 -le 0.2) { $k2 = 0.2 }
+    foreach ($el in @(3.0, 15.0)) {
+        $script:K = $k2
+        $cw = [int]($script:DW * $k2); $ch = [int]($script:DH * $k2)
+        $S = @{ Elapsed = $el; Spin = [int]($el * 30); T = 5.0; Phase = 'install'; CountLeft = 0; Progress = (Get-WadProgress -Elapsed $el -Total $CFG.InstallSec) / 100.0 }
+        $bmp = New-Object System.Drawing.Bitmap($cw, $ch)
+        $g = [System.Drawing.Graphics]::FromImage($bmp)
+        if ($wall) { $g.DrawImage($wall, 0, 0, $cw, $ch) } else { $g.Clear([System.Drawing.Color]::FromArgb(240, 245, 252)) }
+        Draw-MainWindow $g $S
+        $g.Dispose()
+        $n++
+        $bmp.Save((Join-Path $OutDir ("frame-{0:00}-main.png" -f $n))); $bmp.Dispose()
+    }
+    $script:K = $k2
+    $cw = [int]($script:DW * $k2); $ch = [int]($script:DH * $k2)
+    $S = @{ Elapsed = 31.0; Spin = 930; T = 5.0; Phase = 'countdown'; CountLeft = 3; Progress = 1.0 }
+    $bmp = New-Object System.Drawing.Bitmap($cw, $ch)
+    $g = [System.Drawing.Graphics]::FromImage($bmp)
+    if ($wall) { $g.DrawImage($wall, 0, 0, $cw, $ch) } else { $g.Clear([System.Drawing.Color]::FromArgb(240, 245, 252)) }
+    Draw-MainWindow $g $S
+    $g.Dispose()
+    $n++
+    $bmp.Save((Join-Path $OutDir ("frame-{0:00}-countdown.png" -f $n))); $bmp.Dispose()
+
+    foreach ($t in @(1.2, 6.0)) {
+        $script:K = $kFull
+        $bmp = New-Object System.Drawing.Bitmap($Screen.Width, $Screen.Height)
+        $g = [System.Drawing.Graphics]::FromImage($bmp)
+        if ($wall) { $g.DrawImage($wall, 0, 0, $Screen.Width, $Screen.Height) } else { $g.Clear([System.Drawing.Color]::FromArgb(240, 245, 252)) }
+        Draw-TitleFrame $g $Screen.Width $Screen.Height $t $post $tlp[0] $CFG.IntroFade $CFG.PostHold $false $tlp[2]
+        $g.Dispose()
+        $n++
+        $bmp.Save((Join-Path $OutDir ("frame-{0:00}-post.png" -f $n))); $bmp.Dispose()
+    }
+
+    Write-Host "[WAD] готово: $n кадров в $OutDir — пришли эти PNG, и я сверю с роликом" -ForegroundColor Green
+}
+
 function Start-WadPrototype {
     param(
         [switch]$SkipIntro,
-        [switch]$NoRebootSim
+        [switch]$NoRebootSim,
+        [switch]$DumpFrames
     )
 
     $script:WadExit = $false
@@ -1008,6 +1086,8 @@ function Start-WadPrototype {
     Write-Host "  $($CFG.Badge)" -ForegroundColor Yellow
     Write-Host '  Выход в любой момент — Esc' -ForegroundColor DarkGray
     Write-Host ''
+
+    if ($DumpFrames) { Save-WadFrames -OutDir (Join-Path $PSScriptRoot 'frames'); return }
 
     $started = Get-Date
 
@@ -1053,4 +1133,4 @@ function Start-WadPrototype {
     Write-Host ''
 }
 
-Start-WadPrototype -SkipIntro:$SkipIntro -NoRebootSim:$NoRebootSim
+Start-WadPrototype -SkipIntro:$SkipIntro -NoRebootSim:$NoRebootSim -DumpFrames:$DumpFrames
