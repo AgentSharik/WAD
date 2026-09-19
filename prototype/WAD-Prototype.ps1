@@ -178,7 +178,9 @@ function New-WadReportHtml {
         [Parameter(Mandatory)][datetime]$Finished,
         [string]$UserName = 'User',
         [bool]$AsAdmin = $true,
-        [string]$RepoUrl = 'https://github.com/AgentSharik/WAD'
+        [string]$RepoUrl = 'https://github.com/AgentSharik/WAD',
+        [string]$Edition = 'standard',
+        [string]$Theme = 'light'
     )
 
     $logs = Get-WadLogRows -Total $CFG.InstallSec
@@ -250,7 +252,7 @@ function New-WadReportHtml {
   <a class="promo" href="$RepoUrl">Сайт разработчика</a>
   <div class="badge">$($CFG.Badge)</div>
   <h1>Всё готово</h1>
-  <p class="meta">Прогон завершён $($Finished.ToString('dd.MM.yyyy HH:mm')) · $($logs.Count) категории · замечаний: $warnCount · длилось $('{0:00}:{1:00}' -f [math]::Floor($dur.TotalMinutes), $dur.Seconds)</p>
+  <p class="meta">Прогон завершён $($Finished.ToString('dd.MM.yyyy HH:mm')) · $($logs.Count) категории · замечаний: $warnCount · длилось $('{0:00}:{1:00}' -f [math]::Floor($dur.TotalMinutes), $dur.Seconds)<br>Версия: $(if ($Edition -eq 'lite') { 'Lite' } else { 'Обычная' }) · оформление установщика: $(switch ($Theme) { 'dark' { 'тёмная' } 'system' { 'системная' } default { 'светлая' } }) тема</p>
 
   <div class="cards">
 $cards
@@ -286,14 +288,16 @@ function Save-WadReport {
         [Parameter(Mandatory)][datetime]$Finished,
         [string]$UserName = 'User',
         [bool]$AsAdmin = $true,
-        [string]$ReportFile
+        [string]$ReportFile,
+        [string]$Edition = 'standard',
+        [string]$Theme = 'light'
     )
 
     if (-not $ReportFile) { $ReportFile = (Get-WadPaths).ReportFile }
     $dir = Split-Path $ReportFile -Parent
     if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
 
-    $html = New-WadReportHtml -Started $Started -Finished $Finished -UserName $UserName -AsAdmin $AsAdmin -RepoUrl $CFG.RepoUrl
+    $html = New-WadReportHtml -Started $Started -Finished $Finished -UserName $UserName -AsAdmin $AsAdmin -RepoUrl $CFG.RepoUrl -Edition $Edition -Theme $Theme
     $enc = New-Object System.Text.UTF8Encoding($true)          # BOM — кириллица читается везде
     [System.IO.File]::WriteAllText($ReportFile, $html, $enc)
 
@@ -382,6 +386,8 @@ $script:Hits = @()                          # кликабельные зоны 
 $script:WadExit = $false
 $script:WadUserChoice = $null
 $script:WadTray = $null
+$script:WadEdition = 'standard'
+$script:WadThemeChoice = 'light'
 
 $C = @{
     Text   = [System.Drawing.Color]::FromArgb(26, 28, 32)
@@ -396,6 +402,44 @@ $C = @{
     Card   = [System.Drawing.Color]::FromArgb(252, 253, 255)
     Track  = [System.Drawing.Color]::FromArgb(230, 233, 239)
     White  = [System.Drawing.Color]::White
+    Mica   = [System.Drawing.Color]::FromArgb(222, 252, 253, 255)
+    RowHi  = [System.Drawing.Color]::FromArgb(150, 255, 255, 255)
+    RowLn  = [System.Drawing.Color]::FromArgb(16, 0, 0, 0)
+}
+
+function Apply-WadTheme {
+    param([string]$Mode)
+    if ($Mode -eq 'system') {
+        $Mode = 'light'
+        try {
+            $v = (Get-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize' -Name AppsUseLightTheme -ErrorAction Stop).AppsUseLightTheme
+            if ($v -eq 0) { $Mode = 'dark' }
+        } catch { Write-Verbose 'тему системы прочитать не удалось — остаётся светлая' }
+    }
+    $script:WadTheme = $Mode
+    if ($Mode -eq 'dark') {
+        $C.Text  = [System.Drawing.Color]::FromArgb(240, 242, 246)
+        $C.Text2 = [System.Drawing.Color]::FromArgb(168, 174, 184)
+        $C.Text3 = [System.Drawing.Color]::FromArgb(126, 132, 142)
+        $C.Card  = [System.Drawing.Color]::FromArgb(32, 34, 40)
+        $C.Line  = [System.Drawing.Color]::FromArgb(58, 62, 70)
+        $C.Track = [System.Drawing.Color]::FromArgb(58, 62, 70)
+        $C.Mica  = [System.Drawing.Color]::FromArgb(225, 24, 26, 32)
+        $C.RowHi = [System.Drawing.Color]::FromArgb(24, 255, 255, 255)
+        $C.RowLn = [System.Drawing.Color]::FromArgb(24, 255, 255, 255)
+        $C.White = [System.Drawing.Color]::White
+    } else {
+        $C.Text  = [System.Drawing.Color]::FromArgb(26, 28, 32)
+        $C.Text2 = [System.Drawing.Color]::FromArgb(96, 104, 116)
+        $C.Text3 = [System.Drawing.Color]::FromArgb(138, 146, 160)
+        $C.Card  = [System.Drawing.Color]::FromArgb(252, 253, 255)
+        $C.Line  = [System.Drawing.Color]::FromArgb(216, 220, 228)
+        $C.Track = [System.Drawing.Color]::FromArgb(230, 233, 239)
+        $C.Mica  = [System.Drawing.Color]::FromArgb(222, 252, 253, 255)
+        $C.RowHi = [System.Drawing.Color]::FromArgb(150, 255, 255, 255)
+        $C.RowLn = [System.Drawing.Color]::FromArgb(16, 0, 0, 0)
+        $C.White = [System.Drawing.Color]::White
+    }
 }
 
 $Screen = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
@@ -666,7 +710,7 @@ function Draw-MainWindow {
     $te = $S.T
     $appear = ease_out ([math]::Min(1.0, $te / 0.75))
 
-    Draw-RR $g 0 0 $DW $DH 10 ([System.Drawing.Color]::FromArgb(222, 252, 253, 255)) $null
+    Draw-RR $g 0 0 $DW $DH 10 $C.Mica $null
     Draw-RR $g 0.5 0.5 ($DW - 1) ($DH - 1) 10 $null ([System.Drawing.Color]::FromArgb(40, 0, 0, 0)) 1
 
     # шапка: знак WAD + раздел
@@ -714,7 +758,7 @@ function Draw-MainWindow {
         $e = ease_out ([math]::Max(0.0, [math]::Min(1.0, ($te - 0.10 - $i * 0.06) / 0.5)))
         if ($e -le 0.01) { continue }
         $yy = $ry + $i * ($rh + 12)
-        Draw-RR $g $PAD $yy ($DW - 2 * $PAD) $rh 10 ([System.Drawing.Color]::FromArgb([int](150 * $e), 255, 255, 255)) ([System.Drawing.Color]::FromArgb([int](16 * $e), 0, 0, 0)) 1
+        Draw-RR $g $PAD $yy ($DW - 2 * $PAD) $rh 10 (ColA $C.RowHi $e) (ColA $C.RowLn $e) 1
         $icx = $PAD + 34; $icy = $yy + $rh / 2
         Draw-StatusIcon $g ($(SX ($icx))) ($(SY ($icy))) $s.State $S.Spin $e
         Draw-Text $g $WadRows[$i].Name ($PAD + 66) ($yy + 14) ($DW - 2 * $PAD - 160) 26 13.5 'Bold' (ColA $C.Text $e)
@@ -761,6 +805,106 @@ function Draw-MainWindow {
     Draw-RR $g $bx ($by - 8) $bw 42 8 (ColA $C.Accent $appear) $null
     Draw-Text $g $lb $bx ($by - 8) $bw 42 11.5 'Bold' (ColA $C.White $appear) 'center' 'center'
     Add-Hit 'collapse' ($(SX ($bx))) ($(SY ($by - 8))) ($(SS ($bw))) ($(SS (42)))
+}
+
+function Draw-EditionScreen {
+    param($g, $S)
+    $script:Hits = @()
+    $g.SmoothingMode = 'AntiAlias'; $g.TextRenderingHint = 'AntiAliasGridFit'
+    $DW = $script:DW; $DH = $script:DH
+    $PAD = 56
+    Draw-RR $g 0 0 $DW $DH 10 $C.Mica $null
+    Draw-RR $g 0.5 0.5 ($DW - 1) ($DH - 1) 10 $null (ColA $C.Text 0.15) 1
+
+    $ix = $PAD; $iy = 14; $isz = 26
+    $rect = [System.Drawing.Rectangle]::new($(SX $ix), $(SY $iy), $(SS $isz), $(SS $isz))
+    $gb = New-Object System.Drawing.Drawing2D.LinearGradientBrush($rect, $C.Accent, $C.Accent2, 45.0)
+    $g.FillRectangle($gb, $rect); $gb.Dispose()
+    Draw-Text $g 'W' $ix $iy $isz $isz 11 'Bold' $C.White 'center' 'center'
+    Draw-Text $g 'WAD' ($ix + $isz + 12) ($iy + 2) 90 24 14 'Bold' $C.Text 'left' 'center'
+    Draw-Text $g '· выбор версии' ($ix + $isz + 12 + 90) ($iy + 3) 220 24 11.5 'Regular' $C.Text3 'left' 'center'
+
+    Draw-Text $g 'Выберите версию Windows' $PAD 62 ($DW - 2 * $PAD) 40 22 'Bold' $C.Text
+    Draw-Text $g 'Обе версии создаются из одного проверенного исходного образа Microsoft' $PAD 100 ($DW - 2 * $PAD) 22 11 'Regular' $C.Text2
+
+    $cw2 = [int](($DW - 2 * $PAD - 24) / 2)
+    $cy = 148; $chh = 190
+    $cards = @(
+        @{ Id = 'standard'; Tag = 'STANDARD'; Title = 'Обычная'; Desc = 'Полный набор штатных компонентов Windows 11 Pro. Приложения WAD устанавливаются только по выбранным галочкам.' },
+        @{ Id = 'lite'; Tag = 'LITE'; Title = 'Lite'; Desc = 'Для старых ПК: меньше потребительских приложений и фоновых рекомендаций. Темы, безопасность, обновления и совместимость сохраняются.' }
+    )
+    for ($i = 0; $i -lt 2; $i++) {
+        $cd = $cards[$i]
+        $cx = $PAD + $i * ($cw2 + 24)
+        $sel = ($script:WadEdition -eq $cd.Id)
+        if ($sel) {
+            Draw-RR $g $cx $cy $cw2 $chh 10 (ColA $C.Accent 0.06) $null
+            Draw-RR $g $cx $cy $cw2 $chh 10 $null $C.Accent 2
+        } else {
+            Draw-RR $g $cx $cy $cw2 $chh 10 (ColA $C.RowHi 1) (ColA $C.RowLn 1) 1
+        }
+        Draw-Text $g $cd.Tag ($cx + 24) ($cy + 18) 200 18 9.5 'Bold' $C.Accent
+        Draw-Text $g $cd.Title ($cx + 24) ($cy + 42) ($cw2 - 48) 30 17 'Bold' $C.Text
+        Draw-Text $g $cd.Desc ($cx + 24) ($cy + 78) ($cw2 - 48) ($chh - 96) 10.5 'Regular' $C.Text2
+        Add-Hit $cd.Id $cx $cy $cw2 $chh
+    }
+
+    Draw-Text $g 'Оформление установщика' $PAD 372 400 22 12 'Bold' $C.Text
+    $themes = @(@('light', 'Светлая тема'), @('dark', 'Тёмная тема'), @('system', 'Системная тема'))
+    $tx = $PAD
+    foreach ($th in $themes) {
+        $tw = (Measure-W $g $th[1] 11 'Regular') + 40
+        $selT = ($script:WadThemeChoice -eq $th[0])
+        if ($selT) {
+            Draw-RR $g $tx 402 $tw 40 8 $C.Accent $null
+            Draw-Text $g $th[1] $tx 402 $tw 40 11 'Regular' $C.White 'center' 'center'
+        } else {
+            Draw-RR $g $tx 402 $tw 40 8 $null (ColA $C.Text 0.35) 1
+            Draw-Text $g $th[1] $tx 402 $tw 40 11 'Regular' $C.Text2 'center' 'center'
+        }
+        Add-Hit ('theme:' + $th[0]) $tx 402 $tw 40
+        $tx += $tw + 14
+    }
+
+    $bl = 'Продолжить'
+    $bw = (Measure-W $g $bl 12 'Bold') + 50
+    Draw-RR $g ($DW - $PAD - $bw) ($DH - $PAD - 46) $bw 46 8 $C.Accent $null
+    Draw-Text $g $bl ($DW - $PAD - $bw) ($DH - $PAD - 46) $bw 46 12 'Bold' $C.White 'center' 'center'
+    Add-Hit 'next' ($DW - $PAD - $bw) ($DH - $PAD - 46) $bw 46
+    $bb = 'Назад'
+    $bw2 = (Measure-W $g $bb 11 'Regular') + 40
+    Draw-RR $g ($DW - $PAD - $bw - 14 - $bw2) ($DH - $PAD - 46) $bw2 46 8 $null (ColA $C.Text 0.35) 1
+    Draw-Text $g $bb ($DW - $PAD - $bw - 14 - $bw2) ($DH - $PAD - 46) $bw2 46 11 'Regular' $C.Text2 'center' 'center'
+    Add-Hit 'back' ($DW - $PAD - $bw - 14 - $bw2) ($DH - $PAD - 46) $bw2 46
+}
+
+function Show-WadEditionScreen {
+    # возвращает 'next' или 'back'
+    $k = [math]::Min([math]::Min(($Screen.Width - 24) / $script:DW, ($Screen.Height - 24) / $script:DH), 1.0)
+    if ($k -le 0.2) { $k = 0.2 }
+    $script:K = $k
+    $cw = [int]($script:DW * $k); $ch = [int]($script:DH * $k)
+    $form = New-WadForm -W $cw -H $ch
+    $wall = Get-WadWallpaper
+    if ($wall) { $form.BackgroundImage = $wall; $form.BackgroundImageLayout = 'Stretch' }
+    $res = @{ Go = '' }
+    $form.Add_Paint({ Draw-EditionScreen $_.Graphics $null })
+    $form.Add_MouseClick({
+        $id = Get-Hit $_.Location
+        if (-not $id) { return }
+        if ($id -eq 'next') { $res.Go = 'next'; $form.Close(); return }
+        if ($id -eq 'back') { $res.Go = 'back'; $form.Close(); return }
+        if ($id -eq 'standard' -or $id -eq 'lite') { $script:WadEdition = $id; $form.Invalidate(); return }
+        if ($id -like 'theme:*') {
+            $script:WadThemeChoice = $id.Substring(6)
+            Apply-WadTheme $script:WadThemeChoice
+            $form.Invalidate()
+        }
+    })
+    $form.Add_MouseMove({ $form.Cursor = if (Get-Hit $_.Location) { [System.Windows.Forms.Cursors]::Hand } else { [System.Windows.Forms.Cursors]::Default } })
+    [System.Windows.Forms.Application]::Run($form)
+    $form.Dispose()
+    return $res.Go
 }
 
 function Show-WadMainWindow {
@@ -1034,6 +1178,15 @@ function Save-WadFrames {
 
     $k2 = [math]::Min([math]::Min(($Screen.Width - 24) / $script:DW, ($Screen.Height - 24) / $script:DH), 1.0)
     if ($k2 -le 0.2) { $k2 = 0.2 }
+    $script:K = $k2
+    $cw = [int]($script:DW * $k2); $ch = [int]($script:DH * $k2)
+    $bmp = New-Object System.Drawing.Bitmap($cw, $ch)
+    $g = [System.Drawing.Graphics]::FromImage($bmp)
+    if ($wall) { $g.DrawImage($wall, 0, 0, $cw, $ch) } else { $g.Clear([System.Drawing.Color]::FromArgb(240, 245, 252)) }
+    Draw-EditionScreen $g $null
+    $g.Dispose()
+    $n++
+    $bmp.Save((Join-Path $OutDir ("frame-{0:00}-edition.png" -f $n))); $bmp.Dispose()
     foreach ($el in @(3.0, 15.0)) {
         $script:K = $k2
         $cw = [int]($script:DW * $k2); $ch = [int]($script:DH * $k2)
@@ -1097,13 +1250,23 @@ function Start-WadPrototype {
         if (-not $ok -or $script:WadExit) { Write-Host '[WAD] прототип прерван на заставке'; return }
     }
 
+    # выбор версии и темы: «Назад» возвращает к интро, как установщик возвращается к началу
+    while ($true) {
+        $go = Show-WadEditionScreen
+        if ($script:WadExit) { Write-Host '[WAD] прототип прерван на экране выбора'; return }
+        if ($go -eq 'next') { break }
+        $ok = Show-WadTitles -Lines @('Здравствуйте', 'Вас приветствует WAD',
+            "WAD настроит Windows для вас,`nможете отдохнуть", 'Приступаем') -Hold $CFG.IntroHold
+        if (-not $ok -or $script:WadExit) { Write-Host '[WAD] прототип прерван на заставке'; return }
+    }
+
     $res = Show-WadMainWindow
     if (-not $res) { Write-Host '[WAD] прототип прерван в окне установки'; return }
 
     $finished = Get-Date
     $report = $null
     try {
-        $report = Save-WadReport -Started $started -Finished $finished
+        $report = Save-WadReport -Started $started -Finished $finished -Edition $script:WadEdition -Theme $script:WadThemeChoice
         Write-Host "[WAD] отчёт создан: $($report.Path) ($($report.Bytes) байт)" -ForegroundColor Green
         Start-Process -FilePath $report.Path
     } catch {

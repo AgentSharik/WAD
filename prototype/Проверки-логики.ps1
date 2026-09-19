@@ -117,13 +117,19 @@ Assert-That 'нет сетевых загрузок и правок систем
 # реестр, автологон и RunOnce в коде отсутствуют (в комментариях — только как «не трогаем»)
 $strings = @($ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.StringConstantExpressionAst] }, $true) |
     ForEach-Object { $_.Value })
-$bannedStr = @('HKLM', 'HKCU', 'Winlogon', 'RunOnce', 'AutoAdminLogon', 'DefaultUserName')
+$bannedStr = @('HKLM', 'Winlogon', 'RunOnce', 'AutoAdminLogon', 'DefaultUserName')
 $hitStr = @()
 foreach ($s in $strings) { foreach ($b in $bannedStr) { if ($s -like "*$b*") { $hitStr += $b } } }
-Assert-That 'реестр и автологон в коде не фигурируют' (($hitStr | Sort-Object -Unique).Count -eq 0) ("найдено: " + ($hitStr -join ', '))
+# HKCU разрешён только один: чтение темы оформления, без записи
+$hkcu = @($strings | Where-Object { $_ -like '*HKCU*' })
+$hkcuOk = ($hkcu.Count -eq 1) -and ($hkcu[0] -like '*Themes\Personalize*')
+$writeReg = @($used | Where-Object { $_ -in @('Set-ItemProperty', 'New-ItemProperty', 'Remove-ItemProperty') })
+Assert-That 'реестр и автологон в коде не фигурируют' ((($hitStr | Sort-Object -Unique).Count -eq 0) -and $hkcuOk -and ($writeReg.Count -eq 0)) ("найдено: " + (($hitStr + $writeReg) -join ', '))
 
 # --- 7. Все требуемые экраны присутствуют ------------------------------------
 $need = @('Здравствуйте', 'Вас приветствует WAD', 'Приступаем', 'Сайт разработчика', 'Сохранить ярлык',
+          'Выберите версию Windows', 'Обычная', 'Lite', 'Обе версии создаются из одного проверенного исходного образа Microsoft',
+          'Светлая тема', 'Тёмная тема', 'Системная тема', 'Назад', 'Продолжить',
           'Свернуть в фон', 'Перезагрузка через', 'Установка системы окончена.',
           'Теперь давайте создадим вам пользователя', 'Пользователь создаётся как администратор',
           'Создать и продолжить', 'Перезагрузка…')
