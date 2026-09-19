@@ -669,7 +669,6 @@ function Show-WadTitles {
 
     $tl = Get-TitleTimeline $Lines $Hold $WithBlack
     $starts = $tl[0]; $total = $tl[1]; $blackEnd = $tl[2]
-    $fade = $CFG.IntroFade
 
     $sw = [System.Diagnostics.Stopwatch]::StartNew()
     $timer = New-Object System.Windows.Forms.Timer
@@ -808,7 +807,7 @@ function Draw-MainWindow {
 }
 
 function Draw-EditionScreen {
-    param($g, $S)
+    param($g)
     $script:Hits = @()
     $g.SmoothingMode = 'AntiAlias'; $g.TextRenderingHint = 'AntiAliasGridFit'
     $DW = $script:DW; $DH = $script:DH
@@ -888,7 +887,7 @@ function Show-WadEditionScreen {
     $wall = Get-WadWallpaper
     if ($wall) { $form.BackgroundImage = $wall; $form.BackgroundImageLayout = 'Stretch' }
     $res = @{ Go = '' }
-    $form.Add_Paint({ Draw-EditionScreen $_.Graphics $null })
+    $form.Add_Paint({ Draw-EditionScreen $_.Graphics })
     $form.Add_MouseClick({
         $id = Get-Hit $_.Location
         if (-not $id) { return }
@@ -1183,7 +1182,7 @@ function Save-WadFrames {
     $bmp = New-Object System.Drawing.Bitmap($cw, $ch)
     $g = [System.Drawing.Graphics]::FromImage($bmp)
     if ($wall) { $g.DrawImage($wall, 0, 0, $cw, $ch) } else { $g.Clear([System.Drawing.Color]::FromArgb(240, 245, 252)) }
-    Draw-EditionScreen $g $null
+    Draw-EditionScreen $g
     $g.Dispose()
     $n++
     $bmp.Save((Join-Path $OutDir ("frame-{0:00}-edition.png" -f $n))); $bmp.Dispose()
